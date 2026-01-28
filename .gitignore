@@ -1,24 +1,160 @@
-# Compiled class file
+# ============================================
+# .gitignore para Proyecto Java/Maven/JavaFX
+# Sistema de Registro de Estudiantes
+# ============================================
+
+# ============================================
+# Archivos compilados
+# ============================================
 *.class
-
-# Log file
-*.log
-
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
 *.jar
 *.war
-*.nar
 *.ear
+*.nar
+
+# ============================================
+# Directorios de compilación Maven
+# ============================================
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# ============================================
+# IDEs - IntelliJ IDEA
+# ============================================
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+# ============================================
+# IDEs - Eclipse
+# ============================================
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+
+# ============================================
+# IDEs - NetBeans
+# ============================================
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# ============================================
+# IDEs - VS Code
+# ============================================
+.vscode/
+
+# ============================================
+# Logs
+# ============================================
+logs/
+*.log
+log/
+
+# ============================================
+# Base de datos SQLite
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+registro_estudiantes.db
+
+# ============================================
+# Archivos del sistema operativo
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ============================================
+# Archivos temporales
+# ============================================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ============================================
+# JVM crash logs
+# ============================================
+hs_err_pid*
+replay_pid*
+
+# ============================================
+# Archivos de configuración local
+# ============================================
+local.properties
+*.local
+config.local.*
+
+# ============================================
+# Archivos de respaldo
+# ============================================
+*.bak
+*.backup
+*.old
+
+# ============================================
+# Certificados y claves (seguridad)
+# ============================================
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+
+# ============================================
+# Archivos de licencia generados
+# ============================================
+license.dat
+license.key
+
+# ============================================
+# Imágenes de estudiantes subidas
+# ============================================
+uploads/
+photos/
+
+# ============================================
+# Reportes generados
+# ============================================
+reports/
+exports/
+
+# ============================================
+# BlueJ files
+# ============================================
+*.ctxt
+
+# ============================================
+# Mobile Tools for Java (J2ME)
+# ============================================
+.mtj.tmp/
+
+# ============================================
+# Package Files
+# ============================================
 *.zip
 *.tar.gz
 *.rar
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
