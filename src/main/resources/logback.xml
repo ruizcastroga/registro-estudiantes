@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Configuración de Logback para Sistema de Registro de Estudiantes
+    - Console: nivel INFO
+    - Archivo: nivel DEBUG con rotación diaria
+-->
+<configuration>
+
+    <!-- Propiedades -->
+    <property name="LOG_DIR" value="logs"/>
+    <property name="LOG_FILE" value="app"/>
+
+    <!-- Formato de los logs -->
+    <property name="LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+
+    <property name="LOG_PATTERN_CONSOLE"
+              value="%d{HH:mm:ss.SSS} %highlight(%-5level) %cyan(%logger{20}) - %msg%n"/>
+
+    <!-- Appender para consola -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN_CONSOLE}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <!-- Solo mostrar INFO o superior en consola -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+
+    <!-- Appender para archivo con rotación diaria -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${LOG_FILE}.log</file>
+
+        <!-- Política de rotación: diaria y por tamaño -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- Patrón para archivos rotados -->
+            <fileNamePattern>${LOG_DIR}/${LOG_FILE}-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <!-- Tamaño máximo por archivo -->
+            <maxFileSize>10MB</maxFileSize>
+            <!-- Historial máximo en días -->
+            <maxHistory>30</maxHistory>
+            <!-- Tamaño total máximo -->
+            <totalSizeCap>200MB</totalSizeCap>
+        </rollingPolicy>
+
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Appender para errores (archivo separado) -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/error.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/error-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>100MB</totalSizeCap>
+        </rollingPolicy>
+
+        <!-- Solo errores -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Logger específico para SQLite/JDBC -->
+    <logger name="org.sqlite" level="WARN"/>
+    <logger name="com.zaxxer.hikari" level="WARN"/>
+
+    <!-- Logger específico para JavaFX -->
+    <logger name="javafx" level="WARN"/>
+    <logger name="com.sun.javafx" level="WARN"/>
+
+    <!-- Logger para la aplicación -->
+    <logger name="com.tuempresa.registro" level="DEBUG">
+        <appender-ref ref="FILE"/>
+    </logger>
+
+    <!-- Logger para DAOs (SQL) - más detallado si es necesario -->
+    <logger name="com.tuempresa.registro.dao" level="DEBUG"/>
+
+    <!-- Logger para controladores -->
+    <logger name="com.tuempresa.registro.controllers" level="DEBUG"/>
+
+    <!-- Logger para servicios -->
+    <logger name="com.tuempresa.registro.services" level="DEBUG"/>
+
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </root>
+
+</configuration>

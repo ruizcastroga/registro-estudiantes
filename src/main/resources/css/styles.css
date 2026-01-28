@@ -1,0 +1,587 @@
+/*
+ * Estilos principales - Sistema de Registro de Estudiantes
+ * Tema: Moderno y limpio con colores claros
+ */
+
+/* ============================================
+   Variables y colores base
+   ============================================ */
+
+.root {
+    -fx-font-family: "Segoe UI", "Arial", sans-serif;
+    -fx-font-size: 14px;
+
+    /* Colores principales */
+    -primary-color: #2196F3;
+    -primary-dark: #1976D2;
+    -primary-light: #BBDEFB;
+
+    /* Colores de estado */
+    -success-color: #4CAF50;
+    -success-dark: #388E3C;
+    -success-light: #C8E6C9;
+
+    -danger-color: #F44336;
+    -danger-dark: #D32F2F;
+    -danger-light: #FFCDD2;
+
+    -warning-color: #FF9800;
+    -warning-dark: #F57C00;
+    -warning-light: #FFE0B2;
+
+    /* Colores neutros */
+    -background-color: #F5F5F5;
+    -surface-color: #FFFFFF;
+    -text-primary: #212121;
+    -text-secondary: #757575;
+    -border-color: #E0E0E0;
+}
+
+/* ============================================
+   Contenedores principales
+   ============================================ */
+
+.main-container {
+    -fx-background-color: -background-color;
+}
+
+.crud-container {
+    -fx-background-color: -background-color;
+}
+
+/* ============================================
+   Header (Barra superior)
+   ============================================ */
+
+.header-box {
+    -fx-background-color: -primary-color;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 4, 0, 0, 2);
+}
+
+.app-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.page-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+.datetime-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: rgba(255, 255, 255, 0.9);
+}
+
+.stats-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: rgba(255, 255, 255, 0.8);
+}
+
+.stats-value {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}
+
+/* ============================================
+   Footer (Barra inferior)
+   ============================================ */
+
+.footer-box {
+    -fx-background-color: -surface-color;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1 0 0 0;
+}
+
+.status-indicator {
+    -fx-font-size: 18px;
+}
+
+.connection-status {
+    -fx-font-size: 12px;
+    -fx-text-fill: -text-secondary;
+}
+
+.license-info {
+    -fx-font-size: 12px;
+    -fx-text-fill: -text-secondary;
+}
+
+.license-info.demo-mode {
+    -fx-text-fill: -warning-color;
+}
+
+.license-info.licensed-mode {
+    -fx-text-fill: -success-color;
+}
+
+.version-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -text-secondary;
+}
+
+/* ============================================
+   Campo de entrada del scanner
+   ============================================ */
+
+.barcode-input {
+    -fx-font-size: 24px;
+    -fx-padding: 15 20;
+    -fx-background-color: -surface-color;
+    -fx-background-radius: 8;
+    -fx-border-color: -primary-color;
+    -fx-border-width: 2;
+    -fx-border-radius: 8;
+    -fx-alignment: center;
+}
+
+.barcode-input:focused {
+    -fx-border-color: -primary-dark;
+    -fx-effect: dropshadow(gaussian, -primary-light, 8, 0, 0, 0);
+}
+
+.instruction-label {
+    -fx-font-size: 16px;
+    -fx-text-fill: -text-secondary;
+}
+
+/* ============================================
+   Panel de resultado del escaneo
+   ============================================ */
+
+.result-panel {
+    -fx-background-color: -surface-color;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-width: 3;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 4);
+    -fx-min-width: 500;
+}
+
+.result-panel.can-exit {
+    -fx-border-color: -success-color;
+    -fx-background-color: linear-gradient(to bottom, -success-light, -surface-color);
+}
+
+.result-panel.requires-guardian {
+    -fx-border-color: -warning-color;
+    -fx-background-color: linear-gradient(to bottom, -warning-light, -surface-color);
+}
+
+.result-panel.inactive {
+    -fx-border-color: -danger-color;
+    -fx-background-color: linear-gradient(to bottom, -danger-light, -surface-color);
+}
+
+.student-name {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-primary;
+}
+
+.student-grade {
+    -fx-font-size: 18px;
+    -fx-text-fill: -text-secondary;
+}
+
+.status-label {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-padding: 10 20;
+    -fx-background-radius: 8;
+}
+
+.status-label.status-ok {
+    -fx-text-fill: white;
+    -fx-background-color: -success-color;
+}
+
+.status-label.status-warning {
+    -fx-text-fill: white;
+    -fx-background-color: -warning-color;
+}
+
+.status-label.status-inactive {
+    -fx-text-fill: white;
+    -fx-background-color: -danger-color;
+}
+
+/* ============================================
+   Panel de acudientes
+   ============================================ */
+
+.guardians-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-secondary;
+    -fx-padding: 10 0 5 0;
+}
+
+.guardian-item {
+    -fx-font-size: 14px;
+    -fx-text-fill: -text-primary;
+    -fx-padding: 3 0;
+}
+
+/* ============================================
+   Panel de estudiante no encontrado
+   ============================================ */
+
+.not-found-panel {
+    -fx-background-color: -danger-light;
+    -fx-background-radius: 12;
+    -fx-border-color: -danger-color;
+    -fx-border-width: 2;
+    -fx-border-radius: 12;
+}
+
+.not-found-message {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -danger-dark;
+}
+
+.scanned-code {
+    -fx-font-size: 16px;
+    -fx-text-fill: -text-secondary;
+    -fx-font-family: "Consolas", monospace;
+}
+
+/* ============================================
+   Panel de historial
+   ============================================ */
+
+.history-panel {
+    -fx-background-color: -surface-color;
+    -fx-border-color: -border-color;
+    -fx-border-width: 0 0 0 1;
+}
+
+.history-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-primary;
+    -fx-padding: 0 0 10 0;
+}
+
+.history-list {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.history-list .list-cell {
+    -fx-font-size: 12px;
+    -fx-padding: 8 5;
+    -fx-background-color: transparent;
+}
+
+.history-list .list-cell:odd {
+    -fx-background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* ============================================
+   Botones
+   ============================================ */
+
+.button {
+    -fx-padding: 10 20;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+}
+
+.primary-button {
+    -fx-background-color: -primary-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.primary-button:hover {
+    -fx-background-color: -primary-dark;
+}
+
+.primary-button:pressed {
+    -fx-background-color: derive(-primary-dark, -10%);
+}
+
+.secondary-button {
+    -fx-background-color: -surface-color;
+    -fx-text-fill: -primary-color;
+    -fx-border-color: -primary-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+}
+
+.secondary-button:hover {
+    -fx-background-color: -primary-light;
+}
+
+.danger-button {
+    -fx-background-color: -danger-color;
+    -fx-text-fill: white;
+}
+
+.danger-button:hover {
+    -fx-background-color: -danger-dark;
+}
+
+.small-button {
+    -fx-padding: 6 12;
+    -fx-font-size: 12px;
+    -fx-background-color: -surface-color;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.small-button:hover {
+    -fx-background-color: -background-color;
+}
+
+/* ============================================
+   Campos de formulario
+   ============================================ */
+
+.text-field, .text-area {
+    -fx-padding: 10;
+    -fx-background-color: -surface-color;
+    -fx-background-radius: 4;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+}
+
+.text-field:focused, .text-area:focused {
+    -fx-border-color: -primary-color;
+}
+
+.search-field {
+    -fx-background-color: rgba(255, 255, 255, 0.9);
+    -fx-background-radius: 20;
+    -fx-border-radius: 20;
+    -fx-padding: 8 15;
+}
+
+/* ============================================
+   Checkboxes
+   ============================================ */
+
+.check-box {
+    -fx-font-size: 14px;
+}
+
+.check-box .box {
+    -fx-background-color: -surface-color;
+    -fx-border-color: -border-color;
+    -fx-border-width: 2;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.check-box:selected .box {
+    -fx-background-color: -primary-color;
+    -fx-border-color: -primary-color;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: white;
+}
+
+/* ============================================
+   ComboBox
+   ============================================ */
+
+.combo-box {
+    -fx-background-color: -surface-color;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+/* ============================================
+   Tabla de estudiantes
+   ============================================ */
+
+.students-table {
+    -fx-background-color: -surface-color;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.students-table .column-header {
+    -fx-background-color: -background-color;
+    -fx-font-weight: bold;
+    -fx-padding: 10;
+}
+
+.students-table .table-row-cell {
+    -fx-padding: 8;
+}
+
+.students-table .table-row-cell:selected {
+    -fx-background-color: -primary-light;
+}
+
+.students-table .table-row-cell:odd {
+    -fx-background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* ============================================
+   Panel del formulario
+   ============================================ */
+
+.form-panel {
+    -fx-background-color: -surface-color;
+    -fx-border-color: -border-color;
+    -fx-border-width: 0 0 0 1;
+}
+
+.form-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-primary;
+}
+
+.section-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-secondary;
+}
+
+.student-form .label {
+    -fx-text-fill: -text-secondary;
+}
+
+/* ============================================
+   Lista de acudientes (CRUD)
+   ============================================ */
+
+.guardians-list {
+    -fx-background-color: -background-color;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+/* ============================================
+   Mensajes de validación
+   ============================================ */
+
+.validation-message {
+    -fx-font-size: 12px;
+    -fx-padding: 5 0;
+}
+
+.validation-message.error {
+    -fx-text-fill: -danger-color;
+}
+
+.status-message {
+    -fx-font-size: 12px;
+    -fx-text-fill: -text-secondary;
+}
+
+.required-note {
+    -fx-font-size: 11px;
+    -fx-text-fill: -text-secondary;
+    -fx-font-style: italic;
+}
+
+.count-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: -text-secondary;
+}
+
+/* ============================================
+   Separadores
+   ============================================ */
+
+.separator {
+    -fx-background-color: -border-color;
+}
+
+.separator .line {
+    -fx-border-color: -border-color;
+    -fx-border-width: 1 0 0 0;
+}
+
+/* ============================================
+   ScrollBars
+   ============================================ */
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: rgba(0, 0, 0, 0.2);
+    -fx-background-radius: 4;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: rgba(0, 0, 0, 0.3);
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-shape: "";
+    -fx-padding: 0;
+}
+
+/* ============================================
+   Tooltips
+   ============================================ */
+
+.tooltip {
+    -fx-background-color: rgba(50, 50, 50, 0.9);
+    -fx-text-fill: white;
+    -fx-padding: 8 12;
+    -fx-background-radius: 4;
+    -fx-font-size: 12px;
+}
+
+/* ============================================
+   Alertas y diálogos
+   ============================================ */
+
+.alert .content {
+    -fx-padding: 20;
+}
+
+.dialog-pane {
+    -fx-background-color: -surface-color;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: -primary-light;
+}
+
+/* ============================================
+   Estados especiales
+   ============================================ */
+
+.disabled {
+    -fx-opacity: 0.5;
+}
+
+/* Animaciones suaves */
+.button,
+.text-field,
+.combo-box,
+.check-box .box {
+    -fx-transition: all 0.2s ease;
+}
