@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -25,8 +26,14 @@ public class DatabaseConnection {
     // Nombre del archivo de base de datos
     private static final String DB_NAME = "registro_estudiantes.db";
 
+    // Directorio de datos de la aplicación (en home del usuario)
+    private static final String APP_DATA_DIR = System.getProperty("user.home") + File.separator + ".registro-estudiantes";
+
+    // Ruta completa al archivo de base de datos
+    private static final String DB_PATH = APP_DATA_DIR + File.separator + DB_NAME;
+
     // URL de conexión JDBC para SQLite
-    private static final String DB_URL = "jdbc:sqlite:" + DB_NAME;
+    private static final String DB_URL = "jdbc:sqlite:" + DB_PATH;
 
     // Ruta al archivo de schema SQL en resources
     private static final String SCHEMA_PATH = "/database/schema.sql";
@@ -66,6 +73,15 @@ public class DatabaseConnection {
     public Connection getConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
             try {
+                // Crear el directorio de datos si no existe
+                File dataDir = new File(APP_DATA_DIR);
+                if (!dataDir.exists()) {
+                    boolean created = dataDir.mkdirs();
+                    if (created) {
+                        logger.info("Directorio de datos creado: {}", APP_DATA_DIR);
+                    }
+                }
+
                 // Cargar el driver de SQLite (opcional en versiones modernas)
                 Class.forName("org.sqlite.JDBC");
 
@@ -77,7 +93,7 @@ public class DatabaseConnection {
                     stmt.execute("PRAGMA foreign_keys = ON");
                 }
 
-                logger.info("Conexión a la base de datos establecida: {}", DB_NAME);
+                logger.info("Conexión a la base de datos establecida: {}", DB_PATH);
 
             } catch (ClassNotFoundException e) {
                 logger.error("Driver SQLite no encontrado", e);
