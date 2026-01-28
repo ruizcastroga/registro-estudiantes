@@ -106,17 +106,36 @@ public class DatabaseConnection {
 
         Connection conn = getConnection();
 
-        // Dividir el schema en sentencias individuales
-        String[] statements = schema.split(";");
+        // Primero, eliminar comentarios línea por línea
+        StringBuilder cleanSchema = new StringBuilder();
+        for (String line : schema.split("\n")) {
+            String trimmedLine = line.trim();
+            // Ignorar líneas que son solo comentarios
+            if (!trimmedLine.startsWith("--") && !trimmedLine.isEmpty()) {
+                // Eliminar comentarios al final de la línea
+                int commentIndex = line.indexOf("--");
+                if (commentIndex > 0) {
+                    cleanSchema.append(line.substring(0, commentIndex));
+                } else {
+                    cleanSchema.append(line);
+                }
+                cleanSchema.append("\n");
+            }
+        }
 
+        // Dividir el schema limpio en sentencias individuales
+        String[] statements = cleanSchema.toString().split(";");
+
+        int executedCount = 0;
         try (Statement stmt = conn.createStatement()) {
             for (String sql : statements) {
                 String trimmedSql = sql.trim();
 
-                // Ignorar líneas vacías y comentarios
-                if (!trimmedSql.isEmpty() && !trimmedSql.startsWith("--")) {
+                // Ignorar sentencias vacías
+                if (!trimmedSql.isEmpty()) {
                     try {
                         stmt.execute(trimmedSql);
+                        executedCount++;
                         logger.debug("Ejecutado: {}",
                             trimmedSql.length() > 50 ? trimmedSql.substring(0, 50) + "..." : trimmedSql);
                     } catch (SQLException e) {
@@ -127,7 +146,7 @@ public class DatabaseConnection {
             }
         }
 
-        logger.info("Base de datos inicializada correctamente");
+        logger.info("Base de datos inicializada correctamente. {} sentencias ejecutadas.", executedCount);
     }
 
     /**
