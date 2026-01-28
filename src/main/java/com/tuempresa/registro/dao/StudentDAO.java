@@ -179,8 +179,8 @@ public class StudentDAO {
                 "is_minor, requires_guardian, photo_path, status) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        Connection conn = dbConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, student.getBarcode());
             stmt.setString(2, student.getFirstName());
@@ -194,9 +194,11 @@ public class StudentDAO {
             int affectedRows = stmt.executeUpdate();
 
             if (affectedRows > 0) {
-                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        student.setId(generatedKeys.getLong(1));
+                // SQLite: usar last_insert_rowid() para obtener el ID generado
+                try (Statement idStmt = conn.createStatement();
+                     ResultSet rs = idStmt.executeQuery("SELECT last_insert_rowid()")) {
+                    if (rs.next()) {
+                        student.setId(rs.getLong(1));
                         student.setCreatedAt(LocalDateTime.now());
                         logger.info("Estudiante guardado: {}", student);
                     }

@@ -172,8 +172,8 @@ public class GuardianDAO {
         String sql = "INSERT INTO guardians (student_id, name, relationship, " +
                 "id_number, phone, authorized) VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        Connection conn = dbConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, guardian.getStudentId());
             stmt.setString(2, guardian.getName());
@@ -185,9 +185,11 @@ public class GuardianDAO {
             int affectedRows = stmt.executeUpdate();
 
             if (affectedRows > 0) {
-                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        guardian.setId(generatedKeys.getLong(1));
+                // SQLite: usar last_insert_rowid() para obtener el ID generado
+                try (Statement idStmt = conn.createStatement();
+                     ResultSet rs = idStmt.executeQuery("SELECT last_insert_rowid()")) {
+                    if (rs.next()) {
+                        guardian.setId(rs.getLong(1));
                         guardian.setCreatedAt(LocalDateTime.now());
                         logger.info("Acudiente guardado: {}", guardian);
                     }
