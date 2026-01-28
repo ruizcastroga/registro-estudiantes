@@ -202,8 +202,8 @@ public class EntryLogDAO {
         String sql = "INSERT INTO entry_logs (student_id, guardian_id, entry_time, " +
                 "exit_time, log_type, scanned_by, notes) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        Connection conn = dbConnection.getConnection();
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setLong(1, entryLog.getStudentId());
 
@@ -230,9 +230,11 @@ public class EntryLogDAO {
             int affectedRows = stmt.executeUpdate();
 
             if (affectedRows > 0) {
-                try (ResultSet generatedKeys = stmt.getGeneratedKeys()) {
-                    if (generatedKeys.next()) {
-                        entryLog.setId(generatedKeys.getLong(1));
+                // SQLite: usar last_insert_rowid() para obtener el ID generado
+                try (Statement idStmt = conn.createStatement();
+                     ResultSet rs = idStmt.executeQuery("SELECT last_insert_rowid()")) {
+                    if (rs.next()) {
+                        entryLog.setId(rs.getLong(1));
                         logger.info("Registro de entrada/salida guardado: {}", entryLog);
                     }
                 }
