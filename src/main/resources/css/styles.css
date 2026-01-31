@@ -455,6 +455,12 @@
     -fx-text-fill: -text-secondary;
 }
 
+.hint-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: -warning-color;
+    -fx-font-style: italic;
+}
+
 .student-form .label {
     -fx-text-fill: -text-secondary;
 }

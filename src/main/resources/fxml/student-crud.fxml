@@ -70,6 +70,14 @@
                             onAction="#onDeleteStudent" styleClass="danger-button"
                             disable="true"/>
 
+                    <Separator orientation="VERTICAL"/>
+
+                    <!-- Botones de importación CSV -->
+                    <Button fx:id="importCsvButton" text="Importar CSV"
+                            onAction="#onImportCsv" styleClass="secondary-button"/>
+                    <Button fx:id="templateButton" text="Plantilla"
+                            onAction="#onGenerateTemplate" styleClass="small-button"/>
+
                     <Region HBox.hgrow="ALWAYS"/>
 
                     <Label fx:id="countLabel" text="0 estudiantes" styleClass="count-label"/>
@@ -173,15 +181,16 @@
 
                 <Separator/>
 
-                <!-- Sección de acudientes -->
+                <!-- Sección de guardianes legales -->
                 <VBox spacing="10">
-                    <Label text="Acudientes Autorizados" styleClass="section-title"/>
+                    <Label text="Guardianes Legales *" styleClass="section-title"/>
+                    <Label text="(Obligatorio si requiere acompañante)" styleClass="hint-label"/>
 
                     <ListView fx:id="guardiansListView" prefHeight="120"
                               styleClass="guardians-list"/>
 
                     <HBox spacing="10">
-                        <Button fx:id="addGuardianButton" text="Agregar Acudiente"
+                        <Button fx:id="addGuardianButton" text="Agregar Guardián"
                                 onAction="#onAddGuardian" styleClass="small-button"/>
                         <Button fx:id="removeGuardianButton" text="Eliminar"
                                 onAction="#onRemoveGuardian" styleClass="small-button"
