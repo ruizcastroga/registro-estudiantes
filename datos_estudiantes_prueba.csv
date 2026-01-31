@@ -1,0 +1,21 @@
+codigo,nombre,apellido,grado,requiere_acompanante,guardian_nombre,guardian_relacion,guardian_telefono
+STU006,Valentina,Gómez Ruiz,2do Primaria,Si,Patricia Ruiz,Madre,555-6001
+STU007,Sebastián,Morales Castro,4to Primaria,Si,Andrea Castro,Madre,555-6002
+STU008,Camila,Herrera Díaz,6to Primaria,Si,Ricardo Herrera,Padre,555-6003
+STU009,Mateo,Jiménez Vargas,Pre-Kinder,Si,Carolina Vargas,Madre,555-6004
+STU010,Isabella,Torres Medina,1ro Primaria,Si,Luis Torres,Padre,555-6005
+STU011,Daniel,Ramírez Ortiz,3ro Secundaria,No,,,
+STU012,Luciana,Flores Mendoza,Kinder,Si,María Mendoza,Madre,555-6007
+STU013,Nicolás,Acosta Rivera,5to Primaria,Si,Fernando Acosta,Padre,555-6008
+STU014,Sofía,Vargas León,2do Secundaria,Si,Gabriela León,Madre,555-6009
+STU015,Emiliano,Cruz Salazar,7mo Secundaria,No,,,
+STU016,Mariana,Reyes Cordero,4to Primaria,Si,Jorge Reyes,Padre,555-6011
+STU017,Santiago,Mendez Paredes,1ro Secundaria,Si,Elena Paredes,Madre,555-6012
+STU018,Valeria,Núñez Espinoza,3ro Primaria,Si,Manuel Núñez,Padre,555-6013
+STU019,Andrés,Delgado Rivas,Pre-Kinder,Si,Sandra Rivas,Madre,555-6014
+STU020,Regina,Ortega Guzmán,6to Primaria,Si,Carlos Ortega,Padre,555-6015
+STU021,Tomás,Peña Aguirre,2do Primaria,Si,Marta Aguirre,Madre,555-6016
+STU022,Antonella,Vega Campos,5to Secundaria,No,,,
+STU023,Gabriel,Soto Guerrero,Kinder,Si,Rosa Guerrero,Madre,555-6018
+STU024,Renata,Castillo Mora,4to Secundaria,Si,Alejandro Castillo,Padre,555-6019
+STU025,Diego,Romero Peña,1ro Primaria,Si,Claudia Peña,Madre,555-6020
