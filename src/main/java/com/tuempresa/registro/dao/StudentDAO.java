@@ -56,12 +56,13 @@ public class StudentDAO {
 
     /**
      * Busca un estudiante por su código de barras.
+     * Retorna el estudiante sin importar su estado (activo/inactivo/suspendido).
      *
      * @param barcode Código de barras del carné
      * @return Optional con el estudiante si existe
      */
     public Optional<Student> findByBarcode(String barcode) {
-        String sql = "SELECT * FROM students WHERE barcode = ? AND status = 'active'";
+        String sql = "SELECT * FROM students WHERE barcode = ?";
 
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -71,7 +72,7 @@ public class StudentDAO {
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     Student student = mapResultSetToStudent(rs);
-                    logger.debug("Estudiante encontrado: {}", student.getFullName());
+                    logger.debug("Estudiante encontrado: {} (estado: {})", student.getFullName(), student.getStatus());
                     return Optional.of(student);
                 }
             }
@@ -134,6 +135,7 @@ public class StudentDAO {
 
     /**
      * Busca estudiantes por nombre o apellido.
+     * Busca en todos los estudiantes sin importar su estado.
      *
      * @param searchTerm Término de búsqueda
      * @return Lista de estudiantes que coinciden
@@ -141,7 +143,6 @@ public class StudentDAO {
     public List<Student> searchByName(String searchTerm) {
         String sql = "SELECT * FROM students WHERE " +
                 "(first_name LIKE ? OR last_name LIKE ? OR barcode LIKE ?) " +
-                "AND status = 'active' " +
                 "ORDER BY last_name, first_name";
 
         List<Student> students = new ArrayList<>();
