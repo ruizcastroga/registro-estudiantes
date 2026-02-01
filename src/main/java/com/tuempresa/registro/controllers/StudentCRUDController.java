@@ -69,6 +69,7 @@ public class StudentCRUDController implements Initializable {
     @FXML private Button editButton;
     @FXML private Button deleteButton;
     @FXML private Button removeGuardianButton;
+    @FXML private Button clearSearchButton;
 
     // Labels de estado
     @FXML private Label countLabel;
@@ -181,6 +182,13 @@ public class StudentCRUDController implements Initializable {
                 requiresGuardianCheck.setSelected(true);
             }
         });
+
+        // Búsqueda en tiempo real
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            performSearch(newVal);
+            // Mostrar/ocultar botón de limpiar
+            clearSearchButton.setVisible(newVal != null && !newVal.trim().isEmpty());
+        });
     }
 
     /**
@@ -202,22 +210,17 @@ public class StudentCRUDController implements Initializable {
     }
 
     /**
-     * Manejador para búsqueda.
+     * Realiza la búsqueda en tiempo real.
      */
-    @FXML
-    private void onSearch() {
-        String searchTerm = searchField.getText().trim();
-
-        if (searchTerm.isEmpty()) {
+    private void performSearch(String searchTerm) {
+        if (searchTerm == null || searchTerm.trim().isEmpty()) {
             loadStudents();
             return;
         }
 
         studentsList.clear();
-        studentsList.addAll(studentService.searchStudents(searchTerm));
+        studentsList.addAll(studentService.searchStudents(searchTerm.trim()));
         updateCountLabel();
-
-        setStatusMessage("Búsqueda completada: " + studentsList.size() + " resultados");
     }
 
     /**
@@ -228,6 +231,91 @@ public class StudentCRUDController implements Initializable {
         searchField.clear();
         loadStudents();
         setStatusMessage("Filtro limpiado");
+    }
+
+    /**
+     * Manejador para mostrar ayuda.
+     */
+    @FXML
+    private void onShowHelp() {
+        Alert helpDialog = new Alert(Alert.AlertType.INFORMATION);
+        helpDialog.setTitle("Ayuda - Guía Rápida");
+        helpDialog.setHeaderText("Sistema de Registro de Estudiantes");
+        helpDialog.getDialogPane().setPrefWidth(550);
+
+        String helpContent = """
+            ═══════════════════════════════════════════════════
+            📋 GESTIÓN DE ESTUDIANTES
+            ═══════════════════════════════════════════════════
+
+            🔍 BÚSQUEDA
+            • Escribe en el campo de búsqueda para filtrar estudiantes
+            • La búsqueda es instantánea (no necesita botón)
+            • Busca por nombre, apellido o código de barras
+            • Usa el botón ✕ para limpiar la búsqueda
+
+            ➕ AGREGAR ESTUDIANTE
+            1. Clic en "+ Nuevo Estudiante"
+            2. Completa los campos obligatorios (*)
+            3. Si "Requiere acompañante" está marcado, debes agregar
+               al menos un Guardián Legal
+            4. Clic en "Guardar" e ingresa la contraseña
+
+            ✏️ EDITAR ESTUDIANTE
+            1. Selecciona un estudiante de la tabla
+            2. Clic en "Editar"
+            3. Modifica los datos necesarios
+            4. Clic en "Guardar" e ingresa la contraseña
+
+            🗑️ ELIMINAR ESTUDIANTE
+            1. Selecciona un estudiante de la tabla
+            2. Clic en "Eliminar"
+            3. Ingresa la contraseña y confirma la eliminación
+
+            ═══════════════════════════════════════════════════
+            📥 IMPORTACIÓN MASIVA (CSV)
+            ═══════════════════════════════════════════════════
+
+            📄 GENERAR PLANTILLA
+            • Clic en "Plantilla" para descargar un archivo de ejemplo
+            • Abre el archivo en Excel y agrega tus estudiantes
+            • Guarda como CSV (separado por comas)
+
+            📤 IMPORTAR DATOS
+            1. Clic en "Importar CSV"
+            2. Ingresa la contraseña del sistema
+            3. Selecciona tu archivo CSV
+            4. El sistema mostrará un resumen de la importación
+
+            Columnas del CSV:
+            codigo, nombre, apellido, grado, requiere_acompanante,
+            guardian_nombre, guardian_relacion, guardian_telefono
+
+            ═══════════════════════════════════════════════════
+            👨‍👩‍👧 GUARDIANES LEGALES
+            ═══════════════════════════════════════════════════
+
+            • Son las personas autorizadas para recoger al estudiante
+            • Obligatorio si el estudiante "Requiere acompañante"
+            • Incluye: nombre, relación (Madre/Padre/etc.) y teléfono
+
+            ═══════════════════════════════════════════════════
+            🔐 SEGURIDAD
+            ═══════════════════════════════════════════════════
+
+            • Todas las operaciones de modificación requieren contraseña
+            • La contraseña se configura en el primer uso del sistema
+            • Contacta al administrador si olvidaste la contraseña
+            """;
+
+        TextArea textArea = new TextArea(helpContent);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setPrefHeight(450);
+        textArea.setStyle("-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 12px;");
+
+        helpDialog.getDialogPane().setContent(textArea);
+        helpDialog.showAndWait();
     }
 
     /**

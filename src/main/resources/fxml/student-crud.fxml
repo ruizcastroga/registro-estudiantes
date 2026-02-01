@@ -24,7 +24,7 @@
                 </padding>
 
                 <!-- Botón volver -->
-                <Button fx:id="backButton" text="Volver al Scanner"
+                <Button fx:id="backButton" text="← Volver al Scanner"
                         onAction="#onBackToScanner" styleClass="secondary-button"/>
 
                 <Region HBox.hgrow="ALWAYS"/>
@@ -34,18 +34,9 @@
 
                 <Region HBox.hgrow="ALWAYS"/>
 
-                <!-- Búsqueda -->
-                <HBox spacing="10" alignment="CENTER_RIGHT">
-                    <TextField fx:id="searchField"
-                               promptText="Buscar por nombre o código..."
-                               prefWidth="250"
-                               onAction="#onSearch"
-                               styleClass="search-field"/>
-                    <Button fx:id="searchButton" text="Buscar"
-                            onAction="#onSearch" styleClass="primary-button"/>
-                    <Button fx:id="clearSearchButton" text="Limpiar"
-                            onAction="#onClearSearch" styleClass="small-button"/>
-                </HBox>
+                <!-- Botón de ayuda -->
+                <Button fx:id="helpButton" text="? Ayuda"
+                        onAction="#onShowHelp" styleClass="help-button"/>
             </HBox>
         </VBox>
     </top>
@@ -59,9 +50,24 @@
                     <Insets top="15" right="10" bottom="15" left="15"/>
                 </padding>
 
+                <!-- Barra de búsqueda -->
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <TextField fx:id="searchField"
+                               promptText="🔍 Buscar por nombre o código..."
+                               prefWidth="300"
+                               styleClass="search-field"/>
+                    <Button fx:id="clearSearchButton" text="✕"
+                            onAction="#onClearSearch" styleClass="small-button"
+                            visible="false"/>
+
+                    <Region HBox.hgrow="ALWAYS"/>
+
+                    <Label fx:id="countLabel" text="0 estudiantes" styleClass="count-label"/>
+                </HBox>
+
                 <!-- Barra de acciones -->
                 <HBox spacing="10" alignment="CENTER_LEFT">
-                    <Button fx:id="newButton" text="Nuevo Estudiante"
+                    <Button fx:id="newButton" text="+ Nuevo Estudiante"
                             onAction="#onNewStudent" styleClass="primary-button"/>
                     <Button fx:id="editButton" text="Editar"
                             onAction="#onEditStudent" styleClass="secondary-button"
@@ -77,10 +83,6 @@
                             onAction="#onImportCsv" styleClass="secondary-button"/>
                     <Button fx:id="templateButton" text="Plantilla"
                             onAction="#onGenerateTemplate" styleClass="small-button"/>
-
-                    <Region HBox.hgrow="ALWAYS"/>
-
-                    <Label fx:id="countLabel" text="0 estudiantes" styleClass="count-label"/>
                 </HBox>
 
                 <!-- Tabla de estudiantes -->
