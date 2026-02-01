@@ -176,6 +176,11 @@
     -fx-background-color: linear-gradient(to bottom, -danger-light, -surface-color);
 }
 
+.result-panel.suspended {
+    -fx-border-color: #9C27B0;
+    -fx-background-color: linear-gradient(to bottom, #E1BEE7, -surface-color);
+}
+
 .student-name {
     -fx-font-size: 32px;
     -fx-font-weight: bold;
@@ -207,6 +212,28 @@
 .status-label.status-inactive {
     -fx-text-fill: white;
     -fx-background-color: -danger-color;
+}
+
+.status-label.status-suspended {
+    -fx-text-fill: white;
+    -fx-background-color: #9C27B0;
+}
+
+.activity-status-label {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16;
+    -fx-background-radius: 6;
+}
+
+.activity-status-label.status-inactive {
+    -fx-text-fill: white;
+    -fx-background-color: -danger-color;
+}
+
+.activity-status-label.status-suspended {
+    -fx-text-fill: white;
+    -fx-background-color: #9C27B0;
 }
 
 /* ============================================

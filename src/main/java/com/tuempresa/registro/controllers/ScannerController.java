@@ -60,6 +60,7 @@ public class ScannerController implements Initializable {
     @FXML private Label studentNameLabel;
     @FXML private Label studentGradeLabel;
     @FXML private Label statusLabel;
+    @FXML private Label activityStatusLabel;
     @FXML private VBox guardiansPanel;
     @FXML private VBox guardiansList;
     @FXML private VBox notFoundPanel;
@@ -231,10 +232,18 @@ public class ScannerController implements Initializable {
 
     /**
      * Muestra el resultado del escaneo en la interfaz.
+     * Jerarquía de información:
+     * 1. Estado de salida (PUEDE SALIR / REQUIERE ACOMPAÑANTE)
+     * 2. Estado de actividad (INACTIVO / SUSPENDIDO) - solo si aplica
+     * 3. Lista de guardianes legales - solo si requiere acompañante
      */
     private void displayScanResult(StudentService.ScanResult result, String barcode) {
         // Ocultar instrucciones
         instructionLabel.setVisible(false);
+
+        // Resetear estado de actividad
+        activityStatusLabel.setVisible(false);
+        activityStatusLabel.setManaged(false);
 
         if (result.isFound()) {
             Student student = result.getStudent();
@@ -249,27 +258,45 @@ public class ScannerController implements Initializable {
             studentNameLabel.setText(student.getFullName());
             studentGradeLabel.setText(student.getGrade() != null ? student.getGrade() : "");
 
-            // Mostrar estado
-            statusLabel.setText(result.getMessage());
-
             // Aplicar estilos según el estado
-            resultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive");
+            resultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive", "suspended");
+            statusLabel.getStyleClass().removeAll("status-ok", "status-warning", "status-inactive", "status-suspended");
+            activityStatusLabel.getStyleClass().removeAll("status-inactive", "status-suspended");
 
-            if (result.canExit()) {
-                resultPanel.getStyleClass().add("can-exit");
-                statusLabel.getStyleClass().removeAll("status-warning", "status-inactive");
-                statusLabel.getStyleClass().add("status-ok");
+            // Verificar estado de actividad primero (inactivo/suspendido)
+            if (result.isNotActive()) {
+                // Estudiante inactivo o suspendido
+                if (result.isSuspended()) {
+                    resultPanel.getStyleClass().add("suspended");
+                    statusLabel.setText("SUSPENDIDO");
+                    statusLabel.getStyleClass().add("status-suspended");
+                } else {
+                    resultPanel.getStyleClass().add("inactive");
+                    statusLabel.setText("INACTIVO");
+                    statusLabel.getStyleClass().add("status-inactive");
+                }
+                // Ocultar guardianes cuando está inactivo/suspendido
+                guardiansPanel.setVisible(false);
+                guardiansPanel.setManaged(false);
+
             } else if (result.requiresGuardian()) {
+                // Requiere acompañante (activo)
                 resultPanel.getStyleClass().add("requires-guardian");
-                statusLabel.getStyleClass().removeAll("status-ok", "status-inactive");
+                statusLabel.setText("REQUIERE ACOMPAÑANTE");
                 statusLabel.getStyleClass().add("status-warning");
 
-                // Mostrar acudientes autorizados
+                // Mostrar guardianes legales
                 displayGuardians(student.getGuardians());
+
             } else {
-                resultPanel.getStyleClass().add("inactive");
-                statusLabel.getStyleClass().removeAll("status-ok", "status-warning");
-                statusLabel.getStyleClass().add("status-inactive");
+                // Puede salir solo (activo)
+                resultPanel.getStyleClass().add("can-exit");
+                statusLabel.setText("PUEDE SALIR");
+                statusLabel.getStyleClass().add("status-ok");
+
+                // Ocultar guardianes
+                guardiansPanel.setVisible(false);
+                guardiansPanel.setManaged(false);
             }
 
         } else {
@@ -340,9 +367,11 @@ public class ScannerController implements Initializable {
         instructionLabel.setVisible(true);
         guardiansPanel.setVisible(false);
         guardiansPanel.setManaged(false);
+        activityStatusLabel.setVisible(false);
+        activityStatusLabel.setManaged(false);
 
         // Limpiar estilos
-        resultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive");
+        resultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive", "suspended");
     }
 
     /**

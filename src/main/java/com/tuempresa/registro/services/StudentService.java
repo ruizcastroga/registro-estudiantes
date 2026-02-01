@@ -59,10 +59,15 @@ public class StudentService {
         List<Guardian> guardians = guardianDAO.findAuthorizedByStudentId(student.getId());
         student.setGuardians(guardians);
 
-        // Verificar si el estudiante está activo
-        if (!student.isActive()) {
+        // Verificar si el estudiante está activo o suspendido
+        if ("suspended".equals(student.getStatus())) {
+            logger.warn("Estudiante suspendido: {}", student.getFullName());
+            return new ScanResult(true, student, "SUSPENDIDO", ScanResult.Status.SUSPENDED);
+        }
+
+        if ("inactive".equals(student.getStatus())) {
             logger.warn("Estudiante inactivo: {}", student.getFullName());
-            return new ScanResult(true, student, "Estudiante inactivo", ScanResult.Status.INACTIVE);
+            return new ScanResult(true, student, "INACTIVO", ScanResult.Status.INACTIVE);
         }
 
         // Determinar si puede salir solo
@@ -285,7 +290,8 @@ public class StudentService {
             CAN_EXIT,           // Puede salir solo
             REQUIRES_GUARDIAN,  // Requiere acompañante
             NOT_FOUND,          // No encontrado
-            INACTIVE            // Estudiante inactivo
+            INACTIVE,           // Estudiante inactivo
+            SUSPENDED           // Estudiante suspendido
         }
 
         public ScanResult(boolean found, Student student, String message, Status status) {
@@ -306,6 +312,18 @@ public class StudentService {
 
         public boolean requiresGuardian() {
             return status == Status.REQUIRES_GUARDIAN;
+        }
+
+        public boolean isInactive() {
+            return status == Status.INACTIVE;
+        }
+
+        public boolean isSuspended() {
+            return status == Status.SUSPENDED;
+        }
+
+        public boolean isNotActive() {
+            return status == Status.INACTIVE || status == Status.SUSPENDED;
         }
     }
 }

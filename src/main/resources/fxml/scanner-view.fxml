@@ -83,10 +83,15 @@
                 <Label fx:id="statusLabel" text=""
                        styleClass="status-label"/>
 
-                <!-- Lista de acudientes (si requiere) -->
+                <!-- Estado de actividad (INACTIVO / SUSPENDIDO) -->
+                <Label fx:id="activityStatusLabel" text=""
+                       styleClass="activity-status-label"
+                       visible="false" managed="false"/>
+
+                <!-- Lista de guardianes legales (si requiere) -->
                 <VBox fx:id="guardiansPanel" alignment="CENTER" spacing="5"
                       visible="false" managed="false">
-                    <Label text="Acudientes autorizados:" styleClass="guardians-title"/>
+                    <Label text="Guardianes Legales:" styleClass="guardians-title"/>
                     <VBox fx:id="guardiansList" spacing="3" alignment="CENTER"/>
                 </VBox>
             </VBox>
