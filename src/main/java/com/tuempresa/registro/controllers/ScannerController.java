@@ -234,16 +234,12 @@ public class ScannerController implements Initializable {
      * Muestra el resultado del escaneo en la interfaz.
      * Jerarquía de información:
      * 1. Estado de salida (PUEDE SALIR / REQUIERE ACOMPAÑANTE)
-     * 2. Estado de actividad (INACTIVO / SUSPENDIDO) - solo si aplica
-     * 3. Lista de guardianes legales - solo si requiere acompañante
+     * 2. Estado de actividad (ACTIVO / INACTIVO / SUSPENDIDO) - siempre visible
+     * 3. Lista de guardianes legales - solo si requiere acompañante y está activo
      */
     private void displayScanResult(StudentService.ScanResult result, String barcode) {
         // Ocultar instrucciones
         instructionLabel.setVisible(false);
-
-        // Resetear estado de actividad
-        activityStatusLabel.setVisible(false);
-        activityStatusLabel.setManaged(false);
 
         if (result.isFound()) {
             Student student = result.getStudent();
@@ -261,21 +257,32 @@ public class ScannerController implements Initializable {
             // Aplicar estilos según el estado
             resultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive", "suspended");
             statusLabel.getStyleClass().removeAll("status-ok", "status-warning", "status-inactive", "status-suspended");
-            activityStatusLabel.getStyleClass().removeAll("status-inactive", "status-suspended");
+            activityStatusLabel.getStyleClass().removeAll("status-active", "status-inactive", "status-suspended");
 
-            // Verificar estado de actividad primero (inactivo/suspendido)
-            if (result.isNotActive()) {
-                // Estudiante inactivo o suspendido
-                if (result.isSuspended()) {
-                    resultPanel.getStyleClass().add("suspended");
-                    statusLabel.setText("SUSPENDIDO");
-                    statusLabel.getStyleClass().add("status-suspended");
-                } else {
-                    resultPanel.getStyleClass().add("inactive");
-                    statusLabel.setText("INACTIVO");
-                    statusLabel.getStyleClass().add("status-inactive");
-                }
-                // Ocultar guardianes cuando está inactivo/suspendido
+            // Siempre mostrar el estado de actividad
+            activityStatusLabel.setVisible(true);
+            activityStatusLabel.setManaged(true);
+
+            // Verificar estado de actividad (inactivo/suspendido/activo)
+            if (result.isSuspended()) {
+                // Estudiante suspendido
+                resultPanel.getStyleClass().add("suspended");
+                statusLabel.setText("NO PUEDE SALIR");
+                statusLabel.getStyleClass().add("status-suspended");
+                activityStatusLabel.setText("SUSPENDIDO");
+                activityStatusLabel.getStyleClass().add("status-suspended");
+                // Ocultar guardianes
+                guardiansPanel.setVisible(false);
+                guardiansPanel.setManaged(false);
+
+            } else if (result.isInactive()) {
+                // Estudiante inactivo
+                resultPanel.getStyleClass().add("inactive");
+                statusLabel.setText("NO PUEDE SALIR");
+                statusLabel.getStyleClass().add("status-inactive");
+                activityStatusLabel.setText("INACTIVO");
+                activityStatusLabel.getStyleClass().add("status-inactive");
+                // Ocultar guardianes
                 guardiansPanel.setVisible(false);
                 guardiansPanel.setManaged(false);
 
@@ -284,7 +291,8 @@ public class ScannerController implements Initializable {
                 resultPanel.getStyleClass().add("requires-guardian");
                 statusLabel.setText("REQUIERE ACOMPAÑANTE");
                 statusLabel.getStyleClass().add("status-warning");
-
+                activityStatusLabel.setText("ACTIVO");
+                activityStatusLabel.getStyleClass().add("status-active");
                 // Mostrar guardianes legales
                 displayGuardians(student.getGuardians());
 
@@ -293,7 +301,8 @@ public class ScannerController implements Initializable {
                 resultPanel.getStyleClass().add("can-exit");
                 statusLabel.setText("PUEDE SALIR");
                 statusLabel.getStyleClass().add("status-ok");
-
+                activityStatusLabel.setText("ACTIVO");
+                activityStatusLabel.getStyleClass().add("status-active");
                 // Ocultar guardianes
                 guardiansPanel.setVisible(false);
                 guardiansPanel.setManaged(false);
@@ -305,6 +314,8 @@ public class ScannerController implements Initializable {
             resultPanel.setManaged(false);
             notFoundPanel.setVisible(true);
             notFoundPanel.setManaged(true);
+            activityStatusLabel.setVisible(false);
+            activityStatusLabel.setManaged(false);
 
             scannedCodeLabel.setText("Código: " + barcode);
         }
