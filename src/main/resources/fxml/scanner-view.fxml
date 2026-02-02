@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
@@ -88,10 +89,10 @@
                        styleClass="activity-status-label"
                        visible="false" managed="false"/>
 
-                <!-- Lista de guardianes legales (si requiere) -->
+                <!-- Lista de tutores legales (si requiere) -->
                 <VBox fx:id="guardiansPanel" alignment="CENTER" spacing="5"
                       visible="false" managed="false">
-                    <Label text="Guardianes Legales:" styleClass="guardians-title"/>
+                    <Label text="Tutores Legales:" styleClass="guardians-title"/>
                     <VBox fx:id="guardiansList" spacing="3" alignment="CENTER"/>
                 </VBox>
             </VBox>
@@ -145,6 +146,12 @@
             <padding>
                 <Insets top="10" right="20" bottom="10" left="20"/>
             </padding>
+
+            <!-- Escudo del colegio (personalizable) -->
+            <ImageView fx:id="schoolShieldImage" fitHeight="40" fitWidth="40"
+                       preserveRatio="true" styleClass="school-shield"/>
+
+            <Separator orientation="VERTICAL"/>
 
             <!-- Indicador de estado -->
             <HBox alignment="CENTER_LEFT" spacing="8">

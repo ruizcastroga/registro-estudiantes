@@ -17,13 +17,18 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -70,6 +75,7 @@ public class ScannerController implements Initializable {
     @FXML private Label statusIndicator;
     @FXML private Label connectionStatusLabel;
     @FXML private Label licenseInfoLabel;
+    @FXML private ImageView schoolShieldImage;
 
     // Servicios
     private StudentService studentService;
@@ -116,6 +122,9 @@ public class ScannerController implements Initializable {
 
         // Configurar información de licencia
         setupLicenseInfo();
+
+        // Cargar escudo del colegio si existe
+        loadSchoolShield();
 
         // Enfocar el campo de entrada al iniciar
         Platform.runLater(() -> barcodeInput.requestFocus());
@@ -233,9 +242,9 @@ public class ScannerController implements Initializable {
     /**
      * Muestra el resultado del escaneo en la interfaz.
      * Jerarquía de información:
-     * 1. Estado de salida (PUEDE SALIR / REQUIERE ACOMPAÑANTE)
+     * 1. Estado de acceso (PUEDE SALIR / REQUIERE ACOMPAÑANTE / NO PUEDE ENTRAR)
      * 2. Estado de actividad (ACTIVO / INACTIVO / SUSPENDIDO) - siempre visible
-     * 3. Lista de guardianes legales - solo si requiere acompañante y está activo
+     * 3. Lista de tutores legales - solo si requiere acompañante y está activo
      */
     private void displayScanResult(StudentService.ScanResult result, String barcode) {
         // Ocultar instrucciones
@@ -265,24 +274,24 @@ public class ScannerController implements Initializable {
 
             // Verificar estado de actividad (inactivo/suspendido/activo)
             if (result.isSuspended()) {
-                // Estudiante suspendido
+                // Estudiante suspendido - medida de seguridad
                 resultPanel.getStyleClass().add("suspended");
-                statusLabel.setText("NO PUEDE SALIR");
+                statusLabel.setText("NO PUEDE ENTRAR");
                 statusLabel.getStyleClass().add("status-suspended");
                 activityStatusLabel.setText("SUSPENDIDO");
                 activityStatusLabel.getStyleClass().add("status-suspended");
-                // Ocultar guardianes
+                // Ocultar tutores
                 guardiansPanel.setVisible(false);
                 guardiansPanel.setManaged(false);
 
             } else if (result.isInactive()) {
-                // Estudiante inactivo
+                // Estudiante inactivo - medida de seguridad (ya no pertenece a la institución)
                 resultPanel.getStyleClass().add("inactive");
-                statusLabel.setText("NO PUEDE SALIR");
+                statusLabel.setText("NO PUEDE ENTRAR");
                 statusLabel.getStyleClass().add("status-inactive");
                 activityStatusLabel.setText("INACTIVO");
                 activityStatusLabel.getStyleClass().add("status-inactive");
-                // Ocultar guardianes
+                // Ocultar tutores
                 guardiansPanel.setVisible(false);
                 guardiansPanel.setManaged(false);
 
@@ -293,7 +302,7 @@ public class ScannerController implements Initializable {
                 statusLabel.getStyleClass().add("status-warning");
                 activityStatusLabel.setText("ACTIVO");
                 activityStatusLabel.getStyleClass().add("status-active");
-                // Mostrar guardianes legales
+                // Mostrar tutores legales
                 displayGuardians(student.getGuardians());
 
             } else {
@@ -322,7 +331,7 @@ public class ScannerController implements Initializable {
     }
 
     /**
-     * Muestra la lista de acudientes autorizados.
+     * Muestra la lista de tutores legales autorizados.
      */
     private void displayGuardians(List<Guardian> guardians) {
         if (guardians == null || guardians.isEmpty()) {
@@ -467,6 +476,35 @@ public class ScannerController implements Initializable {
 
         } catch (IOException e) {
             logger.error("Error al abrir registro rápido", e);
+        }
+    }
+
+    /**
+     * Carga el escudo del colegio desde el directorio de configuración.
+     * Busca en: ~/.registro-estudiantes/school_shield.png
+     * Si no existe, oculta el ImageView.
+     */
+    private void loadSchoolShield() {
+        try {
+            // Buscar en el directorio de configuración del usuario
+            String userHome = System.getProperty("user.home");
+            File shieldFile = new File(userHome, ".registro-estudiantes/school_shield.png");
+
+            if (shieldFile.exists() && shieldFile.isFile()) {
+                try (InputStream is = new FileInputStream(shieldFile)) {
+                    Image shieldImage = new Image(is);
+                    schoolShieldImage.setImage(shieldImage);
+                    schoolShieldImage.setVisible(true);
+                    logger.info("Escudo del colegio cargado desde: {}", shieldFile.getAbsolutePath());
+                }
+            } else {
+                // No hay escudo personalizado, ocultar el ImageView
+                schoolShieldImage.setVisible(false);
+                logger.debug("No se encontró escudo del colegio en: {}", shieldFile.getAbsolutePath());
+            }
+        } catch (Exception e) {
+            logger.warn("Error al cargar escudo del colegio: {}", e.getMessage());
+            schoolShieldImage.setVisible(false);
         }
     }
 

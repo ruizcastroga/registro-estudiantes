@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * Servicio para importar estudiantes desde archivos CSV.
  * Formato esperado del CSV:
- * codigo,nombre,apellido,grado,requiere_acompañante,nombre_guardian,relacion_guardian,telefono_guardian
+ * codigo,nombre,apellido,grado,requiere_acompañante,tutor_nombre,tutor_relacion,tutor_telefono
  */
 public class CsvImportService {
 
@@ -176,7 +176,7 @@ public class CsvImportService {
 
     /**
      * Mapea las columnas del CSV a los campos esperados.
-     * Retorna: [codigo, nombre, apellido, grado, requiere_acomp, guardian_nombre, guardian_rel, guardian_tel]
+     * Retorna: [codigo, nombre, apellido, grado, requiere_acomp, tutor_nombre, tutor_rel, tutor_tel]
      */
     private int[] mapColumns(String[] headers) {
         int[] mapping = new int[]{-1, -1, -1, -1, -1, -1, -1, -1};
@@ -189,20 +189,20 @@ public class CsvImportService {
 
             if (header.contains("codigo") || header.contains("barcode") || header.contains("code")) {
                 mapping[0] = i;
-            } else if (header.contains("nombre") && !header.contains("apellido") && !header.contains("guardian")) {
+            } else if (header.contains("nombre") && !header.contains("apellido") && !header.contains("guardian") && !header.contains("tutor")) {
                 mapping[1] = i;
             } else if (header.contains("apellido") || header.contains("last")) {
                 mapping[2] = i;
             } else if (header.contains("grado") || header.contains("curso") || header.contains("grade")) {
                 mapping[3] = i;
-            } else if (header.contains("requiere") || header.contains("acompanante") || header.contains("guardian")) {
+            } else if (header.contains("requiere") || header.contains("acompanante")) {
                 if (!header.contains("nombre") && !header.contains("relacion") && !header.contains("telefono")) {
                     mapping[4] = i;
                 }
             }
 
-            // Columnas de guardián
-            if (header.contains("guardian") || header.contains("acudiente") || header.contains("tutor")) {
+            // Columnas de tutor (también acepta guardian y acudiente para compatibilidad)
+            if (header.contains("tutor") || header.contains("guardian") || header.contains("acudiente")) {
                 if (header.contains("nombre") || header.contains("name")) {
                     mapping[5] = i;
                 } else if (header.contains("relacion") || header.contains("parentesco")) {
@@ -312,7 +312,7 @@ public class CsvImportService {
             writer.print('\ufeff');
 
             // Encabezados
-            writer.println("codigo,nombre,apellido,grado,requiere_acompanante,guardian_nombre,guardian_relacion,guardian_telefono");
+            writer.println("codigo,nombre,apellido,grado,requiere_acompanante,tutor_nombre,tutor_relacion,tutor_telefono");
 
             // Ejemplos
             writer.println("EST001,Juan,García López,5to Primaria,Si,María López,Madre,555-1234");
