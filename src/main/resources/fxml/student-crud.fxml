@@ -183,16 +183,16 @@
 
                 <Separator/>
 
-                <!-- Sección de guardianes legales -->
+                <!-- Sección de tutores legales -->
                 <VBox spacing="10">
-                    <Label text="Guardianes Legales *" styleClass="section-title"/>
+                    <Label text="Tutores Legales *" styleClass="section-title"/>
                     <Label text="(Obligatorio si requiere acompañante)" styleClass="hint-label"/>
 
                     <ListView fx:id="guardiansListView" prefHeight="120"
                               styleClass="guardians-list"/>
 
                     <HBox spacing="10">
-                        <Button fx:id="addGuardianButton" text="Agregar Guardián"
+                        <Button fx:id="addGuardianButton" text="Agregar Tutor"
                                 onAction="#onAddGuardian" styleClass="small-button"/>
                         <Button fx:id="removeGuardianButton" text="Eliminar"
                                 onAction="#onRemoveGuardian" styleClass="small-button"

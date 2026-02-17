@@ -242,7 +242,7 @@
 }
 
 /* ============================================
-   Panel de acudientes
+   Panel de tutores legales
    ============================================ */
 
 .guardians-title {
@@ -514,7 +514,7 @@
 }
 
 /* ============================================
-   Lista de acudientes (CRUD)
+   Lista de tutores legales (CRUD)
    ============================================ */
 
 .guardians-list {
@@ -622,6 +622,18 @@
 
 .dialog-pane .header-panel {
     -fx-background-color: -primary-light;
+}
+
+/* ============================================
+   Escudo del colegio
+   ============================================ */
+
+.school-shield {
+    -fx-opacity: 0.9;
+}
+
+.school-shield:hover {
+    -fx-opacity: 1.0;
 }
 
 /* ============================================

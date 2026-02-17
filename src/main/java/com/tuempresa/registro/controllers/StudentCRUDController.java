@@ -258,7 +258,7 @@ public class StudentCRUDController implements Initializable {
             1. Clic en "+ Nuevo Estudiante"
             2. Completa los campos obligatorios (*)
             3. Si "Requiere acompañante" está marcado, debes agregar
-               al menos un Guardián Legal
+               al menos un Tutor Legal
             4. Clic en "Guardar" e ingresa la contraseña
 
             ✏️ EDITAR ESTUDIANTE
@@ -289,10 +289,10 @@ public class StudentCRUDController implements Initializable {
 
             Columnas del CSV:
             codigo, nombre, apellido, grado, requiere_acompanante,
-            guardian_nombre, guardian_relacion, guardian_telefono
+            tutor_nombre, tutor_relacion, tutor_telefono
 
             ═══════════════════════════════════════════════════
-            👨‍👩‍👧 GUARDIANES LEGALES
+            👨‍👩‍👧 TUTORES LEGALES
             ═══════════════════════════════════════════════════
 
             • Son las personas autorizadas para recoger al estudiante
@@ -455,14 +455,14 @@ public class StudentCRUDController implements Initializable {
     }
 
     /**
-     * Manejador para agregar guardián legal.
+     * Manejador para agregar tutor legal.
      */
     @FXML
     private void onAddGuardian() {
-        // Crear diálogo personalizado para guardián
+        // Crear diálogo personalizado para tutor
         Dialog<Guardian> dialog = new Dialog<>();
-        dialog.setTitle("Agregar Guardián Legal");
-        dialog.setHeaderText("Ingrese los datos del guardián legal");
+        dialog.setTitle("Agregar Tutor Legal");
+        dialog.setHeaderText("Ingrese los datos del tutor legal");
 
         ButtonType addButtonType = new ButtonType("Agregar", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(addButtonType, ButtonType.CANCEL);
@@ -782,9 +782,9 @@ public class StudentCRUDController implements Initializable {
             return false;
         }
 
-        // Validar que si requiere acompañante, tenga al menos un guardián
+        // Validar que si requiere acompañante, tenga al menos un tutor
         if (requiresGuardianCheck.isSelected() && currentGuardians.isEmpty()) {
-            showValidationError("Debe agregar al menos un guardián legal");
+            showValidationError("Debe agregar al menos un tutor legal");
             return false;
         }
 
