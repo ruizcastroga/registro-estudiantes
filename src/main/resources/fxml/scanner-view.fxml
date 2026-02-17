@@ -149,7 +149,7 @@
 
             <!-- Escudo del colegio (personalizable - clic para cambiar) -->
             <StackPane fx:id="shieldContainer" styleClass="shield-container"
-                       onMouseClicked="#onShieldClick" cursor="HAND">
+                       onMouseClicked="#onShieldClick">
                 <ImageView fx:id="schoolShieldImage" fitHeight="40" fitWidth="40"
                            preserveRatio="true" styleClass="school-shield"/>
                 <Label fx:id="shieldPlaceholder" text="+ Escudo"
