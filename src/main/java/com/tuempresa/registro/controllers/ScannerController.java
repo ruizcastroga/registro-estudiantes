@@ -19,9 +19,14 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +80,9 @@ public class ScannerController implements Initializable {
     @FXML private Label statusIndicator;
     @FXML private Label connectionStatusLabel;
     @FXML private Label licenseInfoLabel;
+    @FXML private StackPane shieldContainer;
     @FXML private ImageView schoolShieldImage;
+    @FXML private Label shieldPlaceholder;
 
     // Servicios
     private StudentService studentService;
@@ -482,7 +489,7 @@ public class ScannerController implements Initializable {
     /**
      * Carga el escudo del colegio desde el directorio de configuración.
      * Busca en: ~/.registro-estudiantes/school_shield.png
-     * Si no existe, oculta el ImageView.
+     * Si no existe, muestra el placeholder.
      */
     private void loadSchoolShield() {
         try {
@@ -495,16 +502,69 @@ public class ScannerController implements Initializable {
                     Image shieldImage = new Image(is);
                     schoolShieldImage.setImage(shieldImage);
                     schoolShieldImage.setVisible(true);
+                    shieldPlaceholder.setVisible(false);
                     logger.info("Escudo del colegio cargado desde: {}", shieldFile.getAbsolutePath());
                 }
             } else {
-                // No hay escudo personalizado, ocultar el ImageView
+                // No hay escudo personalizado, mostrar placeholder
                 schoolShieldImage.setVisible(false);
+                shieldPlaceholder.setVisible(true);
                 logger.debug("No se encontró escudo del colegio en: {}", shieldFile.getAbsolutePath());
             }
         } catch (Exception e) {
             logger.warn("Error al cargar escudo del colegio: {}", e.getMessage());
             schoolShieldImage.setVisible(false);
+            shieldPlaceholder.setVisible(true);
+        }
+    }
+
+    /**
+     * Manejador para cuando se hace clic en el área del escudo.
+     * Abre un FileChooser para seleccionar una imagen.
+     */
+    @FXML
+    private void onShieldClick() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Seleccionar Escudo del Colegio");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Imágenes", "*.png", "*.jpg", "*.jpeg", "*.gif"),
+                new FileChooser.ExtensionFilter("PNG", "*.png"),
+                new FileChooser.ExtensionFilter("JPEG", "*.jpg", "*.jpeg")
+        );
+
+        Stage stage = (Stage) shieldContainer.getScene().getWindow();
+        File selectedFile = fileChooser.showOpenDialog(stage);
+
+        if (selectedFile != null) {
+            saveShieldImage(selectedFile);
+        }
+    }
+
+    /**
+     * Guarda la imagen seleccionada como escudo del colegio.
+     */
+    private void saveShieldImage(File sourceFile) {
+        try {
+            String userHome = System.getProperty("user.home");
+            File configDir = new File(userHome, ".registro-estudiantes");
+
+            // Crear directorio si no existe
+            if (!configDir.exists()) {
+                configDir.mkdirs();
+            }
+
+            File destFile = new File(configDir, "school_shield.png");
+
+            // Copiar archivo
+            Files.copy(sourceFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+
+            logger.info("Escudo guardado en: {}", destFile.getAbsolutePath());
+
+            // Recargar el escudo
+            loadSchoolShield();
+
+        } catch (Exception e) {
+            logger.error("Error al guardar escudo del colegio", e);
         }
     }
 

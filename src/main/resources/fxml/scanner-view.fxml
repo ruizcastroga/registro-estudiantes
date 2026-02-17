@@ -147,9 +147,14 @@
                 <Insets top="10" right="20" bottom="10" left="20"/>
             </padding>
 
-            <!-- Escudo del colegio (personalizable) -->
-            <ImageView fx:id="schoolShieldImage" fitHeight="40" fitWidth="40"
-                       preserveRatio="true" styleClass="school-shield"/>
+            <!-- Escudo del colegio (personalizable - clic para cambiar) -->
+            <StackPane fx:id="shieldContainer" styleClass="shield-container"
+                       onMouseClicked="#onShieldClick" cursor="HAND">
+                <ImageView fx:id="schoolShieldImage" fitHeight="40" fitWidth="40"
+                           preserveRatio="true" styleClass="school-shield"/>
+                <Label fx:id="shieldPlaceholder" text="+ Escudo"
+                       styleClass="shield-placeholder" visible="false"/>
+            </StackPane>
 
             <Separator orientation="VERTICAL"/>
 
