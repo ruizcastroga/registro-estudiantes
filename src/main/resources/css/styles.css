@@ -633,6 +633,7 @@
     -fx-min-height: 40;
     -fx-padding: 5;
     -fx-background-radius: 5;
+    -fx-cursor: hand;
 }
 
 .shield-container:hover {
