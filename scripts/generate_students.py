@@ -145,21 +145,23 @@ def guardar_csv(estudiantes, archivo):
 
 
 def generar_codigo_barras(codigo):
-    """Genera imagen de código de barras Code128."""
+    """Genera imagen de código de barras Code128 optimizado para scanner."""
     CODE128 = barcode.get_barcode_class('code128')
 
-    # Crear código de barras
+    # Crear código de barras con configuración optimizada para escáneres
     writer = ImageWriter()
     code = CODE128(codigo, writer=writer)
 
-    # Guardar en memoria
+    # Guardar en memoria con mayor resolución y tamaño
     buffer = BytesIO()
     code.write(buffer, options={
-        'module_width': 0.4,
-        'module_height': 15,
-        'font_size': 10,
-        'text_distance': 5,
-        'quiet_zone': 6
+        'module_width': 0.5,      # Más ancho para mejor lectura
+        'module_height': 20,      # Más alto para mejor lectura
+        'font_size': 14,          # Número más visible
+        'text_distance': 8,       # Más espacio entre barras y texto
+        'quiet_zone': 10,         # Mayor zona de silencio (importante para scanners)
+        'write_text': True,       # Mostrar número debajo
+        'dpi': 300                # Mayor resolución
     })
     buffer.seek(0)
 
@@ -167,14 +169,14 @@ def generar_codigo_barras(codigo):
 
 
 def generar_pdf_carnets(estudiantes, archivo):
-    """Genera PDF con carnets de código de barras."""
+    """Genera PDF con carnets de código de barras optimizados para scanner."""
     c = canvas.Canvas(archivo, pagesize=letter)
     width, height = letter
 
-    # Configuración del carnet
-    carnet_width = 3.5 * inch
-    carnet_height = 2.2 * inch
-    margin = 0.5 * inch
+    # Configuración del carnet - MÁS GRANDE para mejor escaneo
+    carnet_width = 3.8 * inch
+    carnet_height = 2.5 * inch
+    margin = 0.3 * inch
     cards_per_row = 2
     cards_per_col = 4
 
@@ -222,20 +224,21 @@ def generar_pdf_carnets(estudiantes, archivo):
                 c.setFillColor(colors.HexColor('#666666'))
                 c.drawCentredString(x + carnet_width/2, y + carnet_height - 0.9 * inch, est['grado'])
 
-                # Código de barras
+                # Código de barras - TAMAÑO GRANDE para mejor escaneo
                 try:
                     barcode_img = generar_codigo_barras(est['codigo'])
 
-                    # Guardar temporalmente
+                    # Guardar temporalmente con alta calidad
                     temp_path = f"/tmp/barcode_{est['codigo']}.png"
-                    barcode_img.save(temp_path)
+                    barcode_img.save(temp_path, dpi=(300, 300))
 
-                    # Dibujar en PDF
-                    barcode_width = 2.5 * inch
-                    barcode_height = 0.8 * inch
+                    # Dibujar en PDF - MÁS GRANDE
+                    barcode_width = 3.2 * inch
+                    barcode_height = 1.0 * inch
                     barcode_x = x + (carnet_width - barcode_width) / 2
-                    barcode_y = y + 0.2 * inch
-                    c.drawImage(temp_path, barcode_x, barcode_y, barcode_width, barcode_height)
+                    barcode_y = y + 0.15 * inch
+                    c.drawImage(temp_path, barcode_x, barcode_y, barcode_width, barcode_height,
+                               preserveAspectRatio=True)
 
                     # Limpiar archivo temporal
                     os.remove(temp_path)
