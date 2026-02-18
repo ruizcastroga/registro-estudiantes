@@ -110,21 +110,5 @@ INSERT OR IGNORE INTO app_config (key, value, description) VALUES
     ('default_guard_name', 'Guardia', 'Nombre por defecto del guardia');
 
 
--- Datos de prueba (solo para desarrollo)
--- Estos datos se pueden eliminar en producción
-
--- Estudiantes de ejemplo
-INSERT OR IGNORE INTO students (barcode, first_name, last_name, grade, is_minor, requires_guardian, status) VALUES
-    ('STU001', 'Juan Carlos', 'García López', '5to Primaria', 1, 1, 'active'),
-    ('STU002', 'María Fernanda', 'Rodríguez Pérez', '3ro Primaria', 1, 1, 'active'),
-    ('STU003', 'Pedro Antonio', 'Martínez Silva', '11vo Secundaria', 0, 0, 'active'),
-    ('STU004', 'Ana Sofía', 'López Hernández', '1ro Primaria', 1, 1, 'active'),
-    ('STU005', 'Carlos Eduardo', 'Sánchez Mora', '8vo Secundaria', 1, 0, 'active');
-
--- Acudientes de ejemplo
-INSERT OR IGNORE INTO guardians (student_id, name, relationship, id_number, phone, authorized) VALUES
-    (1, 'Roberto García', 'Padre', '12345678', '555-1234', 1),
-    (1, 'Carmen López', 'Madre', '87654321', '555-5678', 1),
-    (2, 'José Rodríguez', 'Padre', '11223344', '555-1111', 1),
-    (4, 'Laura Hernández', 'Madre', '44332211', '555-2222', 1),
-    (4, 'Miguel López', 'Padre', '55667788', '555-3333', 1);
+-- Nota: No se incluyen datos de prueba.
+-- Usar el importador CSV para cargar estudiantes.
