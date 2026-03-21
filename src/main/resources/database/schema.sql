@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS students (
     is_minor INTEGER DEFAULT 1,             -- 1 = menor de edad, 0 = mayor de edad
     requires_guardian INTEGER DEFAULT 1,    -- 1 = requiere acompañante, 0 = puede salir solo
     photo_path TEXT,                        -- Ruta a la foto del estudiante (opcional)
-    status TEXT DEFAULT 'active',           -- Estado: 'active', 'inactive', 'suspended'
+    status TEXT DEFAULT 'active',           -- Estado: 'active', 'inactive'
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
