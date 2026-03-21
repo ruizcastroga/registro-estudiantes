@@ -250,7 +250,7 @@ public class ScannerController implements Initializable {
      * Muestra el resultado del escaneo en la interfaz.
      * Jerarquía de información:
      * 1. Estado de acceso (PUEDE SALIR / REQUIERE ACOMPAÑANTE / NO PUEDE ENTRAR)
-     * 2. Estado de actividad (ACTIVO / INACTIVO / SUSPENDIDO) - siempre visible
+     * 2. Estado de actividad (ACTIVO / INACTIVO) - siempre visible
      * 3. Lista de tutores legales - solo si requiere acompañante y está activo
      */
     private void displayScanResult(StudentService.ScanResult result, String barcode) {
@@ -271,27 +271,16 @@ public class ScannerController implements Initializable {
             studentGradeLabel.setText(student.getGrade() != null ? student.getGrade() : "");
 
             // Aplicar estilos según el estado
-            resultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive", "suspended");
-            statusLabel.getStyleClass().removeAll("status-ok", "status-warning", "status-inactive", "status-suspended");
-            activityStatusLabel.getStyleClass().removeAll("status-active", "status-inactive", "status-suspended");
+            resultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive");
+            statusLabel.getStyleClass().removeAll("status-ok", "status-warning", "status-inactive");
+            activityStatusLabel.getStyleClass().removeAll("status-active", "status-inactive");
 
             // Siempre mostrar el estado de actividad
             activityStatusLabel.setVisible(true);
             activityStatusLabel.setManaged(true);
 
-            // Verificar estado de actividad (inactivo/suspendido/activo)
-            if (result.isSuspended()) {
-                // Estudiante suspendido - medida de seguridad
-                resultPanel.getStyleClass().add("suspended");
-                statusLabel.setText("NO PUEDE ENTRAR");
-                statusLabel.getStyleClass().add("status-suspended");
-                activityStatusLabel.setText("SUSPENDIDO");
-                activityStatusLabel.getStyleClass().add("status-suspended");
-                // Ocultar tutores
-                guardiansPanel.setVisible(false);
-                guardiansPanel.setManaged(false);
-
-            } else if (result.isInactive()) {
+            // Verificar estado de actividad (inactivo/activo)
+            if (result.isInactive()) {
                 // Estudiante inactivo - medida de seguridad (ya no pertenece a la institución)
                 resultPanel.getStyleClass().add("inactive");
                 statusLabel.setText("NO PUEDE ENTRAR");
@@ -398,7 +387,7 @@ public class ScannerController implements Initializable {
         activityStatusLabel.setManaged(false);
 
         // Limpiar estilos
-        resultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive", "suspended");
+        resultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive");
     }
 
     /**

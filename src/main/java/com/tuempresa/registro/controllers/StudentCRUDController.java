@@ -144,8 +144,7 @@ public class StudentCRUDController implements Initializable {
 
         colStatus.setCellValueFactory(cellData -> {
             String status = cellData.getValue().getStatus();
-            String displayStatus = "active".equals(status) ? "Activo" :
-                    "inactive".equals(status) ? "Inactivo" : status;
+            String displayStatus = "active".equals(status) ? "Activo" : "Inactivo";
             return new SimpleStringProperty(displayStatus);
         });
 
@@ -157,7 +156,7 @@ public class StudentCRUDController implements Initializable {
      * Configura el ComboBox de estado.
      */
     private void setupStatusCombo() {
-        statusCombo.getItems().addAll("Activo", "Inactivo", "Suspendido");
+        statusCombo.getItems().addAll("Activo", "Inactivo");
         statusCombo.setValue("Activo");
     }
 
@@ -817,7 +816,6 @@ public class StudentCRUDController implements Initializable {
         return switch (displayStatus) {
             case "Activo" -> "active";
             case "Inactivo" -> "inactive";
-            case "Suspendido" -> "suspended";
             default -> "active";
         };
     }
@@ -825,9 +823,7 @@ public class StudentCRUDController implements Initializable {
     private String mapStatusFromDb(String dbStatus) {
         return switch (dbStatus) {
             case "active" -> "Activo";
-            case "inactive" -> "Inactivo";
-            case "suspended" -> "Suspendido";
-            default -> "Activo";
+            default -> "Inactivo";
         };
     }
 }
