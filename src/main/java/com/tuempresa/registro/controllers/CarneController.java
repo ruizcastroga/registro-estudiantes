@@ -1,7 +1,6 @@
 package com.tuempresa.registro.controllers;
 
 import com.google.zxing.BarcodeFormat;
-import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.oned.Code128Writer;
 import com.tuempresa.registro.dao.DatabaseConnection;
@@ -489,7 +488,7 @@ public class CarneController implements Initializable {
 
             return image;
 
-        } catch (WriterException e) {
+        } catch (Exception e) {
             logger.error("Error al generar código de barras para: {}", value, e);
             return null;
         }
