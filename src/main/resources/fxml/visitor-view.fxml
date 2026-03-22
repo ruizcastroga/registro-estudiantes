@@ -202,8 +202,13 @@
                                    prefWidth="220" styleClass="form-field"/>
                         <Button text="Agregar Carné" onAction="#onAddBadge"
                                 styleClass="primary-button"/>
+                        <Separator orientation="VERTICAL"/>
+                        <Button text="Importar CSV" onAction="#onImportBadgesCsv"
+                                styleClass="secondary-button"/>
+                        <Button text="Plantilla" onAction="#onGenerateBadgesTemplate"
+                                styleClass="small-button"/>
                         <Region HBox.hgrow="ALWAYS"/>
-                        <Label text="(Las acciones de estado requieren contraseña admin)"
+                        <Label text="(Todas las acciones requieren contraseña admin)"
                                styleClass="hint-label"/>
                     </HBox>
 
