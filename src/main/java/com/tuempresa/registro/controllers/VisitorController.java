@@ -544,7 +544,7 @@ public class VisitorController implements Initializable {
 
         int deleted = visitorService.purgeLogsBefore(date.atStartOfDay());
         showInfo("Se eliminaron " + deleted + " registros.");
-        loadLogsTable();
+        loadAllData();
     }
 
     @FXML

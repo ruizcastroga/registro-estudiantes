@@ -183,7 +183,11 @@ public class VisitorService {
      * Elimina registros históricos anteriores a la fecha indicada.
      */
     public int purgeLogsBefore(LocalDateTime cutoff) {
-        return logDAO.deleteBeforeDate(cutoff);
+        int deleted = logDAO.deleteBeforeDate(cutoff);
+        if (deleted > 0) {
+            badgeDAO.resetOrphanedBadges();
+        }
+        return deleted;
     }
 
     public int countAvailableBadges() {
