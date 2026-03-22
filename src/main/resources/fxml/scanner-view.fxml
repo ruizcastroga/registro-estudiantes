@@ -38,9 +38,11 @@
                     <Label fx:id="todayScansLabel" text="0" styleClass="stats-value"/>
                 </VBox>
 
-                <!-- Botón de gestión -->
+                <!-- Botones de gestión -->
                 <Button fx:id="manageButton" text="Gestionar Estudiantes"
                         onAction="#onManageStudents" styleClass="secondary-button"/>
+                <Button text="Control de Visitantes"
+                        onAction="#onManageVisitors" styleClass="secondary-button"/>
             </HBox>
         </VBox>
     </top>

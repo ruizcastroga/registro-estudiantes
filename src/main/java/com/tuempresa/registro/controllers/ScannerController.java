@@ -449,6 +449,29 @@ public class ScannerController implements Initializable {
     }
 
     /**
+     * Manejador para abrir el módulo de control de visitantes.
+     */
+    @FXML
+    private void onManageVisitors() {
+        try {
+            logger.info("Abriendo control de visitantes");
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/visitor-view.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) barcodeInput.getScene().getWindow();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+
+            stage.setScene(scene);
+            stage.setTitle("Control de Visitantes");
+
+        } catch (IOException e) {
+            logger.error("Error al abrir control de visitantes", e);
+        }
+    }
+
+    /**
      * Manejador para registro rápido de nuevo estudiante.
      */
     @FXML
