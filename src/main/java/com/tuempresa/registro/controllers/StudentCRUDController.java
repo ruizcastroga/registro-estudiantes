@@ -605,6 +605,29 @@ public class StudentCRUDController implements Initializable {
     }
 
     /**
+     * Manejador para abrir el módulo Creador de Carné.
+     */
+    @FXML
+    private void onManageCarne() {
+        try {
+            logger.info("Abriendo Creador de Carné desde CRUD");
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/carne-view.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) studentsTable.getScene().getWindow();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+
+            stage.setScene(scene);
+            stage.setTitle("Creador de Carné");
+
+        } catch (IOException e) {
+            logger.error("Error al abrir Creador de Carné", e);
+        }
+    }
+
+    /**
      * Manejador para volver al scanner.
      */
     @FXML

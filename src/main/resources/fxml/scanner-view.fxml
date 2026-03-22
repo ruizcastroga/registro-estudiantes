@@ -43,6 +43,8 @@
                         onAction="#onManageStudents" styleClass="secondary-button"/>
                 <Button text="Control de Visitantes"
                         onAction="#onManageVisitors" styleClass="secondary-button"/>
+                <Button text="Creador de Carné"
+                        onAction="#onManageCarne" styleClass="secondary-button"/>
             </HBox>
         </VBox>
     </top>

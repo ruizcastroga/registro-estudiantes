@@ -27,6 +27,9 @@
                 <Button fx:id="backButton" text="← Volver al Scanner"
                         onAction="#onBackToScanner" styleClass="secondary-button"/>
 
+                <Button text="Creador de Carné"
+                        onAction="#onManageCarne" styleClass="secondary-button"/>
+
                 <Region HBox.hgrow="ALWAYS"/>
 
                 <!-- Título -->
