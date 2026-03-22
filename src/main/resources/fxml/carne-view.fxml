@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    Vista del Creador de Carné.
+    Permite buscar un estudiante existente o ingresar datos de uno nuevo
+    para generar e imprimir su carné físico.
+-->
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.tuempresa.registro.controllers.CarneController"
+            styleClass="crud-container"
+            prefWidth="1050" prefHeight="720">
+
+    <!-- Barra superior -->
+    <top>
+        <VBox styleClass="header-box">
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <padding>
+                    <Insets top="15" right="20" bottom="15" left="20"/>
+                </padding>
+
+                <Button text="← Volver al Scanner"
+                        onAction="#onBackToScanner" styleClass="secondary-button"/>
+
+                <Button text="Gestionar Estudiantes"
+                        onAction="#onManageStudents" styleClass="secondary-button"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+
+                <Label text="Creador de Carné" styleClass="page-title"/>
+
+                <Region HBox.hgrow="ALWAYS"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- Contenido principal -->
+    <center>
+        <SplitPane dividerPositions="0.42" orientation="HORIZONTAL">
+
+            <!-- Panel izquierdo: Búsqueda y formulario -->
+            <VBox spacing="12" styleClass="form-panel">
+                <padding>
+                    <Insets top="15" right="15" bottom="15" left="15"/>
+                </padding>
+
+                <!-- Sección de búsqueda -->
+                <Label text="Buscar estudiante existente" styleClass="section-title"/>
+
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                    <TextField fx:id="searchField"
+                               promptText="Buscar por nombre o cédula..."
+                               HBox.hgrow="ALWAYS"
+                               styleClass="search-field"
+                               onKeyReleased="#onSearch"/>
+                    <Button text="✕" fx:id="clearSearchButton"
+                            onAction="#onClearSearch" styleClass="small-button"
+                            visible="false"/>
+                </HBox>
+
+                <ListView fx:id="searchResultsList" prefHeight="130"
+                          styleClass="students-table"/>
+
+                <Separator/>
+
+                <!-- Botón nuevo carné -->
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Button text="+ Nuevo Carné" onAction="#onNewStudent"
+                            styleClass="primary-button"/>
+                    <Label fx:id="modeLabel" text="" styleClass="hint-label"/>
+                </HBox>
+
+                <Separator/>
+
+                <!-- Formulario de datos -->
+                <Label fx:id="formTitle" text="Datos del Carné" styleClass="form-title"/>
+
+                <GridPane hgap="10" vgap="10" styleClass="student-form">
+                    <Label text="Cédula: *" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <TextField fx:id="cedulaField" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                               promptText="Número de cédula" onKeyReleased="#onFormFieldChanged"/>
+
+                    <Label text="Nombre: *" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <TextField fx:id="firstNameField" GridPane.columnIndex="1" GridPane.rowIndex="1"
+                               promptText="Nombre(s)" onKeyReleased="#onFormFieldChanged"/>
+
+                    <Label text="Apellido: *" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <TextField fx:id="lastNameField" GridPane.columnIndex="1" GridPane.rowIndex="2"
+                               promptText="Apellido(s)" onKeyReleased="#onFormFieldChanged"/>
+
+                    <Label text="Grado:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    <TextField fx:id="gradeField" GridPane.columnIndex="1" GridPane.rowIndex="3"
+                               promptText="Ej: 5to Primaria" onKeyReleased="#onFormFieldChanged"/>
+
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="80" halignment="RIGHT"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
+                    </columnConstraints>
+                </GridPane>
+
+                <!-- Foto del estudiante -->
+                <Separator/>
+
+                <HBox spacing="12" alignment="CENTER_LEFT">
+                    <StackPane styleClass="carne-photo-picker" prefWidth="70" prefHeight="70"
+                               onMouseClicked="#onSelectPhoto">
+                        <ImageView fx:id="photoPreview" fitWidth="65" fitHeight="65"
+                                   preserveRatio="true"/>
+                        <Label fx:id="photoPickerLabel" text="+ Foto" styleClass="carne-placeholder-text"/>
+                    </StackPane>
+
+                    <VBox spacing="5">
+                        <Label text="Foto del Estudiante" styleClass="section-title"/>
+                        <Label text="Clic en el cuadro para seleccionar" styleClass="hint-label"/>
+                        <Label text="(Opcional — se puede agregar después)" styleClass="hint-label"/>
+                        <Button text="Quitar foto" fx:id="removePhotoButton"
+                                onAction="#onRemovePhoto" styleClass="small-button"
+                                visible="false"/>
+                    </VBox>
+                </HBox>
+
+                <Region VBox.vgrow="ALWAYS"/>
+
+                <!-- Mensaje de validación -->
+                <Label fx:id="validationLabel" text="" styleClass="validation-message"/>
+
+                <!-- Botones de acción -->
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <Button text="Cancelar" onAction="#onCancel" styleClass="secondary-button"/>
+                    <Button fx:id="printButton" text="Imprimir Carné"
+                            onAction="#onPrint" styleClass="primary-button" disable="true"/>
+                </HBox>
+
+                <Label fx:id="statusLabel" text="Busque un estudiante o cree un nuevo carné"
+                       styleClass="status-message"/>
+            </VBox>
+
+            <!-- Panel derecho: Vista previa del carné -->
+            <VBox spacing="15" alignment="TOP_CENTER">
+                <padding>
+                    <Insets top="20" right="20" bottom="20" left="20"/>
+                </padding>
+
+                <Label text="Vista Previa del Carné" styleClass="section-title"/>
+
+                <!-- Contenedor del carné — tamaño fijo, ratio CR80 (85.6×54mm ≈ 1.585:1) -->
+                <StackPane alignment="CENTER">
+                    <!-- El cardPane se construye programáticamente en el controlador -->
+                    <VBox fx:id="cardPane" styleClass="carne-card"
+                          prefWidth="428" minWidth="428" maxWidth="428"
+                          prefHeight="270" minHeight="270" maxHeight="270">
+
+                        <!-- Encabezado: nombre de la institución -->
+                        <HBox styleClass="carne-header" prefHeight="46" minHeight="46" maxHeight="46"
+                              alignment="CENTER">
+                            <Label fx:id="cardSchoolName" text="Nombre de la Institución"
+                                   styleClass="carne-school-name" wrapText="true"
+                                   alignment="CENTER" textAlignment="CENTER"/>
+                        </HBox>
+
+                        <!-- Cuerpo: info a la izquierda, escudo a la derecha -->
+                        <HBox VBox.vgrow="ALWAYS">
+
+                            <!-- Columna izquierda: texto + fila inferior (foto + código) -->
+                            <VBox HBox.hgrow="ALWAYS">
+
+                                <!-- Campos de texto -->
+                                <VBox styleClass="carne-info-section" spacing="4" VBox.vgrow="ALWAYS">
+                                    <padding>
+                                        <Insets top="8" left="10" bottom="6" right="6"/>
+                                    </padding>
+                                    <Label fx:id="cardCedula" text="Cédula:"
+                                           styleClass="carne-field"/>
+                                    <Label fx:id="cardNombre" text="Nombre:"
+                                           styleClass="carne-field"/>
+                                    <Label fx:id="cardApellido" text="Apellido:"
+                                           styleClass="carne-field"/>
+                                    <Label fx:id="cardGrado" text="Grado:"
+                                           styleClass="carne-field"/>
+                                </VBox>
+
+                                <!-- Fila inferior: foto del estudiante + código de barras -->
+                                <HBox prefHeight="105" minHeight="105" maxHeight="105"
+                                      styleClass="carne-bottom-row">
+
+                                    <!-- Foto del estudiante -->
+                                    <StackPane prefWidth="88" minWidth="88" maxWidth="88"
+                                               styleClass="carne-photo-container">
+                                        <ImageView fx:id="cardPhotoView" fitWidth="78"
+                                                   fitHeight="95" preserveRatio="true"/>
+                                        <Label fx:id="cardPhotoPlaceholder" text="Foto&#10;Estudiante"
+                                               styleClass="carne-placeholder-text"
+                                               wrapText="true" alignment="CENTER"
+                                               textAlignment="CENTER"/>
+                                    </StackPane>
+
+                                    <!-- Código de barras -->
+                                    <VBox HBox.hgrow="ALWAYS" alignment="CENTER" spacing="2"
+                                          styleClass="carne-barcode-container">
+                                        <padding>
+                                            <Insets top="8" left="5" bottom="4" right="5"/>
+                                        </padding>
+                                        <ImageView fx:id="cardBarcodeView"
+                                                   fitWidth="195" fitHeight="60"
+                                                   preserveRatio="false" smooth="false"/>
+                                        <Label fx:id="cardBarcodeText" text=""
+                                               styleClass="carne-barcode-text"/>
+                                    </VBox>
+                                </HBox>
+                            </VBox>
+
+                            <!-- Columna derecha: escudo/logo -->
+                            <StackPane prefWidth="118" minWidth="118" maxWidth="118"
+                                       styleClass="carne-shield-container">
+                                <ImageView fx:id="cardShieldView" fitWidth="92"
+                                           fitHeight="92" preserveRatio="true"/>
+                                <Label fx:id="cardShieldPlaceholder" text="Escudo/Logo&#10;Institución"
+                                       styleClass="carne-placeholder-text"
+                                       wrapText="true" alignment="CENTER"
+                                       textAlignment="CENTER"/>
+                            </StackPane>
+                        </HBox>
+                    </VBox>
+                </StackPane>
+
+                <Label text="Tamaño real al imprimir: CR80 — 85.6 × 54 mm"
+                       styleClass="hint-label"/>
+            </VBox>
+        </SplitPane>
+    </center>
+
+    <!-- Barra inferior -->
+    <bottom>
+        <HBox styleClass="footer-box" alignment="CENTER_LEFT" spacing="20">
+            <padding>
+                <Insets top="10" right="20" bottom="10" left="20"/>
+            </padding>
+            <Label text="* Campos obligatorios para guardar" styleClass="required-note"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="Creador de Carné v1.0" styleClass="version-label"/>
+        </HBox>
+    </bottom>
+</BorderPane>

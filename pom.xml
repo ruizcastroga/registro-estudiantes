@@ -76,6 +76,13 @@
             <artifactId>logback-core</artifactId>
             <version>${logback.version}</version>
         </dependency>
+
+        <!-- ZXing - Generación de códigos de barras para el Creador de Carné -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.2</version>
+        </dependency>
     </dependencies>
 
     <build>
