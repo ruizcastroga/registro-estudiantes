@@ -117,13 +117,13 @@
                 </HBox>
             </VBox>
 
-            <!-- Panel: salida registrada -->
+            <!-- Panel: salida registrada (reutilizado también para entrada confirmada) -->
             <VBox fx:id="exitResultPanel" visible="false" managed="false"
                   styleClass="result-panel can-exit" spacing="10" alignment="CENTER">
                 <padding>
                     <Insets top="20" right="40" bottom="20" left="40"/>
                 </padding>
-                <Label text="SALIDA REGISTRADA" styleClass="status-label status-ok"/>
+                <Label fx:id="exitStatusLabel" text="SALIDA REGISTRADA" styleClass="status-label status-ok"/>
                 <Label fx:id="exitVisitorLabel" text="" styleClass="student-name"/>
                 <Label fx:id="exitBadgeLabel" text="" styleClass="student-grade"/>
                 <Label fx:id="exitTimeLabel" text="" styleClass="datetime-label"/>
@@ -234,11 +234,12 @@
                     </padding>
 
                     <HBox spacing="10" alignment="CENTER_LEFT">
-                        <Label text="Borrar registros anteriores a:" styleClass="form-label"/>
-                        <DatePicker fx:id="purgeDatePicker" styleClass="form-field"/>
-                        <Button text="Borrar" onAction="#onPurgeLogs"
-                                styleClass="danger-button"/>
+                        <TextField fx:id="logsSearchField"
+                                   promptText="Buscar por carné, cédula, nombre..."
+                                   prefWidth="320" styleClass="form-field"/>
                         <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Borrar Historial" onAction="#onPurgeLogs"
+                                styleClass="danger-button"/>
                         <Button text="&#8635; Actualizar" onAction="#onRefreshLogs"
                                 styleClass="small-button"/>
                     </HBox>
