@@ -10,6 +10,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -113,6 +114,7 @@ public class VisitorController implements Initializable {
     private ObservableList<VisitorBadge> badgesList;
     private ObservableList<VisitorLog> logsList;
     private FilteredList<VisitorLog> filteredLogsList;
+    private SortedList<VisitorLog> sortedLogsList;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -123,6 +125,7 @@ public class VisitorController implements Initializable {
         badgesList = FXCollections.observableArrayList();
         logsList = FXCollections.observableArrayList();
         filteredLogsList = new FilteredList<>(logsList, p -> true);
+        sortedLogsList = new SortedList<>(filteredLogsList);
 
         setupInsideTable();
         setupBadgesTable();
@@ -219,7 +222,8 @@ public class VisitorController implements Initializable {
                 c.getValue().getJustification() != null ? c.getValue().getJustification() : ""));
         colLogEntry.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFormattedEntryTime()));
         colLogExit.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFormattedExitTime()));
-        logsTable.setItems(filteredLogsList);
+        sortedLogsList.comparatorProperty().bind(logsTable.comparatorProperty());
+        logsTable.setItems(sortedLogsList);
     }
 
     private void setupLogsSearch() {

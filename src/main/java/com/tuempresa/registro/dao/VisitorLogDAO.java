@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -16,6 +17,7 @@ import java.util.Optional;
 public class VisitorLogDAO {
 
     private static final Logger logger = LoggerFactory.getLogger(VisitorLogDAO.class);
+    private static final DateTimeFormatter SQLITE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final DatabaseConnection dbConnection;
 
@@ -130,10 +132,10 @@ public class VisitorLogDAO {
      * Elimina todos los registros anteriores a una fecha dada.
      */
     public int deleteBeforeDate(LocalDateTime cutoff) {
-        String sql = "DELETE FROM visitor_logs WHERE entry_time < ?";
+        String sql = "DELETE FROM visitor_logs WHERE datetime(entry_time) < datetime(?)";
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, cutoff.toString().replace("T", " "));
+            stmt.setString(1, cutoff.format(SQLITE_FMT));
             int deleted = stmt.executeUpdate();
             logger.info("Eliminados {} registros anteriores a {}", deleted, cutoff);
             return deleted;
