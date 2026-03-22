@@ -23,12 +23,16 @@ import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import javafx.stage.FileChooser;
+
+import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -285,6 +289,7 @@ public class VisitorController implements Initializable {
                     justificationField.getText()
             );
 
+            String registeredBadgeCode = pendingBadge.getCode();
             clearResultPanels();
 
             // Confirmar visualmente la entrada
@@ -292,7 +297,7 @@ public class VisitorController implements Initializable {
             confirmLabel.getStyleClass().addAll("status-label", "status-ok");
             Label nameLabel = new Label(log.getDisplayName());
             nameLabel.getStyleClass().add("student-name");
-            Label badgeLbl = new Label("Carné: " + pendingBadge.getCode());
+            Label badgeLbl = new Label("Carné: " + registeredBadgeCode);
             badgeLbl.getStyleClass().add("student-grade");
 
             VBox tmpPanel = new VBox(10, confirmLabel, nameLabel, badgeLbl);
@@ -304,7 +309,7 @@ public class VisitorController implements Initializable {
             entryFormPanel.getParent().getChildrenUnmodifiable();
             // Usar el exitResultPanel como contenedor reutilizable
             exitVisitorLabel.setText(log.getDisplayName());
-            exitBadgeLabel.setText("Carné: " + pendingBadge.getCode());
+            exitBadgeLabel.setText("Carné: " + registeredBadgeCode);
             exitTimeLabel.setText("Entrada: " + LocalDateTime.now().format(
                     DateTimeFormatter.ofPattern("HH:mm:ss")));
             exitResultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive");
@@ -360,6 +365,9 @@ public class VisitorController implements Initializable {
             showError("Ingrese un código para el carné.");
             return;
         }
+        if (!confirmAdminAction("agregar el carné '" + code + "'")) {
+            return;
+        }
         try {
             visitorService.createBadge(code);
             newBadgeCodeField.clear();
@@ -369,6 +377,113 @@ public class VisitorController implements Initializable {
             showError("Error al crear carné: " + e.getMessage());
         } catch (IllegalArgumentException e) {
             showError(e.getMessage());
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Importación masiva de carnés (CSV)
+    // -----------------------------------------------------------------------
+
+    @FXML
+    private void onImportBadgesCsv() {
+        if (!confirmAdminAction("importar carnés desde CSV")) return;
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Seleccionar archivo CSV de carnés");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Archivos CSV", "*.csv"),
+                new FileChooser.ExtensionFilter("Todos los archivos", "*.*")
+        );
+
+        File file = fileChooser.showOpenDialog(badgesTable.getScene().getWindow());
+        if (file == null) return;
+
+        int imported = 0;
+        int skipped = 0;
+        List<String> errors = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+
+            String line;
+            boolean firstLine = true;
+            int row = 0;
+            while ((line = reader.readLine()) != null) {
+                row++;
+                line = line.trim();
+                if (line.isEmpty()) continue;
+
+                // Saltar encabezado (si contiene "codigo" o "code")
+                if (firstLine) {
+                    firstLine = false;
+                    String lower = line.toLowerCase();
+                    if (lower.contains("codigo") || lower.contains("code") || lower.contains("carne")) continue;
+                }
+
+                // Tomar primer campo (por si hay más columnas)
+                String code = line.split("[,;\\t]")[0].trim().replaceAll("^\"|\"$", "");
+                if (code.isEmpty()) continue;
+
+                try {
+                    visitorService.createBadge(code);
+                    imported++;
+                } catch (IllegalArgumentException e) {
+                    skipped++; // ya existe
+                } catch (SQLException e) {
+                    errors.add("Fila " + row + " (" + code + "): " + e.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            showError("Error al leer el archivo: " + e.getMessage());
+            return;
+        }
+
+        StringBuilder summary = new StringBuilder();
+        summary.append("Importación completada:\n");
+        summary.append("- Importados: ").append(imported).append("\n");
+        summary.append("- Omitidos (ya existen): ").append(skipped).append("\n");
+        summary.append("- Errores: ").append(errors.size());
+        if (!errors.isEmpty()) {
+            summary.append("\n\nErrores:\n");
+            int max = Math.min(5, errors.size());
+            for (int i = 0; i < max; i++) summary.append("- ").append(errors.get(i)).append("\n");
+            if (errors.size() > 5) summary.append("... y ").append(errors.size() - 5).append(" más");
+        }
+
+        Alert alert = new Alert(errors.isEmpty() ? Alert.AlertType.INFORMATION : Alert.AlertType.WARNING);
+        alert.setTitle("Resultado de Importación");
+        alert.setHeaderText("Carnés importados");
+        alert.setContentText(summary.toString());
+        alert.showAndWait();
+
+        loadBadgesTable();
+        updateStats();
+    }
+
+    @FXML
+    private void onGenerateBadgesTemplate() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Guardar plantilla CSV de carnés");
+        fileChooser.setInitialFileName("plantilla_carnes_visitantes.csv");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Archivos CSV", "*.csv")
+        );
+
+        File file = fileChooser.showSaveDialog(badgesTable.getScene().getWindow());
+        if (file == null) return;
+
+        try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(
+                new FileOutputStream(file), StandardCharsets.UTF_8))) {
+            writer.print('\ufeff'); // BOM para Excel
+            writer.println("codigo");
+            writer.println("V-1");
+            writer.println("V-2");
+            writer.println("V-3");
+            writer.println("VISITANTE-01");
+            writer.println("VISITANTE-02");
+            showInfo("Plantilla guardada en:\n" + file.getAbsolutePath());
+        } catch (IOException e) {
+            showError("No se pudo guardar la plantilla: " + e.getMessage());
         }
     }
 
