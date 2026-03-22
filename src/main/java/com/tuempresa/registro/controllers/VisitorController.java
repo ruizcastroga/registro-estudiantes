@@ -511,7 +511,7 @@ public class VisitorController implements Initializable {
         dialog.setTitle("Borrar Historial");
         dialog.setHeaderText("Seleccione hasta qué fecha borrar los registros");
 
-        DatePicker datePicker = new DatePicker(LocalDate.now().minusMonths(1));
+        DatePicker datePicker = new DatePicker(LocalDate.now());
         datePicker.setPromptText("Borrar registros anteriores a...");
 
         VBox content = new VBox(10,
