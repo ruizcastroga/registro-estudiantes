@@ -330,6 +330,7 @@ public class VisitorController implements Initializable {
             updateStats();
             loadInsideList();
             loadBadgesTable();
+            loadLogsTable();
             autoClear.playFromStart();
             badgeInput.requestFocus();
 
