@@ -110,5 +110,41 @@ INSERT OR IGNORE INTO app_config (key, value, description) VALUES
     ('default_guard_name', 'Guardia', 'Nombre por defecto del guardia');
 
 
+-- ============================================
+-- Módulo de Visitantes
+-- ============================================
+
+-- Tabla de carnés físicos para visitantes
+CREATE TABLE IF NOT EXISTS visitor_badges (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT UNIQUE NOT NULL,              -- Código del carné (escaneado o manual)
+    status TEXT DEFAULT 'available',        -- Estado: 'available', 'in_use', 'lost'
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_visitor_badges_code ON visitor_badges(code);
+CREATE INDEX IF NOT EXISTS idx_visitor_badges_status ON visitor_badges(status);
+
+
+-- Tabla de registro de visitas
+CREATE TABLE IF NOT EXISTS visitor_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    badge_id INTEGER NOT NULL,              -- Carné usado
+    id_number TEXT NOT NULL,               -- Cédula del visitante (obligatorio)
+    first_name TEXT,                       -- Nombre (opcional)
+    last_name TEXT,                        -- Apellido (opcional)
+    justification TEXT,                    -- Justificación de entrada (opcional)
+    entry_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    exit_time DATETIME,                    -- NULL mientras el visitante está adentro
+    FOREIGN KEY (badge_id) REFERENCES visitor_badges(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_visitor_logs_badge ON visitor_logs(badge_id);
+CREATE INDEX IF NOT EXISTS idx_visitor_logs_id_number ON visitor_logs(id_number);
+CREATE INDEX IF NOT EXISTS idx_visitor_logs_entry_time ON visitor_logs(entry_time);
+CREATE INDEX IF NOT EXISTS idx_visitor_logs_exit_time ON visitor_logs(exit_time);
+
+
 -- Nota: No se incluyen datos de prueba.
 -- Usar el importador CSV para cargar estudiantes.

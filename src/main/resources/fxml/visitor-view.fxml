@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    Vista del módulo de visitantes.
+    Permite registrar entrada/salida de visitantes usando carnés físicos.
+    Incluye gestión de carnés e historial de visitas.
+-->
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.tuempresa.registro.controllers.VisitorController"
+            styleClass="main-container"
+            prefWidth="1000" prefHeight="700">
+
+    <!-- Barra superior -->
+    <top>
+        <VBox styleClass="header-box">
+            <HBox alignment="CENTER_LEFT" spacing="20">
+                <padding>
+                    <Insets top="15" right="20" bottom="15" left="20"/>
+                </padding>
+
+                <VBox HBox.hgrow="ALWAYS">
+                    <Label text="Control de Visitantes" styleClass="app-title"/>
+                    <Label fx:id="subtitleLabel" text="Escanee un carné para registrar entrada o salida"
+                           styleClass="datetime-label"/>
+                </VBox>
+
+                <!-- Stats rápidas -->
+                <VBox alignment="CENTER" spacing="2">
+                    <Label text="Dentro ahora" styleClass="stats-label"/>
+                    <Label fx:id="insideCountLabel" text="0" styleClass="stats-value"/>
+                </VBox>
+                <VBox alignment="CENTER" spacing="2">
+                    <Label text="Visitas hoy" styleClass="stats-label"/>
+                    <Label fx:id="todayCountLabel" text="0" styleClass="stats-value"/>
+                </VBox>
+                <VBox alignment="CENTER" spacing="2">
+                    <Label text="Carnés disponibles" styleClass="stats-label"/>
+                    <Label fx:id="availableCountLabel" text="0" styleClass="stats-value"/>
+                </VBox>
+
+                <Button text="&#8592; Volver al Scanner"
+                        onAction="#onBack" styleClass="secondary-button"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <!-- Área central: scanner + resultado -->
+    <center>
+        <VBox alignment="TOP_CENTER" spacing="20">
+            <padding>
+                <Insets top="25" right="30" bottom="20" left="30"/>
+            </padding>
+
+            <!-- Campo de escaneo del carné -->
+            <HBox alignment="CENTER" spacing="10">
+                <TextField fx:id="badgeInput"
+                           promptText="Escanee o escriba el código del carné de visitante..."
+                           onAction="#onBadgeScanned"
+                           styleClass="barcode-input"
+                           prefWidth="500"/>
+                <Button text="Procesar" onAction="#onBadgeScanned" styleClass="primary-button"/>
+            </HBox>
+
+            <!-- Panel: carné disponible → formulario de entrada -->
+            <VBox fx:id="entryFormPanel" visible="false" managed="false"
+                  styleClass="result-panel" spacing="15" alignment="CENTER">
+                <padding>
+                    <Insets top="20" right="40" bottom="20" left="40"/>
+                </padding>
+
+                <Label text="REGISTRAR ENTRADA" styleClass="status-label status-ok"/>
+                <Label fx:id="entryBadgeLabel" text="" styleClass="student-grade"/>
+
+                <GridPane hgap="15" vgap="10" alignment="CENTER">
+                    <Label text="Cédula *:" GridPane.columnIndex="0" GridPane.rowIndex="0"
+                           styleClass="form-label"/>
+                    <TextField fx:id="idNumberField"
+                               promptText="Número de cédula (obligatorio)"
+                               styleClass="form-field" prefWidth="280"
+                               GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+                    <Label text="Nombre:" GridPane.columnIndex="0" GridPane.rowIndex="1"
+                           styleClass="form-label"/>
+                    <TextField fx:id="firstNameField"
+                               promptText="Nombre (opcional)"
+                               styleClass="form-field" prefWidth="280"
+                               GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                    <Label text="Apellido:" GridPane.columnIndex="0" GridPane.rowIndex="2"
+                           styleClass="form-label"/>
+                    <TextField fx:id="lastNameField"
+                               promptText="Apellido (opcional)"
+                               styleClass="form-field" prefWidth="280"
+                               GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                    <Label text="Justificación:" GridPane.columnIndex="0" GridPane.rowIndex="3"
+                           styleClass="form-label"/>
+                    <TextField fx:id="justificationField"
+                               promptText="Motivo de la visita (opcional)"
+                               styleClass="form-field" prefWidth="280"
+                               GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+                </GridPane>
+
+                <Label fx:id="entryValidationLabel" text="" styleClass="validation-error"
+                       visible="false" managed="false"/>
+
+                <HBox alignment="CENTER" spacing="15">
+                    <Button text="Confirmar Entrada" onAction="#onConfirmEntry"
+                            styleClass="primary-button"/>
+                    <Button text="Cancelar" onAction="#onCancelEntry"
+                            styleClass="secondary-button"/>
+                </HBox>
+            </VBox>
+
+            <!-- Panel: salida registrada -->
+            <VBox fx:id="exitResultPanel" visible="false" managed="false"
+                  styleClass="result-panel can-exit" spacing="10" alignment="CENTER">
+                <padding>
+                    <Insets top="20" right="40" bottom="20" left="40"/>
+                </padding>
+                <Label text="SALIDA REGISTRADA" styleClass="status-label status-ok"/>
+                <Label fx:id="exitVisitorLabel" text="" styleClass="student-name"/>
+                <Label fx:id="exitBadgeLabel" text="" styleClass="student-grade"/>
+                <Label fx:id="exitTimeLabel" text="" styleClass="datetime-label"/>
+            </VBox>
+
+            <!-- Panel: carné no encontrado -->
+            <VBox fx:id="notFoundPanel" visible="false" managed="false"
+                  styleClass="not-found-panel" spacing="10" alignment="CENTER">
+                <padding>
+                    <Insets top="20" right="40" bottom="20" left="40"/>
+                </padding>
+                <Label text="Carné no encontrado" styleClass="not-found-message"/>
+                <Label fx:id="notFoundCodeLabel" text="" styleClass="scanned-code"/>
+                <Label text="Registre el carné en la sección 'Gestionar Carnés'" styleClass="instruction-label"/>
+            </VBox>
+
+            <!-- Panel: carné perdido -->
+            <VBox fx:id="lostPanel" visible="false" managed="false"
+                  styleClass="result-panel inactive" spacing="10" alignment="CENTER">
+                <padding>
+                    <Insets top="20" right="40" bottom="20" left="40"/>
+                </padding>
+                <Label text="CARNÉ PERDIDO" styleClass="status-label status-inactive"/>
+                <Label text="Este carné está marcado como perdido. Contacte al administrador."
+                       styleClass="student-grade"/>
+            </VBox>
+
+            <!-- Mensaje de instrucción inicial -->
+            <Label fx:id="instructionLabel"
+                   text="Escanee un carné de visitante para continuar"
+                   styleClass="instruction-label"/>
+
+        </VBox>
+    </center>
+
+    <!-- Panel lateral: visitantes dentro ahora -->
+    <right>
+        <VBox styleClass="history-panel" prefWidth="300">
+            <padding>
+                <Insets top="20" right="15" bottom="20" left="15"/>
+            </padding>
+
+            <Label text="Visitantes Dentro Ahora" styleClass="history-title"/>
+            <Separator/>
+
+            <TableView fx:id="insideTable" VBox.vgrow="ALWAYS" styleClass="history-list">
+                <columns>
+                    <TableColumn fx:id="colInsideBadge" text="Carné" prefWidth="70"/>
+                    <TableColumn fx:id="colInsideName" text="Visitante" prefWidth="130"/>
+                    <TableColumn fx:id="colInsideEntry" text="Entrada" prefWidth="80"/>
+                </columns>
+                <placeholder>
+                    <Label text="Nadie dentro" styleClass="table-placeholder"/>
+                </placeholder>
+            </TableView>
+        </VBox>
+    </right>
+
+    <!-- Panel inferior: pestañas de gestión -->
+    <bottom>
+        <TabPane fx:id="managementTabs" tabClosingPolicy="UNAVAILABLE"
+                 styleClass="management-tabs">
+
+            <!-- Pestaña: Gestionar carnés -->
+            <Tab text="Gestionar Carnés">
+                <VBox spacing="10">
+                    <padding>
+                        <Insets top="12" right="15" bottom="12" left="15"/>
+                    </padding>
+
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Código nuevo:" styleClass="form-label"/>
+                        <TextField fx:id="newBadgeCodeField"
+                                   promptText="Ej: VISITANTE-01 o escanee aquí"
+                                   onAction="#onAddBadge"
+                                   prefWidth="220" styleClass="form-field"/>
+                        <Button text="Agregar Carné" onAction="#onAddBadge"
+                                styleClass="primary-button"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="(Las acciones de estado requieren contraseña admin)"
+                               styleClass="hint-label"/>
+                    </HBox>
+
+                    <TableView fx:id="badgesTable" prefHeight="130">
+                        <columns>
+                            <TableColumn fx:id="colBadgeCode" text="Código" prefWidth="200"/>
+                            <TableColumn fx:id="colBadgeStatus" text="Estado" prefWidth="120"/>
+                            <TableColumn fx:id="colBadgeUpdated" text="Actualizado" prefWidth="150"/>
+                            <TableColumn fx:id="colBadgeActions" text="Acciones" prefWidth="250"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="Sin carnés registrados. Agregue uno arriba." styleClass="table-placeholder"/>
+                        </placeholder>
+                    </TableView>
+                </VBox>
+            </Tab>
+
+            <!-- Pestaña: Historial de visitas -->
+            <Tab text="Historial de Visitas">
+                <VBox spacing="10">
+                    <padding>
+                        <Insets top="12" right="15" bottom="12" left="15"/>
+                    </padding>
+
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Borrar registros anteriores a:" styleClass="form-label"/>
+                        <DatePicker fx:id="purgeDatePicker" styleClass="form-field"/>
+                        <Button text="Borrar" onAction="#onPurgeLogs"
+                                styleClass="danger-button"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="&#8635; Actualizar" onAction="#onRefreshLogs"
+                                styleClass="small-button"/>
+                    </HBox>
+
+                    <TableView fx:id="logsTable" prefHeight="130">
+                        <columns>
+                            <TableColumn fx:id="colLogBadge" text="Carné" prefWidth="100"/>
+                            <TableColumn fx:id="colLogId" text="Cédula" prefWidth="120"/>
+                            <TableColumn fx:id="colLogName" text="Nombre" prefWidth="160"/>
+                            <TableColumn fx:id="colLogJustification" text="Justificación" prefWidth="180"/>
+                            <TableColumn fx:id="colLogEntry" text="Entrada" prefWidth="130"/>
+                            <TableColumn fx:id="colLogExit" text="Salida" prefWidth="130"/>
+                        </columns>
+                        <placeholder>
+                            <Label text="Sin registros de visitas." styleClass="table-placeholder"/>
+                        </placeholder>
+                    </TableView>
+                </VBox>
+            </Tab>
+        </TabPane>
+    </bottom>
+</BorderPane>
