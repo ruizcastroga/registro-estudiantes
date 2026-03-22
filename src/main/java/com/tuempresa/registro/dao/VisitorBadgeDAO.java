@@ -136,6 +136,25 @@ public class VisitorBadgeDAO {
         }
     }
 
+    /**
+     * Resetea a 'available' todos los carnés en estado 'in_use' que no tienen
+     * ningún log activo (exit_time IS NULL). Útil después de purgar el historial.
+     */
+    public int resetOrphanedBadges() {
+        String sql = "UPDATE visitor_badges SET status = 'available', updated_at = CURRENT_TIMESTAMP " +
+                     "WHERE status = 'in_use' AND id NOT IN " +
+                     "(SELECT badge_id FROM visitor_logs WHERE exit_time IS NULL)";
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            int reset = stmt.executeUpdate();
+            if (reset > 0) logger.info("Carnés huérfanos reseteados a disponible: {}", reset);
+            return reset;
+        } catch (SQLException e) {
+            logger.error("Error al resetear carnés huérfanos", e);
+        }
+        return 0;
+    }
+
     public boolean existsByCode(String code) {
         String sql = "SELECT COUNT(*) FROM visitor_badges WHERE code = ?";
         try (Connection conn = dbConnection.getConnection();
