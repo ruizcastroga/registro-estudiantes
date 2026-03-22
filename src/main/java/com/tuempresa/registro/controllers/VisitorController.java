@@ -9,6 +9,7 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -68,6 +69,7 @@ public class VisitorController implements Initializable {
     @FXML private Label entryValidationLabel;
 
     @FXML private VBox exitResultPanel;
+    @FXML private Label exitStatusLabel;
     @FXML private Label exitVisitorLabel;
     @FXML private Label exitBadgeLabel;
     @FXML private Label exitTimeLabel;
@@ -92,7 +94,7 @@ public class VisitorController implements Initializable {
     @FXML private TableColumn<VisitorBadge, String> colBadgeActions;
 
     // Pestaña: historial
-    @FXML private DatePicker purgeDatePicker;
+    @FXML private TextField logsSearchField;
     @FXML private TableView<VisitorLog> logsTable;
     @FXML private TableColumn<VisitorLog, String> colLogBadge;
     @FXML private TableColumn<VisitorLog, String> colLogId;
@@ -110,6 +112,7 @@ public class VisitorController implements Initializable {
     private ObservableList<VisitorLog> insideList;
     private ObservableList<VisitorBadge> badgesList;
     private ObservableList<VisitorLog> logsList;
+    private FilteredList<VisitorLog> filteredLogsList;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -119,10 +122,12 @@ public class VisitorController implements Initializable {
         insideList = FXCollections.observableArrayList();
         badgesList = FXCollections.observableArrayList();
         logsList = FXCollections.observableArrayList();
+        filteredLogsList = new FilteredList<>(logsList, p -> true);
 
         setupInsideTable();
         setupBadgesTable();
         setupLogsTable();
+        setupLogsSearch();
 
         autoClear = new PauseTransition(Duration.seconds(AUTO_CLEAR_SECONDS));
         autoClear.setOnFinished(e -> clearResultPanels());
@@ -214,7 +219,24 @@ public class VisitorController implements Initializable {
                 c.getValue().getJustification() != null ? c.getValue().getJustification() : ""));
         colLogEntry.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFormattedEntryTime()));
         colLogExit.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getFormattedExitTime()));
-        logsTable.setItems(logsList);
+        logsTable.setItems(filteredLogsList);
+    }
+
+    private void setupLogsSearch() {
+        logsSearchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            String filter = newVal == null ? "" : newVal.trim().toLowerCase();
+            if (filter.isEmpty()) {
+                filteredLogsList.setPredicate(p -> true);
+            } else {
+                filteredLogsList.setPredicate(log -> {
+                    if (log.getBadgeCode() != null && log.getBadgeCode().toLowerCase().contains(filter)) return true;
+                    if (log.getIdNumber() != null && log.getIdNumber().toLowerCase().contains(filter)) return true;
+                    if (log.getFullName() != null && log.getFullName().toLowerCase().contains(filter)) return true;
+                    if (log.getJustification() != null && log.getJustification().toLowerCase().contains(filter)) return true;
+                    return false;
+                });
+            }
+        });
     }
 
     // -----------------------------------------------------------------------
@@ -292,26 +314,10 @@ public class VisitorController implements Initializable {
             String registeredBadgeCode = pendingBadge.getCode();
             clearResultPanels();
 
-            // Confirmar visualmente la entrada
-            Label confirmLabel = new Label("ENTRADA REGISTRADA");
-            confirmLabel.getStyleClass().addAll("status-label", "status-ok");
-            Label nameLabel = new Label(log.getDisplayName());
-            nameLabel.getStyleClass().add("student-name");
-            Label badgeLbl = new Label("Carné: " + registeredBadgeCode);
-            badgeLbl.getStyleClass().add("student-grade");
-
-            VBox tmpPanel = new VBox(10, confirmLabel, nameLabel, badgeLbl);
-            tmpPanel.setAlignment(javafx.geometry.Pos.CENTER);
-            tmpPanel.getStyleClass().addAll("result-panel", "can-exit");
-            tmpPanel.setPadding(new Insets(20, 40, 20, 40));
-
-            // Insertar dinámicamente sobre el área central
-            entryFormPanel.getParent().getChildrenUnmodifiable();
-            // Usar el exitResultPanel como contenedor reutilizable
+            exitStatusLabel.setText("ENTRADA REGISTRADA");
             exitVisitorLabel.setText(log.getDisplayName());
             exitBadgeLabel.setText("Carné: " + registeredBadgeCode);
-            exitTimeLabel.setText("Entrada: " + LocalDateTime.now().format(
-                    DateTimeFormatter.ofPattern("HH:mm:ss")));
+            exitTimeLabel.setText("Entrada: " + LocalDateTime.now().format(TIME_FMT));
             exitResultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive");
             exitResultPanel.getStyleClass().add("can-exit");
             showPanel(exitResultPanel);
@@ -319,6 +325,7 @@ public class VisitorController implements Initializable {
             pendingBadge = null;
             updateStats();
             loadInsideList();
+            loadBadgesTable();
             autoClear.playFromStart();
             badgeInput.requestFocus();
 
@@ -342,6 +349,7 @@ public class VisitorController implements Initializable {
     // -----------------------------------------------------------------------
 
     private void showExitResult(VisitorLog log, String badgeCode) {
+        exitStatusLabel.setText("SALIDA REGISTRADA");
         exitVisitorLabel.setText(log.getDisplayName());
         exitBadgeLabel.setText("Carné: " + badgeCode);
         exitTimeLabel.setText("Salida: " + LocalDateTime.now().format(TIME_FMT));
@@ -351,6 +359,7 @@ public class VisitorController implements Initializable {
         autoClear.playFromStart();
         badgeInput.requestFocus();
         loadInsideList();
+        loadBadgesTable();
         loadLogsTable();
     }
 
@@ -493,11 +502,31 @@ public class VisitorController implements Initializable {
 
     @FXML
     private void onPurgeLogs() {
-        LocalDate date = purgeDatePicker.getValue();
-        if (date == null) {
-            showError("Seleccione una fecha para borrar los registros.");
-            return;
-        }
+        // Mostrar popup de selección de rango de fechas
+        Dialog<LocalDate> dialog = new Dialog<>();
+        dialog.setTitle("Borrar Historial");
+        dialog.setHeaderText("Seleccione hasta qué fecha borrar los registros");
+
+        DatePicker datePicker = new DatePicker(LocalDate.now().minusMonths(1));
+        datePicker.setPromptText("Borrar registros anteriores a...");
+
+        VBox content = new VBox(10,
+                new Label("Borrar todos los registros anteriores a:"),
+                datePicker,
+                new Label("Esta acción no se puede deshacer.")
+        );
+        content.setPadding(new Insets(15));
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        Platform.runLater(datePicker::requestFocus);
+
+        dialog.setResultConverter(btn -> btn == ButtonType.OK ? datePicker.getValue() : null);
+
+        Optional<LocalDate> result = dialog.showAndWait();
+        if (result.isEmpty() || result.get() == null) return;
+
+        LocalDate date = result.get();
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Confirmar borrado");
