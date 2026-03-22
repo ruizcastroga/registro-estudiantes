@@ -17,6 +17,9 @@ module com.tuempresa.registro {
     requires ch.qos.logback.classic;
     requires ch.qos.logback.core;
 
+    // Dependencia de ZXing para generación de códigos de barras (Creador de Carné)
+    requires com.google.zxing;
+
     // Abrir paquetes para reflexión de JavaFX FXML
     opens com.tuempresa.registro to javafx.fxml;
     opens com.tuempresa.registro.controllers to javafx.fxml;
