@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS students (
     is_minor INTEGER DEFAULT 1,             -- 1 = menor de edad, 0 = mayor de edad
     requires_guardian INTEGER DEFAULT 1,    -- 1 = requiere acompañante, 0 = puede salir solo
     photo_path TEXT,                        -- Ruta a la foto del estudiante (opcional)
-    status TEXT DEFAULT 'active',           -- Estado: 'active', 'inactive', 'suspended'
+    status TEXT DEFAULT 'active',           -- Estado: 'active', 'inactive'
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -108,6 +108,42 @@ INSERT OR IGNORE INTO app_config (key, value, description) VALUES
     ('auto_clear_seconds', '10', 'Segundos para limpiar pantalla automáticamente'),
     ('sound_enabled', 'true', 'Habilitar sonidos de alerta'),
     ('default_guard_name', 'Guardia', 'Nombre por defecto del guardia');
+
+
+-- ============================================
+-- Módulo de Visitantes
+-- ============================================
+
+-- Tabla de carnés físicos para visitantes
+CREATE TABLE IF NOT EXISTS visitor_badges (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT UNIQUE NOT NULL,              -- Código del carné (escaneado o manual)
+    status TEXT DEFAULT 'available',        -- Estado: 'available', 'in_use', 'lost'
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_visitor_badges_code ON visitor_badges(code);
+CREATE INDEX IF NOT EXISTS idx_visitor_badges_status ON visitor_badges(status);
+
+
+-- Tabla de registro de visitas
+CREATE TABLE IF NOT EXISTS visitor_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    badge_id INTEGER NOT NULL,              -- Carné usado
+    id_number TEXT NOT NULL,               -- Cédula del visitante (obligatorio)
+    first_name TEXT,                       -- Nombre (opcional)
+    last_name TEXT,                        -- Apellido (opcional)
+    justification TEXT,                    -- Justificación de entrada (opcional)
+    entry_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    exit_time DATETIME,                    -- NULL mientras el visitante está adentro
+    FOREIGN KEY (badge_id) REFERENCES visitor_badges(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_visitor_logs_badge ON visitor_logs(badge_id);
+CREATE INDEX IF NOT EXISTS idx_visitor_logs_id_number ON visitor_logs(id_number);
+CREATE INDEX IF NOT EXISTS idx_visitor_logs_entry_time ON visitor_logs(entry_time);
+CREATE INDEX IF NOT EXISTS idx_visitor_logs_exit_time ON visitor_logs(exit_time);
 
 
 -- Nota: No se incluyen datos de prueba.

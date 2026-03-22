@@ -176,10 +176,6 @@
     -fx-background-color: linear-gradient(to bottom, -danger-light, -surface-color);
 }
 
-.result-panel.suspended {
-    -fx-border-color: #9C27B0;
-    -fx-background-color: linear-gradient(to bottom, #E1BEE7, -surface-color);
-}
 
 .student-name {
     -fx-font-size: 32px;
@@ -214,10 +210,6 @@
     -fx-background-color: -danger-color;
 }
 
-.status-label.status-suspended {
-    -fx-text-fill: white;
-    -fx-background-color: #9C27B0;
-}
 
 .activity-status-label {
     -fx-font-size: 14px;
@@ -236,10 +228,6 @@
     -fx-background-color: -danger-color;
 }
 
-.activity-status-label.status-suspended {
-    -fx-text-fill: white;
-    -fx-background-color: #9C27B0;
-}
 
 /* ============================================
    Panel de tutores legales
@@ -678,4 +666,53 @@
 .combo-box,
 .check-box .box {
     -fx-transition: all 0.2s ease;
+}
+
+/* ============================================
+   Módulo de Visitantes
+   ============================================ */
+
+.danger-button {
+    -fx-background-color: -danger-color;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 6 14;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+}
+
+.danger-button:hover {
+    -fx-background-color: -danger-dark;
+}
+
+.validation-error {
+    -fx-text-fill: -danger-color;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.hint-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: -text-secondary;
+}
+
+.table-placeholder {
+    -fx-text-fill: -text-secondary;
+    -fx-font-style: italic;
+}
+
+.management-tabs {
+    -fx-background-color: -surface-color;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1 0 0 0;
+}
+
+.management-tabs .tab-header-area .tab {
+    -fx-padding: 6 16;
+}
+
+.form-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: -text-primary;
+    -fx-alignment: CENTER_RIGHT;
 }
