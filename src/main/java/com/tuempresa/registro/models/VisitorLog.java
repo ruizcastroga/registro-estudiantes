@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter;
 public class VisitorLog {
 
     private static final DateTimeFormatter DISPLAY_FORMATTER =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+            DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm a");
 
     private Long id;
     private Long badgeId;

@@ -52,7 +52,7 @@ public class ScannerController implements Initializable {
 
     // Formateador de fecha/hora
     private static final DateTimeFormatter DATE_TIME_FORMATTER =
-            DateTimeFormatter.ofPattern("EEEE, dd 'de' MMMM 'de' yyyy - HH:mm:ss");
+            DateTimeFormatter.ofPattern("EEEE, dd 'de' MMMM 'de' yyyy - hh:mm:ss a");
 
     // Tiempo en segundos para limpiar la pantalla automáticamente
     private static final int AUTO_CLEAR_SECONDS = 10;
@@ -353,7 +353,7 @@ public class ScannerController implements Initializable {
      */
     private void addToHistory(StudentService.ScanResult result, String barcode) {
         String historyEntry;
-        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss a"));
 
         if (result.isFound()) {
             Student student = result.getStudent();

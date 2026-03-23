@@ -24,10 +24,10 @@ public class EntryLog {
 
     // Formateador de fecha/hora para display
     private static final DateTimeFormatter DISPLAY_FORMATTER =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+            DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm:ss a");
 
     private static final DateTimeFormatter TIME_FORMATTER =
-            DateTimeFormatter.ofPattern("HH:mm:ss");
+            DateTimeFormatter.ofPattern("hh:mm:ss a");
 
     /**
      * Constructor vacío.
