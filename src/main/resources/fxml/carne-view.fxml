@@ -13,8 +13,7 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.tuempresa.registro.controllers.CarneController"
-            styleClass="crud-container"
-            prefWidth="1050" prefHeight="720">
+            styleClass="crud-container">
 
     <!-- Barra superior -->
     <top>
