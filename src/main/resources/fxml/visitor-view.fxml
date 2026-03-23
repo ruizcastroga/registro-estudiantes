@@ -12,8 +12,7 @@
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.tuempresa.registro.controllers.VisitorController"
-            styleClass="main-container"
-            prefWidth="1000" prefHeight="700">
+            styleClass="main-container">
 
     <!-- Barra superior -->
     <top>
