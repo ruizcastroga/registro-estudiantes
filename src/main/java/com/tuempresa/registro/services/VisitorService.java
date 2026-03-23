@@ -179,6 +179,10 @@ public class VisitorService {
         return logDAO.findAll();
     }
 
+    public List<VisitorLog> getLogsByDateRange(LocalDateTime from, LocalDateTime to) {
+        return logDAO.findByDateRange(from, to);
+    }
+
     /**
      * Elimina registros históricos anteriores a la fecha indicada.
      */
