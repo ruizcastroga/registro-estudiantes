@@ -621,6 +621,7 @@ public class StudentCRUDController implements Initializable {
 
             stage.setScene(scene);
             stage.setTitle("Creador de Carné");
+            Platform.runLater(() -> stage.setMaximized(true));
 
         } catch (IOException e) {
             logger.error("Error al abrir Creador de Carné", e);
@@ -644,6 +645,7 @@ public class StudentCRUDController implements Initializable {
 
             stage.setScene(scene);
             stage.setTitle("Scanner de Estudiantes");
+            Platform.runLater(() -> stage.setMaximized(true));
 
         } catch (IOException e) {
             logger.error("Error al volver al scanner", e);

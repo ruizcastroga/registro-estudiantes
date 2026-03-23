@@ -654,6 +654,7 @@ public class VisitorController implements Initializable {
             scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
             stage.setScene(scene);
             stage.setTitle("Sistema de Registro");
+            Platform.runLater(() -> stage.setMaximized(true));
         } catch (IOException e) {
             logger.error("Error al volver al scanner", e);
         }
