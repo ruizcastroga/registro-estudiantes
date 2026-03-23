@@ -442,6 +442,7 @@ public class ScannerController implements Initializable {
 
             stage.setScene(scene);
             stage.setTitle("Gestión de Estudiantes");
+            stage.setMaximized(true);
 
         } catch (IOException e) {
             logger.error("Error al abrir gestión de estudiantes", e);
@@ -465,6 +466,7 @@ public class ScannerController implements Initializable {
 
             stage.setScene(scene);
             stage.setTitle("Control de Visitantes");
+            stage.setMaximized(true);
 
         } catch (IOException e) {
             logger.error("Error al abrir control de visitantes", e);
@@ -488,6 +490,7 @@ public class ScannerController implements Initializable {
 
             stage.setScene(scene);
             stage.setTitle("Creador de Carné");
+            stage.setMaximized(true);
 
         } catch (IOException e) {
             logger.error("Error al abrir Creador de Carné", e);
@@ -515,6 +518,7 @@ public class ScannerController implements Initializable {
 
             stage.setScene(scene);
             stage.setTitle("Registrar Nuevo Estudiante");
+            stage.setMaximized(true);
 
         } catch (IOException e) {
             logger.error("Error al abrir registro rápido", e);
