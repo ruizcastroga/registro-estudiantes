@@ -249,7 +249,7 @@ public class VisitorController implements Initializable {
 
     @FXML
     private void onBadgeScanned() {
-        String code = badgeInput.getText().trim();
+        String code = badgeInput.getText().trim().toUpperCase();
         badgeInput.clear();
 
         if (code.isEmpty()) {
@@ -374,7 +374,7 @@ public class VisitorController implements Initializable {
 
     @FXML
     private void onAddBadge() {
-        String code = newBadgeCodeField.getText().trim();
+        String code = newBadgeCodeField.getText().trim().toUpperCase();
         if (code.isEmpty()) {
             showError("Ingrese un código para el carné.");
             return;
@@ -435,7 +435,7 @@ public class VisitorController implements Initializable {
                 }
 
                 // Tomar primer campo (por si hay más columnas)
-                String code = line.split("[,;\\t]")[0].trim().replaceAll("^\"|\"$", "");
+                String code = line.split("[,;\\t]")[0].trim().replaceAll("^\"|\"$", "").toUpperCase();
                 if (code.isEmpty()) continue;
 
                 try {
