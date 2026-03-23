@@ -552,6 +552,94 @@ public class VisitorController implements Initializable {
         loadLogsTable();
     }
 
+    @FXML
+    private void onExportLogs() {
+        // --- Diálogo de selección de rango ---
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Exportar Historial");
+        dialog.setHeaderText("Seleccione el rango de fechas a exportar");
+
+        DatePicker fromPicker = new DatePicker(LocalDate.now().withDayOfMonth(1));
+        DatePicker toPicker   = new DatePicker(LocalDate.now());
+        fromPicker.setPromptText("Desde");
+        toPicker.setPromptText("Hasta");
+
+        VBox content = new VBox(10,
+                new Label("Desde:"), fromPicker,
+                new Label("Hasta:"),  toPicker
+        );
+        content.setPadding(new Insets(15));
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+
+        Platform.runLater(fromPicker::requestFocus);
+
+        Optional<ButtonType> result = dialog.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) return;
+
+        LocalDate from = fromPicker.getValue();
+        LocalDate to   = toPicker.getValue();
+
+        if (from == null || to == null) {
+            showError("Debe seleccionar ambas fechas.");
+            return;
+        }
+        if (from.isAfter(to)) {
+            showError("La fecha de inicio debe ser anterior o igual a la fecha de fin.");
+            return;
+        }
+
+        // --- Obtener registros ---
+        List<VisitorLog> logs = visitorService.getLogsByDateRange(
+                from.atStartOfDay(), to.atTime(23, 59, 59));
+
+        if (logs.isEmpty()) {
+            showInfo("No hay registros en el rango seleccionado.");
+            return;
+        }
+
+        // --- Elegir destino ---
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Guardar exportación");
+        fileChooser.setInitialFileName(
+                "visitas_" + from + "_" + to + ".csv");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Archivo CSV", "*.csv"),
+                new FileChooser.ExtensionFilter("Todos los archivos", "*.*")
+        );
+
+        File file = fileChooser.showSaveDialog(logsTable.getScene().getWindow());
+        if (file == null) return;
+
+        // --- Escribir CSV ---
+        DateTimeFormatter csvFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy hh:mm a");
+        try (PrintWriter pw = new PrintWriter(
+                new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
+            pw.print('\ufeff'); // BOM para Excel
+            pw.println("Carné,Cédula,Nombre,Justificación,Entrada,Salida");
+            for (VisitorLog log : logs) {
+                pw.printf("\"%s\",\"%s\",\"%s\",\"%s\",\"%s\",\"%s\"%n",
+                        esc(log.getBadgeCode()),
+                        esc(log.getIdNumber()),
+                        esc(log.getFullName()),
+                        esc(log.getJustification()),
+                        log.getEntryTime() != null ? log.getEntryTime().format(csvFmt) : "",
+                        log.getExitTime()  != null ? log.getExitTime().format(csvFmt)  : "Dentro"
+                );
+            }
+        } catch (IOException e) {
+            showError("Error al guardar el archivo: " + e.getMessage());
+            return;
+        }
+
+        showInfo("Exportación completada.\n" + logs.size() + " registros guardados en:\n" + file.getAbsolutePath());
+    }
+
+    /** Escapa comillas dobles para CSV. */
+    private static String esc(String s) {
+        return s == null ? "" : s.replace("\"", "\"\"");
+    }
+
     // -----------------------------------------------------------------------
     // Navegación
     // -----------------------------------------------------------------------

@@ -132,6 +132,29 @@ public class VisitorLogDAO {
     }
 
     /**
+     * Retorna los registros de visitas entre dos fechas (inclusive).
+     */
+    public List<VisitorLog> findByDateRange(LocalDateTime from, LocalDateTime to) {
+        String sql = "SELECT vl.*, vb.code AS badge_code " +
+                     "FROM visitor_logs vl " +
+                     "JOIN visitor_badges vb ON vl.badge_id = vb.id " +
+                     "WHERE vl.entry_time >= ? AND vl.entry_time <= ? " +
+                     "ORDER BY vl.entry_time ASC";
+        List<VisitorLog> list = new ArrayList<>();
+        try (Connection conn = dbConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, from.format(SQLITE_FMT));
+            stmt.setString(2, to.format(SQLITE_FMT));
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) list.add(map(rs));
+            }
+        } catch (SQLException e) {
+            logger.error("Error al obtener visitas por rango de fechas", e);
+        }
+        return list;
+    }
+
+    /**
      * Elimina todos los registros anteriores a una fecha dada.
      */
     public int deleteBeforeDate(LocalDateTime cutoff) {

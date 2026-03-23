@@ -238,6 +238,8 @@
                                    promptText="Buscar por carné, cédula, nombre..."
                                    prefWidth="320" styleClass="form-field"/>
                         <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="&#8659; Exportar CSV" onAction="#onExportLogs"
+                                styleClass="small-button"/>
                         <Button text="Borrar Historial" onAction="#onPurgeLogs"
                                 styleClass="danger-button"/>
                         <Button text="&#8635; Actualizar" onAction="#onRefreshLogs"
