@@ -38,7 +38,7 @@ public class VisitorBadgeDAO {
     }
 
     public Optional<VisitorBadge> findByCode(String code) {
-        String sql = "SELECT * FROM visitor_badges WHERE code = ?";
+        String sql = "SELECT * FROM visitor_badges WHERE UPPER(code) = UPPER(?)";
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, code);
@@ -156,7 +156,7 @@ public class VisitorBadgeDAO {
     }
 
     public boolean existsByCode(String code) {
-        String sql = "SELECT COUNT(*) FROM visitor_badges WHERE code = ?";
+        String sql = "SELECT COUNT(*) FROM visitor_badges WHERE UPPER(code) = UPPER(?)";
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, code);
