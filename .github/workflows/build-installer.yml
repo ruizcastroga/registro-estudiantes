@@ -34,15 +34,16 @@ jobs:
           Expand-Archive -Path "javafx-jmods.zip" -DestinationPath "."
           echo "JAVAFX_JMODS=$PWD\javafx-jmods-$env:JAVAFX_VERSION" | Out-File -FilePath $env:GITHUB_ENV -Append
 
-      - name: Set project version from tag
-        run: mvn versions:set -DnewVersion=${{ steps.vars.outputs.VERSION }} -DgenerateBackupPoms=false
-
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
-      - name: Copy app JAR to target/lib
+      - name: Find app JAR and copy to target/lib
+        id: jar
         shell: pwsh
-        run: Copy-Item "target\registro-estudiantes-${{ steps.vars.outputs.VERSION }}.jar" "target\lib\"
+        run: |
+          $jar = Get-ChildItem target\*.jar | Where-Object { $_.Name -notmatch 'original' } | Select-Object -First 1
+          Copy-Item $jar.FullName "target\lib\"
+          echo "JAR_NAME=$($jar.Name)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Create custom runtime with jlink
         shell: pwsh
@@ -62,11 +63,11 @@ jobs:
             --type msi `
             --runtime-image target\runtime `
             --input target\lib `
-            --main-jar registro-estudiantes-${{ steps.vars.outputs.VERSION }}.jar `
+            --main-jar "${{ steps.jar.outputs.JAR_NAME }}" `
             --main-class com.tuempresa.registro.Main `
             --java-options "--add-modules javafx.controls,javafx.fxml,javafx.graphics" `
             --name "Registro Estudiantes" `
-            --app-version ${{ steps.vars.outputs.VERSION }} `
+            --app-version "${{ steps.vars.outputs.VERSION }}" `
             --vendor "Tu Empresa" `
             --description "Sistema de registro y control de salida de estudiantes" `
             --dest target\installer `
