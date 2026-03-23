@@ -82,11 +82,12 @@ def generar_pdf(codes: list[str], pdf_path: str) -> None:
     card_w = 3.37 * inch   # 85.6 mm
     card_h = 2.13 * inch   # 54 mm
 
-    cols         = 2
-    rows         = 4
-    margin_x     = (page_w - cols * card_w) / (cols + 1)
-    margin_y_top = 0.5 * inch
-    gap_y        = (page_h - margin_y_top - rows * card_h) / (rows - 1)
+    cols            = 2
+    rows            = 4
+    margin_x        = (page_w - cols * card_w) / (cols + 1)
+    margin_y_top    = 0.5 * inch
+    margin_y_bottom = 0.5 * inch
+    gap_y           = (page_h - margin_y_top - margin_y_bottom - rows * card_h) / (rows - 1)
 
     # Colores del tema
     COLOR_HEADER = colors.HexColor("#1565C0")   # azul oscuro
