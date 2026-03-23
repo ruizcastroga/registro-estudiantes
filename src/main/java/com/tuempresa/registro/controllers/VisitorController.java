@@ -47,7 +47,7 @@ import java.util.ResourceBundle;
 public class VisitorController implements Initializable {
 
     private static final Logger logger = LoggerFactory.getLogger(VisitorController.class);
-    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm:ss");
+    private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("hh:mm:ss a");
     private static final int AUTO_CLEAR_SECONDS = 8;
 
     // Header
@@ -158,7 +158,7 @@ public class VisitorController implements Initializable {
         colBadgeUpdated.setCellValueFactory(c -> {
             VisitorBadge b = c.getValue();
             String val = b.getUpdatedAt() != null ?
-                    b.getUpdatedAt().format(DateTimeFormatter.ofPattern("dd/MM HH:mm")) : "";
+                    b.getUpdatedAt().format(DateTimeFormatter.ofPattern("dd/MM hh:mm a")) : "";
             return new SimpleStringProperty(val);
         });
 
