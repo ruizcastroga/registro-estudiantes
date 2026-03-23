@@ -724,6 +724,7 @@ public class CarneController implements Initializable {
             scene.getStylesheets().add(
                     getClass().getResource("/css/styles.css").toExternalForm());
 
+            stage.setMaximized(false);
             stage.setScene(scene);
             stage.setTitle(title);
             Platform.runLater(() -> stage.setMaximized(true));
