@@ -89,8 +89,9 @@ public class VisitorLogDAO {
      * Registra una nueva entrada de visitante.
      */
     public VisitorLog save(VisitorLog log) throws SQLException {
-        String sql = "INSERT INTO visitor_logs (badge_id, id_number, first_name, last_name, justification) " +
-                     "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO visitor_logs (badge_id, id_number, first_name, last_name, justification, entry_time) " +
+                     "VALUES (?, ?, ?, ?, ?, ?)";
+        LocalDateTime now = LocalDateTime.now();
         Connection conn = dbConnection.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setLong(1, log.getBadgeId());
@@ -98,12 +99,13 @@ public class VisitorLogDAO {
             stmt.setString(3, log.getFirstName());
             stmt.setString(4, log.getLastName());
             stmt.setString(5, log.getJustification());
+            stmt.setString(6, now.format(SQLITE_FMT));
             stmt.executeUpdate();
             try (Statement idStmt = conn.createStatement();
                  ResultSet rs = idStmt.executeQuery("SELECT last_insert_rowid()")) {
                 if (rs.next()) {
                     log.setId(rs.getLong(1));
-                    log.setEntryTime(LocalDateTime.now());
+                    log.setEntryTime(now);
                 }
             }
         }
@@ -115,10 +117,11 @@ public class VisitorLogDAO {
      * Registra la salida de un visitante (por ID del log).
      */
     public boolean registerExit(Long logId) {
-        String sql = "UPDATE visitor_logs SET exit_time = CURRENT_TIMESTAMP WHERE id = ?";
+        String sql = "UPDATE visitor_logs SET exit_time = ? WHERE id = ?";
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setLong(1, logId);
+            stmt.setString(1, LocalDateTime.now().format(SQLITE_FMT));
+            stmt.setLong(2, logId);
             boolean updated = stmt.executeUpdate() > 0;
             if (updated) logger.info("Salida registrada para log ID: {}", logId);
             return updated;
@@ -149,7 +152,7 @@ public class VisitorLogDAO {
      * Cuenta el total de visitas de hoy.
      */
     public int countToday() {
-        String sql = "SELECT COUNT(*) FROM visitor_logs WHERE DATE(entry_time) = DATE('now')";
+        String sql = "SELECT COUNT(*) FROM visitor_logs WHERE DATE(entry_time) = DATE('now', 'localtime')";
         try (Connection conn = dbConnection.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
