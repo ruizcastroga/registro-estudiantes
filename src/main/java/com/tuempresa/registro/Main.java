@@ -336,9 +336,9 @@ public class Main extends Application {
             cleanup();
         });
 
-        // Mostrar ventana en pantalla completa
-        primaryStage.setMaximized(true);
+        // Mostrar ventana y maximizar después del render
         primaryStage.show();
+        Platform.runLater(() -> primaryStage.setMaximized(true));
 
         logger.info("Vista principal cargada");
     }

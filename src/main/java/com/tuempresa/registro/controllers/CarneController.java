@@ -726,7 +726,7 @@ public class CarneController implements Initializable {
 
             stage.setScene(scene);
             stage.setTitle(title);
-            stage.setMaximized(true);
+            Platform.runLater(() -> stage.setMaximized(true));
         } catch (IOException e) {
             logger.error("Error al navegar a {}", fxmlPath, e);
         }
