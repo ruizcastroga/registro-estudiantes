@@ -652,6 +652,7 @@ public class VisitorController implements Initializable {
             Stage stage = (Stage) badgeInput.getScene().getWindow();
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            stage.setMaximized(false);
             stage.setScene(scene);
             stage.setTitle("Sistema de Registro");
             Platform.runLater(() -> stage.setMaximized(true));

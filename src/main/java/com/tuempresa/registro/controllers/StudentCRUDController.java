@@ -619,6 +619,7 @@ public class StudentCRUDController implements Initializable {
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
 
+            stage.setMaximized(false);
             stage.setScene(scene);
             stage.setTitle("Creador de Carné");
             Platform.runLater(() -> stage.setMaximized(true));
@@ -643,6 +644,7 @@ public class StudentCRUDController implements Initializable {
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
 
+            stage.setMaximized(false);
             stage.setScene(scene);
             stage.setTitle("Scanner de Estudiantes");
             Platform.runLater(() -> stage.setMaximized(true));
