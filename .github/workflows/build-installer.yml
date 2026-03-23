@@ -1,0 +1,83 @@
+name: Build MSI Installer
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  JAVAFX_VERSION: 21.0.1
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Get version from tag
+        id: vars
+        shell: bash
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Download JavaFX jmods for Windows
+        shell: pwsh
+        run: |
+          $url = "https://download2.gluonhq.com/openjfx/$env:JAVAFX_VERSION/openjfx-$($env:JAVAFX_VERSION)_windows-x64_bin-jmods.zip"
+          Invoke-WebRequest -Uri $url -OutFile "javafx-jmods.zip"
+          Expand-Archive -Path "javafx-jmods.zip" -DestinationPath "."
+          echo "JAVAFX_JMODS=$PWD\javafx-jmods-$env:JAVAFX_VERSION" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Set project version from tag
+        run: mvn versions:set -DnewVersion=${{ steps.vars.outputs.VERSION }} -DgenerateBackupPoms=false
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      - name: Copy app JAR to target/lib
+        shell: pwsh
+        run: Copy-Item "target\registro-estudiantes-${{ steps.vars.outputs.VERSION }}.jar" "target\lib\"
+
+      - name: Create custom runtime with jlink
+        shell: pwsh
+        run: |
+          jlink `
+            --module-path "$env:JAVA_HOME\jmods;$env:JAVAFX_JMODS" `
+            --add-modules java.base,java.desktop,java.logging,java.sql,java.naming,javafx.controls,javafx.fxml,javafx.graphics,javafx.base `
+            --output target\runtime `
+            --strip-debug `
+            --no-header-files `
+            --no-man-pages
+
+      - name: Create MSI installer with jpackage
+        shell: pwsh
+        run: |
+          jpackage `
+            --type msi `
+            --runtime-image target\runtime `
+            --input target\lib `
+            --main-jar registro-estudiantes-${{ steps.vars.outputs.VERSION }}.jar `
+            --main-class com.tuempresa.registro.Main `
+            --java-options "--add-modules javafx.controls,javafx.fxml,javafx.graphics" `
+            --name "Registro Estudiantes" `
+            --app-version ${{ steps.vars.outputs.VERSION }} `
+            --vendor "Tu Empresa" `
+            --description "Sistema de registro y control de salida de estudiantes" `
+            --dest target\installer `
+            --win-menu `
+            --win-shortcut `
+            --win-dir-chooser
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Registro Estudiantes v${{ steps.vars.outputs.VERSION }}"
+          files: target/installer/*.msi
+          generate_release_notes: true
+          fail_on_unmatched_files: true
