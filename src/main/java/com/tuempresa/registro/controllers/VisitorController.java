@@ -189,8 +189,10 @@ public class VisitorController implements Initializable {
                 box.setPadding(new Insets(2));
 
                 btnLost.setOnAction(e -> {
+                    if (!requireSession()) return;
                     if (!sessionManager.canModifyData()) {
-                        showAlert(Alert.AlertType.WARNING, "Acceso Denegado", "Necesita una sesión de Administrador activa para esta operación.");
+                        showAlert(Alert.AlertType.WARNING, "Sin Permisos",
+                                "No tiene permisos para modificar carnés.");
                         return;
                     }
                     VisitorBadge badge = getTableView().getItems().get(getIndex());
@@ -199,8 +201,10 @@ public class VisitorController implements Initializable {
                 });
 
                 btnAvailable.setOnAction(e -> {
+                    if (!requireSession()) return;
                     if (!sessionManager.canModifyData()) {
-                        showAlert(Alert.AlertType.WARNING, "Acceso Denegado", "Necesita una sesión de Administrador activa para esta operación.");
+                        showAlert(Alert.AlertType.WARNING, "Sin Permisos",
+                                "No tiene permisos para modificar carnés.");
                         return;
                     }
                     VisitorBadge badge = getTableView().getItems().get(getIndex());
@@ -209,8 +213,10 @@ public class VisitorController implements Initializable {
                 });
 
                 btnDelete.setOnAction(e -> {
+                    if (!requireSession()) return;
                     if (!sessionManager.canModifyData()) {
-                        showAlert(Alert.AlertType.WARNING, "Acceso Denegado", "Necesita una sesión de Administrador activa para esta operación.");
+                        showAlert(Alert.AlertType.WARNING, "Sin Permisos",
+                                "No tiene permisos para eliminar carnés.");
                         return;
                     }
                     VisitorBadge badge = getTableView().getItems().get(getIndex());
@@ -398,8 +404,10 @@ public class VisitorController implements Initializable {
             showError("Ingrese un código para el carné.");
             return;
         }
+        if (!requireSession()) return;
         if (!sessionManager.canModifyData()) {
-            showAlert(Alert.AlertType.WARNING, "Acceso Denegado", "Necesita una sesión de Administrador activa para esta operación.");
+            showAlert(Alert.AlertType.WARNING, "Sin Permisos",
+                    "No tiene permisos para agregar carnés.");
             return;
         }
         try {
@@ -420,8 +428,10 @@ public class VisitorController implements Initializable {
 
     @FXML
     private void onImportBadgesCsv() {
+        if (!requireSession()) return;
         if (!sessionManager.canModifyData()) {
-            showAlert(Alert.AlertType.WARNING, "Acceso Denegado", "Necesita una sesión de Administrador activa para esta operación.");
+            showAlert(Alert.AlertType.WARNING, "Sin Permisos",
+                    "No tiene permisos para importar carnés.");
             return;
         }
 
@@ -563,8 +573,10 @@ public class VisitorController implements Initializable {
         Optional<ButtonType> res = confirm.showAndWait();
         if (res.isEmpty() || res.get() != ButtonType.OK) return;
 
+        if (!requireSession()) return;
         if (!sessionManager.canModifyData()) {
-            showAlert(Alert.AlertType.WARNING, "Acceso Denegado", "Necesita una sesión de Administrador activa para esta operación.");
+            showAlert(Alert.AlertType.WARNING, "Sin Permisos",
+                    "No tiene permisos para borrar registros históricos.");
             return;
         }
 
@@ -670,94 +682,125 @@ public class VisitorController implements Initializable {
     // Sesión
     // -----------------------------------------------------------------------
 
+    /**
+     * Configura la barra de sesión vinculando las propiedades del SessionManager.
+     */
     private void setupSessionBar() {
         sessionBar.setVisible(true);
         sessionBar.setManaged(true);
+
+        // Bind labels to session properties
+        sessionUserLabel.textProperty().bind(sessionManager.currentUsernameProperty());
+        sessionRoleLabel.textProperty().bind(sessionManager.currentRoleProperty());
+        sessionTimerLabel.textProperty().bind(sessionManager.remainingTimeFormattedProperty());
+
+        // Show/hide login/logout buttons based on session state
         sessionManager.sessionActiveProperty().addListener((obs, wasActive, isActive) -> {
             sessionLoginBtn.setVisible(!isActive);
             sessionLoginBtn.setManaged(!isActive);
             sessionLogoutBtn.setVisible(isActive);
             sessionLogoutBtn.setManaged(isActive);
-            if (isActive) {
-                sessionUserLabel.setText("Usuario: " + sessionManager.getCurrentUser().getUsername());
-                sessionRoleLabel.setText("Rol: " + sessionManager.getCurrentUser().getRole());
+        });
+
+        // Timer warning when < 120 seconds
+        sessionManager.remainingSecondsProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.intValue() > 0 && newVal.intValue() < 120) {
+                sessionTimerLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
             } else {
-                sessionUserLabel.setText("");
-                sessionRoleLabel.setText("");
-                sessionTimerLabel.setText("");
+                sessionTimerLabel.setStyle("");
             }
         });
-        sessionManager.remainingTimeFormattedProperty().addListener((obs, oldVal, newVal) -> {
-            sessionTimerLabel.setText(newVal);
-            int remaining = sessionManager.remainingSecondsProperty().get();
-            if (remaining <= 120 && remaining > 0) {
-                sessionTimerLabel.getStyleClass().setAll("session-timer-warning");
-                sessionBar.getStyleClass().setAll("session-bar", "session-bar-warning");
-            } else {
-                sessionTimerLabel.getStyleClass().setAll("session-timer-label");
-                sessionBar.getStyleClass().setAll("session-bar");
-            }
-        });
+
+        // Set initial button state
         boolean active = sessionManager.isSessionActive();
         sessionLoginBtn.setVisible(!active);
         sessionLoginBtn.setManaged(!active);
         sessionLogoutBtn.setVisible(active);
         sessionLogoutBtn.setManaged(active);
-        if (active) {
-            sessionUserLabel.setText("Usuario: " + sessionManager.getCurrentUser().getUsername());
-            sessionRoleLabel.setText("Rol: " + sessionManager.getCurrentUser().getRole());
-            sessionTimerLabel.setText(sessionManager.remainingTimeFormattedProperty().get());
-        }
     }
 
+    /**
+     * Muestra diálogo de login con usuario y contraseña.
+     * Loop en credenciales incorrectas hasta que el usuario cancele.
+     */
     @FXML
     private void onLogin() {
-        SecurityManager security = SecurityManager.getInstance();
-        Dialog<ButtonType> dialog = new Dialog<>();
-        dialog.setTitle("Iniciar Sesión");
-        dialog.setHeaderText("Ingrese sus credenciales");
-        ButtonType loginButtonType = new ButtonType("Iniciar Sesión", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
-
-        VBox content = new VBox(10);
-        content.setPadding(new Insets(20));
-        TextField usernameInput = new TextField();
-        usernameInput.setPromptText("Usuario");
-        PasswordField passwordInput = new PasswordField();
-        passwordInput.setPromptText("Contraseña");
-        Label errorLabel = new Label();
-        errorLabel.setStyle("-fx-text-fill: red;");
-        errorLabel.setVisible(false);
-        content.getChildren().addAll(new Label("Usuario:"), usernameInput, new Label("Contraseña:"), passwordInput, errorLabel);
-        dialog.getDialogPane().setContent(content);
-        Platform.runLater(usernameInput::requestFocus);
+        SecurityManager secMgr = SecurityManager.getInstance();
 
         while (true) {
-            Optional<ButtonType> result = dialog.showAndWait();
-            if (result.isEmpty() || result.get() != loginButtonType) return;
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Iniciar Sesión");
+            dialog.setHeaderText("Ingrese sus credenciales");
 
-            Optional<AdminUser> userOpt = security.authenticate(usernameInput.getText(), passwordInput.getText());
-            if (userOpt.isPresent()) {
-                AdminUser user = userOpt.get();
-                int timeout = sessionManager.getTimeoutMinutes();
-                sessionManager.startSession(user, timeout);
-                Alert success = new Alert(Alert.AlertType.INFORMATION);
-                success.setTitle("Sesión Iniciada");
-                success.setHeaderText(null);
-                success.setContentText("Usuario " + user.getUsername() + " logueado correctamente.\nTu sesión estará activa por " + timeout + " minutos.\nSi terminas antes, recuerda cerrar la sesión para cuidar los datos.");
-                success.showAndWait();
+            ButtonType loginButtonType = new ButtonType("Iniciar Sesión", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
+
+            VBox content = new VBox(10);
+            content.setPadding(new Insets(20));
+
+            TextField usernameField = new TextField();
+            usernameField.setPromptText("Usuario");
+            PasswordField passwordField = new PasswordField();
+            passwordField.setPromptText("Contraseña");
+            Label errorLabel = new Label();
+            errorLabel.setStyle("-fx-text-fill: red;");
+
+            content.getChildren().addAll(
+                    new Label("Usuario:"), usernameField,
+                    new Label("Contraseña:"), passwordField,
+                    errorLabel
+            );
+            dialog.getDialogPane().setContent(content);
+            Platform.runLater(usernameField::requestFocus);
+
+            Optional<ButtonType> result = dialog.showAndWait();
+
+            if (result.isEmpty() || result.get() == ButtonType.CANCEL) {
+                return;
+            }
+
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText();
+
+            Optional<AdminUser> authResult = secMgr.authenticate(username, password);
+
+            if (authResult.isPresent()) {
+                AdminUser adminUser = authResult.get();
+                int timeoutMinutes = sessionManager.getTimeoutMinutes();
+                sessionManager.startSession(adminUser, timeoutMinutes);
+
+                showAlert(Alert.AlertType.INFORMATION, "Sesión Iniciada",
+                        "Usuario " + username + " logueado correctamente. " +
+                                "Tu sesión estará activa por " + timeoutMinutes + " minutos. " +
+                                "Si terminas antes, recuerda cerrar la sesión para cuidar los datos.");
                 return;
             } else {
-                errorLabel.setText("Credenciales incorrectas. Intente de nuevo.");
-                errorLabel.setVisible(true);
-                passwordInput.clear();
+                showAlert(Alert.AlertType.ERROR, "Error de Autenticación",
+                        "Usuario o contraseña incorrectos. Intente de nuevo.");
             }
         }
     }
 
+    /**
+     * Cierra la sesión actual.
+     */
     @FXML
     private void onLogout() {
         sessionManager.endSession();
+    }
+
+    /**
+     * Verifica que haya una sesión activa. Muestra alerta si no.
+     *
+     * @return true si hay sesión activa
+     */
+    private boolean requireSession() {
+        if (!sessionManager.isSessionActive()) {
+            showAlert(Alert.AlertType.WARNING, "Sesión Requerida",
+                    "Debe iniciar sesión para realizar esta operación.");
+            return false;
+        }
+        return true;
     }
 
     // -----------------------------------------------------------------------
