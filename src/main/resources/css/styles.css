@@ -817,3 +817,148 @@
     -fx-border-color: -primary-color;
     -fx-background-color: -primary-light;
 }
+
+/* ============================================
+   Barra de Sesión (Session Bar)
+   ============================================ */
+
+.session-bar {
+    -fx-background-color: #263238;
+    -fx-border-color: #37474F;
+    -fx-border-width: 0 0 1 0;
+}
+
+.session-user-label {
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.session-role-label {
+    -fx-text-fill: #B0BEC5;
+    -fx-font-size: 12px;
+    -fx-padding: 2 8;
+    -fx-background-color: rgba(255,255,255,0.1);
+    -fx-background-radius: 10;
+}
+
+.session-timer-label {
+    -fx-text-fill: #4CAF50;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Consolas", monospace;
+}
+
+.session-timer-warning {
+    -fx-text-fill: #F44336;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-font-family: "Consolas", monospace;
+}
+
+.session-bar-warning {
+    -fx-background-color: #B71C1C;
+    -fx-border-color: #D32F2F;
+    -fx-border-width: 0 0 1 0;
+}
+
+.session-button {
+    -fx-background-color: rgba(255,255,255,0.15);
+    -fx-text-fill: white;
+    -fx-padding: 5 15;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-font-size: 12px;
+}
+
+.session-button:hover {
+    -fx-background-color: rgba(255,255,255,0.25);
+}
+
+/* ============================================
+   Módulo de Personal (Staff)
+   ============================================ */
+
+.staff-result-panel {
+    -fx-background-color: -surface-color;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-border-width: 3;
+    -fx-border-color: -primary-color;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 4);
+    -fx-min-width: 500;
+    -fx-background-color: linear-gradient(to bottom, -primary-light, -surface-color);
+}
+
+.staff-name {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -text-primary;
+}
+
+.staff-department {
+    -fx-font-size: 16px;
+    -fx-text-fill: -text-secondary;
+}
+
+.staff-status {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-padding: 8 16;
+    -fx-background-radius: 6;
+    -fx-text-fill: white;
+    -fx-background-color: -primary-color;
+}
+
+/* ============================================
+   Navigation buttons (consistent across pages)
+   ============================================ */
+
+.nav-button {
+    -fx-background-color: rgba(255, 255, 255, 0.15);
+    -fx-text-fill: white;
+    -fx-padding: 8 16;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-font-size: 13px;
+}
+
+.nav-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.3);
+}
+
+.nav-button-active {
+    -fx-background-color: rgba(255, 255, 255, 0.3);
+    -fx-text-fill: white;
+    -fx-padding: 8 16;
+    -fx-background-radius: 4;
+    -fx-border-radius: 4;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-border-color: white;
+    -fx-border-width: 0 0 2 0;
+}
+
+/* ============================================
+   Settings Module
+   ============================================ */
+
+.settings-section {
+    -fx-background-color: -surface-color;
+    -fx-padding: 20;
+    -fx-background-radius: 8;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+}
+
+.settings-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: -text-primary;
+}
+
+.settings-description {
+    -fx-font-size: 12px;
+    -fx-text-fill: -text-secondary;
+    -fx-wrap-text: true;
+}

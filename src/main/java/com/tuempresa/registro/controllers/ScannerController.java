@@ -1,10 +1,18 @@
 package com.tuempresa.registro.controllers;
 
+import com.tuempresa.registro.dao.ActivityLogDAO;
+import com.tuempresa.registro.models.AdminUser;
 import com.tuempresa.registro.models.EntryLog;
 import com.tuempresa.registro.models.Guardian;
+import com.tuempresa.registro.models.StaffMember;
 import com.tuempresa.registro.models.Student;
+import com.tuempresa.registro.models.VisitorBadge;
+import com.tuempresa.registro.services.StaffService;
 import com.tuempresa.registro.services.StudentService;
+import com.tuempresa.registro.services.VisitorService;
 import com.tuempresa.registro.utils.LicenseManager;
+import com.tuempresa.registro.utils.SecurityManager;
+import com.tuempresa.registro.utils.SessionManager;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -12,13 +20,14 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -38,6 +47,7 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -45,6 +55,7 @@ import java.util.TimerTask;
 /**
  * Controlador de la vista principal del scanner.
  * Gestiona el escaneo de códigos de barras y muestra los resultados.
+ * Busca en estudiantes, personal y visitantes de forma unificada.
  */
 public class ScannerController implements Initializable {
 
@@ -60,22 +71,12 @@ public class ScannerController implements Initializable {
     // Máximo de elementos en el historial
     private static final int MAX_HISTORY_ITEMS = 5;
 
-    // Componentes FXML
+    // Componentes FXML - Generales
     @FXML private Label schoolNameLabel;
     @FXML private Label dateTimeLabel;
     @FXML private Label todayScansLabel;
     @FXML private TextField barcodeInput;
     @FXML private Label instructionLabel;
-    @FXML private VBox resultPanel;
-    @FXML private Label studentNameLabel;
-    @FXML private Label studentGradeLabel;
-    @FXML private Label statusLabel;
-    @FXML private Label activityStatusLabel;
-    @FXML private VBox guardiansPanel;
-    @FXML private VBox guardiansList;
-    @FXML private VBox notFoundPanel;
-    @FXML private Label notFoundLabel;
-    @FXML private Label scannedCodeLabel;
     @FXML private ListView<String> historyListView;
     @FXML private Label statusIndicator;
     @FXML private Label connectionStatusLabel;
@@ -84,8 +85,50 @@ public class ScannerController implements Initializable {
     @FXML private ImageView schoolShieldImage;
     @FXML private Label shieldPlaceholder;
 
+    // Componentes FXML - Panel de resultado estudiante
+    @FXML private VBox resultPanel;
+    @FXML private Label studentNameLabel;
+    @FXML private Label studentGradeLabel;
+    @FXML private Label statusLabel;
+    @FXML private Label activityStatusLabel;
+    @FXML private VBox guardiansPanel;
+    @FXML private VBox guardiansList;
+
+    // Componentes FXML - Panel de resultado personal
+    @FXML private VBox staffResultPanel;
+    @FXML private Label staffNameLabel;
+    @FXML private Label staffDepartmentLabel;
+    @FXML private Label staffStatusLabel;
+
+    // Componentes FXML - Panel de resultado visitante
+    @FXML private VBox visitorResultPanel;
+    @FXML private Label visitorNameLabel;
+    @FXML private Label visitorBadgeLabel;
+    @FXML private Label visitorEntryExitLabel;
+
+    // Componentes FXML - Panel no encontrado
+    @FXML private VBox notFoundPanel;
+    @FXML private Label notFoundLabel;
+    @FXML private Label scannedCodeLabel;
+    @FXML private Button quickRegisterButton;
+
+    // Componentes FXML - Otros
+    @FXML private Button manageButton;
+    @FXML private Button clearHistoryButton;
+
+    // Componentes FXML - Barra de sesión
+    @FXML private HBox sessionBar;
+    @FXML private Label sessionUserLabel;
+    @FXML private Label sessionRoleLabel;
+    @FXML private Label sessionTimerLabel;
+    @FXML private Button sessionLoginBtn;
+    @FXML private Button sessionLogoutBtn;
+
     // Servicios
     private StudentService studentService;
+    private StaffService staffService;
+    private VisitorService visitorService;
+    private ActivityLogDAO activityLogDAO;
     private LicenseManager licenseManager;
 
     // Lista observable para el historial
@@ -109,6 +152,9 @@ public class ScannerController implements Initializable {
 
         // Inicializar servicios
         studentService = new StudentService();
+        staffService = new StaffService();
+        visitorService = new VisitorService();
+        activityLogDAO = new ActivityLogDAO();
         licenseManager = LicenseManager.getInstance();
 
         // Configurar lista de historial
@@ -133,10 +179,66 @@ public class ScannerController implements Initializable {
         // Cargar escudo del colegio si existe
         loadSchoolShield();
 
+        // Configurar barra de sesión
+        setupSessionBar();
+
         // Enfocar el campo de entrada al iniciar
         Platform.runLater(() -> barcodeInput.requestFocus());
 
         logger.info("ScannerController inicializado correctamente");
+    }
+
+    /**
+     * Configura la barra de sesión con listeners para cambios de estado.
+     */
+    private void setupSessionBar() {
+        SessionManager sm = SessionManager.getInstance();
+        sm.sessionActiveProperty().addListener((obs, oldVal, newVal) -> {
+            sessionBar.setVisible(true);
+            sessionBar.setManaged(true);
+            if (newVal) {
+                sessionUserLabel.setText("Usuario: " + sm.getCurrentUser().getUsername());
+                sessionRoleLabel.setText("Rol: " + sm.getCurrentUser().getRole());
+                sessionLoginBtn.setVisible(false);
+                sessionLoginBtn.setManaged(false);
+                sessionLogoutBtn.setVisible(true);
+                sessionLogoutBtn.setManaged(true);
+            } else {
+                sessionUserLabel.setText("");
+                sessionRoleLabel.setText("");
+                sessionLoginBtn.setVisible(true);
+                sessionLoginBtn.setManaged(true);
+                sessionLogoutBtn.setVisible(false);
+                sessionLogoutBtn.setManaged(false);
+                sessionTimerLabel.setText("");
+            }
+        });
+        sm.remainingTimeFormattedProperty().addListener((obs, oldVal, newVal) -> {
+            sessionTimerLabel.setText(newVal);
+            int remaining = sm.remainingSecondsProperty().get();
+            if (remaining <= 120 && remaining > 0) {
+                sessionTimerLabel.getStyleClass().setAll("session-timer-warning");
+                sessionBar.getStyleClass().setAll("session-bar", "session-bar-warning");
+            } else {
+                sessionTimerLabel.getStyleClass().setAll("session-timer-label");
+                sessionBar.getStyleClass().setAll("session-bar");
+            }
+        });
+        // Show bar with login button if no active session
+        if (sm.isSessionActive()) {
+            sessionBar.setVisible(true);
+            sessionBar.setManaged(true);
+            sessionUserLabel.setText("Usuario: " + sm.getCurrentUser().getUsername());
+            sessionRoleLabel.setText("Rol: " + sm.getCurrentUser().getRole());
+            sessionTimerLabel.setText(sm.remainingTimeFormattedProperty().get());
+            sessionLoginBtn.setVisible(false);
+            sessionLoginBtn.setManaged(false);
+            sessionLogoutBtn.setVisible(true);
+            sessionLogoutBtn.setManaged(true);
+        } else {
+            sessionBar.setVisible(true);
+            sessionBar.setManaged(true);
+        }
     }
 
     /**
@@ -212,6 +314,7 @@ public class ScannerController implements Initializable {
     /**
      * Manejador del evento cuando se escanea un código de barras.
      * Se dispara al presionar Enter en el campo de entrada.
+     * Busca en estudiantes, personal y visitantes de forma unificada.
      */
     @FXML
     private void onBarcodeScanned() {
@@ -224,20 +327,55 @@ public class ScannerController implements Initializable {
         logger.info("Código escaneado: {}", barcode);
         lastScannedCode = barcode;
 
-        // Procesar el escaneo
-        StudentService.ScanResult result = studentService.processScan(barcode, "Guardia");
+        // Ocultar instrucciones
+        instructionLabel.setVisible(false);
 
-        // Mostrar resultado
-        displayScanResult(result, barcode);
+        // 1. Intentar como estudiante
+        StudentService.ScanResult studentResult = studentService.processScan(barcode, "Guardia");
+        if (studentResult.isFound()) {
+            displayStudentResult(studentResult, barcode);
+            addToHistory("student", studentResult.getStudent().getFullName(),
+                    studentResult.canExit() ? "[OK]" : "[REQ]");
+            barcodeInput.clear();
+            updateTodayScansCount();
+            autoClearTransition.playFromStart();
+            barcodeInput.requestFocus();
+            return;
+        }
+
+        // 2. Intentar como personal
+        StaffService.ScanResult staffResult = staffService.processScan(barcode, "Guardia");
+        if (staffResult.isFound()) {
+            displayStaffResult(staffResult, barcode);
+            addToHistory("staff", staffResult.getStaff().getFullName(), "[PER]");
+            barcodeInput.clear();
+            updateTodayScansCount();
+            autoClearTransition.playFromStart();
+            barcodeInput.requestFocus();
+            return;
+        }
+
+        // 3. Intentar como carné de visitante
+        VisitorService.ScanResult visitorResult = visitorService.processBadgeScan(barcode);
+        if (visitorResult.getStatus() != VisitorService.ScanStatus.BADGE_NOT_FOUND) {
+            displayVisitorResult(visitorResult, barcode);
+            addToHistory("visitor", barcode, "[VIS]");
+            barcodeInput.clear();
+            updateTodayScansCount();
+            autoClearTransition.playFromStart();
+            barcodeInput.requestFocus();
+            return;
+        }
+
+        // 4. No encontrado en ninguna tabla
+        displayNotFound(barcode);
+        addToHistory(null, barcode, "[???]");
 
         // Limpiar el campo de entrada
         barcodeInput.clear();
 
         // Actualizar estadísticas
         updateTodayScansCount();
-
-        // Agregar al historial
-        addToHistory(result, barcode);
 
         // Iniciar auto-limpieza
         autoClearTransition.playFromStart();
@@ -247,83 +385,209 @@ public class ScannerController implements Initializable {
     }
 
     /**
-     * Muestra el resultado del escaneo en la interfaz.
-     * Jerarquía de información:
-     * 1. Estado de acceso (PUEDE SALIR / REQUIERE ACOMPAÑANTE / NO PUEDE ENTRAR)
-     * 2. Estado de actividad (ACTIVO / INACTIVO) - siempre visible
-     * 3. Lista de tutores legales - solo si requiere acompañante y está activo
+     * Muestra el resultado del escaneo de un estudiante.
      */
-    private void displayScanResult(StudentService.ScanResult result, String barcode) {
-        // Ocultar instrucciones
-        instructionLabel.setVisible(false);
+    private void displayStudentResult(StudentService.ScanResult result, String barcode) {
+        hideAllResultPanels();
 
-        if (result.isFound()) {
-            Student student = result.getStudent();
+        Student student = result.getStudent();
 
-            // Mostrar panel de resultado
+        // Mostrar panel de resultado estudiante
+        resultPanel.setVisible(true);
+        resultPanel.setManaged(true);
+
+        // Mostrar información del estudiante
+        studentNameLabel.setText(student.getFullName());
+        studentGradeLabel.setText(student.getGrade() != null ? student.getGrade() : "");
+
+        // Aplicar estilos según el estado
+        resultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive");
+        statusLabel.getStyleClass().removeAll("status-ok", "status-warning", "status-inactive");
+        activityStatusLabel.getStyleClass().removeAll("status-active", "status-inactive");
+
+        // Siempre mostrar el estado de actividad
+        activityStatusLabel.setVisible(true);
+        activityStatusLabel.setManaged(true);
+
+        // Verificar estado de actividad (inactivo/activo)
+        if (result.isInactive()) {
+            resultPanel.getStyleClass().add("inactive");
+            statusLabel.setText("NO PUEDE ENTRAR");
+            statusLabel.getStyleClass().add("status-inactive");
+            activityStatusLabel.setText("INACTIVO");
+            activityStatusLabel.getStyleClass().add("status-inactive");
+            guardiansPanel.setVisible(false);
+            guardiansPanel.setManaged(false);
+
+        } else if (result.requiresGuardian()) {
+            resultPanel.getStyleClass().add("requires-guardian");
+            statusLabel.setText("REQUIERE ACOMPAÑANTE");
+            statusLabel.getStyleClass().add("status-warning");
+            activityStatusLabel.setText("ACTIVO");
+            activityStatusLabel.getStyleClass().add("status-active");
+            displayGuardians(student.getGuardians());
+
+        } else {
+            resultPanel.getStyleClass().add("can-exit");
+            statusLabel.setText("PUEDE SALIR");
+            statusLabel.getStyleClass().add("status-ok");
+            activityStatusLabel.setText("ACTIVO");
+            activityStatusLabel.getStyleClass().add("status-active");
+            guardiansPanel.setVisible(false);
+            guardiansPanel.setManaged(false);
+        }
+    }
+
+    /**
+     * Muestra el resultado del escaneo de un miembro del personal.
+     */
+    private void displayStaffResult(StaffService.ScanResult result, String barcode) {
+        hideAllResultPanels();
+
+        StaffMember staff = result.getStaff();
+
+        if (staffResultPanel != null) {
+            staffResultPanel.setVisible(true);
+            staffResultPanel.setManaged(true);
+
+            if (staffNameLabel != null) {
+                staffNameLabel.setText(staff.getFullName());
+            }
+            if (staffDepartmentLabel != null) {
+                staffDepartmentLabel.setText(staff.getDepartment() != null ? staff.getDepartment() : "");
+            }
+            if (staffStatusLabel != null) {
+                staffStatusLabel.getStyleClass().removeAll("status-ok", "status-inactive");
+                if (result.getStatus() == StaffService.ScanResult.Status.INACTIVE) {
+                    staffStatusLabel.setText("INACTIVO");
+                    staffStatusLabel.getStyleClass().add("status-inactive");
+                } else {
+                    staffStatusLabel.setText("REGISTRADO");
+                    staffStatusLabel.getStyleClass().add("status-ok");
+                }
+            }
+        } else {
+            // Fallback: usar panel de estudiantes para mostrar info del personal
             resultPanel.setVisible(true);
             resultPanel.setManaged(true);
-            notFoundPanel.setVisible(false);
-            notFoundPanel.setManaged(false);
-
-            // Mostrar información del estudiante
-            studentNameLabel.setText(student.getFullName());
-            studentGradeLabel.setText(student.getGrade() != null ? student.getGrade() : "");
-
-            // Aplicar estilos según el estado
             resultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive");
-            statusLabel.getStyleClass().removeAll("status-ok", "status-warning", "status-inactive");
-            activityStatusLabel.getStyleClass().removeAll("status-active", "status-inactive");
 
-            // Siempre mostrar el estado de actividad
+            studentNameLabel.setText(staff.getFullName());
+            studentGradeLabel.setText("PERSONAL");
+
             activityStatusLabel.setVisible(true);
             activityStatusLabel.setManaged(true);
 
-            // Verificar estado de actividad (inactivo/activo)
-            if (result.isInactive()) {
-                // Estudiante inactivo - medida de seguridad (ya no pertenece a la institución)
+            statusLabel.getStyleClass().removeAll("status-ok", "status-warning", "status-inactive");
+            activityStatusLabel.getStyleClass().removeAll("status-active", "status-inactive");
+
+            if (result.getStatus() == StaffService.ScanResult.Status.INACTIVE) {
                 resultPanel.getStyleClass().add("inactive");
-                statusLabel.setText("NO PUEDE ENTRAR");
+                statusLabel.setText("INACTIVO");
                 statusLabel.getStyleClass().add("status-inactive");
                 activityStatusLabel.setText("INACTIVO");
                 activityStatusLabel.getStyleClass().add("status-inactive");
-                // Ocultar tutores
-                guardiansPanel.setVisible(false);
-                guardiansPanel.setManaged(false);
-
-            } else if (result.requiresGuardian()) {
-                // Requiere acompañante (activo)
-                resultPanel.getStyleClass().add("requires-guardian");
-                statusLabel.setText("REQUIERE ACOMPAÑANTE");
-                statusLabel.getStyleClass().add("status-warning");
-                activityStatusLabel.setText("ACTIVO");
-                activityStatusLabel.getStyleClass().add("status-active");
-                // Mostrar tutores legales
-                displayGuardians(student.getGuardians());
-
             } else {
-                // Puede salir solo (activo)
                 resultPanel.getStyleClass().add("can-exit");
-                statusLabel.setText("PUEDE SALIR");
+                statusLabel.setText("REGISTRADO");
                 statusLabel.getStyleClass().add("status-ok");
                 activityStatusLabel.setText("ACTIVO");
                 activityStatusLabel.getStyleClass().add("status-active");
-                // Ocultar guardianes
-                guardiansPanel.setVisible(false);
-                guardiansPanel.setManaged(false);
             }
 
-        } else {
-            // Mostrar panel de no encontrado
-            resultPanel.setVisible(false);
-            resultPanel.setManaged(false);
-            notFoundPanel.setVisible(true);
-            notFoundPanel.setManaged(true);
-            activityStatusLabel.setVisible(false);
-            activityStatusLabel.setManaged(false);
-
-            scannedCodeLabel.setText("Código: " + barcode);
+            guardiansPanel.setVisible(false);
+            guardiansPanel.setManaged(false);
         }
+    }
+
+    /**
+     * Muestra el resultado del escaneo de un carné de visitante.
+     */
+    private void displayVisitorResult(VisitorService.ScanResult result, String barcode) {
+        hideAllResultPanels();
+
+        // Usar panel de estudiante como fallback para mostrar info del visitante
+        resultPanel.setVisible(true);
+        resultPanel.setManaged(true);
+        resultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive");
+
+        statusLabel.getStyleClass().removeAll("status-ok", "status-warning", "status-inactive");
+        activityStatusLabel.getStyleClass().removeAll("status-active", "status-inactive");
+        activityStatusLabel.setVisible(true);
+        activityStatusLabel.setManaged(true);
+        guardiansPanel.setVisible(false);
+        guardiansPanel.setManaged(false);
+
+        switch (result.getStatus()) {
+            case BADGE_AVAILABLE -> {
+                studentNameLabel.setText("VISITANTE - Carné: " + barcode);
+                studentGradeLabel.setText("Carné disponible");
+                resultPanel.getStyleClass().add("can-exit");
+                statusLabel.setText("CARNÉ DISPONIBLE");
+                statusLabel.getStyleClass().add("status-ok");
+                activityStatusLabel.setText("Ingrese cédula en módulo de visitantes");
+                activityStatusLabel.getStyleClass().add("status-active");
+            }
+            case EXIT_REGISTERED -> {
+                String visitorName = result.getLog() != null ? result.getLog().getDisplayName() : barcode;
+                studentNameLabel.setText("VISITANTE - " + visitorName);
+                studentGradeLabel.setText("Salida registrada");
+                resultPanel.getStyleClass().add("can-exit");
+                statusLabel.setText("SALIDA REGISTRADA");
+                statusLabel.getStyleClass().add("status-ok");
+                activityStatusLabel.setText("COMPLETADO");
+                activityStatusLabel.getStyleClass().add("status-active");
+            }
+            case BADGE_LOST -> {
+                studentNameLabel.setText("VISITANTE - Carné: " + barcode);
+                studentGradeLabel.setText("Carné perdido");
+                resultPanel.getStyleClass().add("inactive");
+                statusLabel.setText("CARNÉ PERDIDO");
+                statusLabel.getStyleClass().add("status-inactive");
+                activityStatusLabel.setText("Contacte al administrador");
+                activityStatusLabel.getStyleClass().add("status-inactive");
+            }
+            default -> {
+                studentNameLabel.setText("VISITANTE - Carné: " + barcode);
+                studentGradeLabel.setText(result.getMessage());
+                resultPanel.getStyleClass().add("requires-guardian");
+                statusLabel.setText("ERROR");
+                statusLabel.getStyleClass().add("status-warning");
+                activityStatusLabel.setText("");
+            }
+        }
+    }
+
+    /**
+     * Muestra el panel de no encontrado.
+     */
+    private void displayNotFound(String barcode) {
+        hideAllResultPanels();
+
+        notFoundPanel.setVisible(true);
+        notFoundPanel.setManaged(true);
+        activityStatusLabel.setVisible(false);
+        activityStatusLabel.setManaged(false);
+
+        scannedCodeLabel.setText("Código: " + barcode);
+    }
+
+    /**
+     * Oculta todos los paneles de resultado.
+     */
+    private void hideAllResultPanels() {
+        resultPanel.setVisible(false);
+        resultPanel.setManaged(false);
+        notFoundPanel.setVisible(false);
+        notFoundPanel.setManaged(false);
+        if (staffResultPanel != null) {
+            staffResultPanel.setVisible(false);
+            staffResultPanel.setManaged(false);
+        }
+        guardiansPanel.setVisible(false);
+        guardiansPanel.setManaged(false);
+        activityStatusLabel.setVisible(false);
+        activityStatusLabel.setManaged(false);
     }
 
     /**
@@ -351,17 +615,9 @@ public class ScannerController implements Initializable {
     /**
      * Agrega un escaneo al historial.
      */
-    private void addToHistory(StudentService.ScanResult result, String barcode) {
-        String historyEntry;
+    private void addToHistory(String type, String name, String tag) {
         String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("hh:mm:ss a"));
-
-        if (result.isFound()) {
-            Student student = result.getStudent();
-            String status = result.canExit() ? "[OK]" : "[REQ]";
-            historyEntry = String.format("%s %s %s", time, status, student.getFullName());
-        } else {
-            historyEntry = String.format("%s [???] %s", time, barcode);
-        }
+        String historyEntry = String.format("%s %s %s", time, tag, name);
 
         // Agregar al inicio de la lista
         historyItems.add(0, historyEntry);
@@ -380,6 +636,10 @@ public class ScannerController implements Initializable {
         resultPanel.setManaged(false);
         notFoundPanel.setVisible(false);
         notFoundPanel.setManaged(false);
+        if (staffResultPanel != null) {
+            staffResultPanel.setVisible(false);
+            staffResultPanel.setManaged(false);
+        }
         instructionLabel.setVisible(true);
         guardiansPanel.setVisible(false);
         guardiansPanel.setManaged(false);
@@ -391,29 +651,21 @@ public class ScannerController implements Initializable {
     }
 
     /**
-     * Actualiza el contador de escaneos del día.
+     * Actualiza el contador de escaneos del día usando ActivityLogDAO.
      */
     private void updateTodayScansCount() {
-        int count = studentService.countTodayScans();
+        int count = activityLogDAO.countToday();
         todayScansLabel.setText(String.valueOf(count));
     }
 
     /**
-     * Carga el historial reciente.
+     * Carga el historial reciente usando ActivityLogDAO.
      */
     private void loadRecentHistory() {
-        List<EntryLog> recentLogs = studentService.getRecentScans(MAX_HISTORY_ITEMS);
+        List<String> recentEntries = activityLogDAO.getRecentFormatted(MAX_HISTORY_ITEMS);
 
         historyItems.clear();
-
-        for (EntryLog log : recentLogs) {
-            String status = log.getStudent() != null && !log.getStudent().isRequiresGuardian() ?
-                    "[OK]" : "[REQ]";
-            String name = log.getStudent() != null ?
-                    log.getStudent().getFullName() : "ID: " + log.getStudentId();
-            String entry = String.format("%s %s %s", log.getTimeOnly(), status, name);
-            historyItems.add(entry);
-        }
+        historyItems.addAll(recentEntries);
     }
 
     /**
@@ -423,6 +675,91 @@ public class ScannerController implements Initializable {
     private void onClearHistory() {
         historyItems.clear();
         logger.info("Historial limpiado");
+    }
+
+    /**
+     * Manejador para iniciar sesión.
+     * Muestra un diálogo con campos de usuario y contraseña.
+     */
+    @FXML
+    private void onLogin() {
+        SecurityManager securityManager = SecurityManager.getInstance();
+        SessionManager sessionManager = SessionManager.getInstance();
+
+        while (true) {
+            // Crear diálogo de login
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Iniciar Sesión");
+            dialog.setHeaderText("Ingrese sus credenciales");
+
+            ButtonType loginButtonType = new ButtonType("Iniciar Sesión", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
+
+            GridPane grid = new GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
+            grid.setPadding(new Insets(20, 150, 10, 10));
+
+            TextField usernameField = new TextField();
+            usernameField.setPromptText("Usuario");
+            PasswordField passwordField = new PasswordField();
+            passwordField.setPromptText("Contraseña");
+
+            grid.add(new Label("Usuario:"), 0, 0);
+            grid.add(usernameField, 1, 0);
+            grid.add(new Label("Contraseña:"), 0, 1);
+            grid.add(passwordField, 1, 1);
+
+            dialog.getDialogPane().setContent(grid);
+
+            Platform.runLater(usernameField::requestFocus);
+
+            Optional<ButtonType> dialogResult = dialog.showAndWait();
+
+            if (dialogResult.isEmpty() || dialogResult.get() == ButtonType.CANCEL) {
+                break; // Usuario canceló
+            }
+
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText();
+
+            Optional<AdminUser> authResult = securityManager.authenticate(username, password);
+
+            if (authResult.isPresent()) {
+                AdminUser user = authResult.get();
+                int timeout = sessionManager.getTimeoutMinutes();
+                sessionManager.startSession(user, timeout);
+
+                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                successAlert.setTitle("Sesión Iniciada");
+                successAlert.setHeaderText(null);
+                successAlert.setContentText(
+                        "Usuario " + user.getUsername() + " logueado correctamente. " +
+                        "Tu sesión estará activa por " + timeout + " minutos. " +
+                        "Si terminas antes, recuerda cerrar la sesión para cuidar los datos."
+                );
+                successAlert.showAndWait();
+                break;
+            } else {
+                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                errorAlert.setTitle("Error de Autenticación");
+                errorAlert.setHeaderText(null);
+                errorAlert.setContentText("Usuario o contraseña incorrectos. Intente nuevamente.");
+                errorAlert.showAndWait();
+                // Loop continues - show dialog again
+            }
+        }
+
+        barcodeInput.requestFocus();
+    }
+
+    /**
+     * Manejador para cerrar sesión.
+     */
+    @FXML
+    private void onLogout() {
+        SessionManager.getInstance().endSession();
+        barcodeInput.requestFocus();
     }
 
     /**
@@ -497,6 +834,56 @@ public class ScannerController implements Initializable {
 
         } catch (IOException e) {
             logger.error("Error al abrir Creador de Carné", e);
+        }
+    }
+
+    /**
+     * Manejador para abrir la gestión de personal.
+     */
+    @FXML
+    private void onManageStaff() {
+        try {
+            logger.info("Abriendo gestión de personal");
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/staff-admin.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) barcodeInput.getScene().getWindow();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+
+            stage.setMaximized(false);
+            stage.setScene(scene);
+            stage.setTitle("Gestión de Personal");
+            Platform.runLater(() -> stage.setMaximized(true));
+
+        } catch (IOException e) {
+            logger.error("Error al abrir gestión de personal", e);
+        }
+    }
+
+    /**
+     * Manejador para abrir la configuración del sistema.
+     */
+    @FXML
+    private void onManageSettings() {
+        try {
+            logger.info("Abriendo configuración del sistema");
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/settings-view.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = (Stage) barcodeInput.getScene().getWindow();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+
+            stage.setMaximized(false);
+            stage.setScene(scene);
+            stage.setTitle("Configuración");
+            Platform.runLater(() -> stage.setMaximized(true));
+
+        } catch (IOException e) {
+            logger.error("Error al abrir configuración del sistema", e);
         }
     }
 

@@ -6,12 +6,12 @@
 <?import javafx.scene.layout.*?>
 
 <!--
-    Vista de gestión de estudiantes (CRUD).
-    Permite agregar, editar, eliminar y buscar estudiantes.
+    Vista de administración de personal.
+    Permite agregar, editar, eliminar y buscar miembros del personal.
 -->
 <BorderPane xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.tuempresa.registro.controllers.StudentCRUDController"
+            fx:controller="com.tuempresa.registro.controllers.StaffAdminController"
             styleClass="crud-container">
 
     <!-- Barra superior -->
@@ -38,10 +38,10 @@
                     <!-- Botones de navegación -->
                     <Button fx:id="backButton" text="Scanner"
                             onAction="#onBackToScanner" styleClass="secondary-button"/>
+                    <Button text="Estudiantes"
+                            onAction="#onManageStudents" styleClass="secondary-button"/>
                     <Button text="Visitantes"
                             onAction="#onManageVisitors" styleClass="secondary-button"/>
-                    <Button text="Personal"
-                            onAction="#onManageStaff" styleClass="secondary-button"/>
                     <Button text="Creador de Carné"
                             onAction="#onManageCarne" styleClass="secondary-button"/>
                     <Button text="Ajustes"
@@ -50,7 +50,7 @@
                     <Region HBox.hgrow="ALWAYS"/>
 
                     <!-- Título -->
-                    <Label text="Gestión de Estudiantes" styleClass="page-title"/>
+                    <Label text="Administración de Personal" styleClass="page-title"/>
 
                     <Region HBox.hgrow="ALWAYS"/>
 
@@ -65,7 +65,7 @@
     <!-- Contenido principal dividido -->
     <center>
         <SplitPane dividerPositions="0.6" orientation="HORIZONTAL">
-            <!-- Panel izquierdo: Tabla de estudiantes -->
+            <!-- Panel izquierdo: Tabla de personal -->
             <VBox spacing="10">
                 <padding>
                     <Insets top="15" right="10" bottom="15" left="15"/>
@@ -83,31 +83,23 @@
 
                     <Region HBox.hgrow="ALWAYS"/>
 
-                    <Label fx:id="countLabel" text="0 estudiantes" styleClass="count-label"/>
+                    <Label fx:id="countLabel" text="0 personal" styleClass="count-label"/>
                 </HBox>
 
                 <!-- Barra de acciones -->
                 <HBox spacing="10" alignment="CENTER_LEFT">
-                    <Button fx:id="newButton" text="+ Nuevo Estudiante"
-                            onAction="#onNewStudent" styleClass="primary-button"/>
+                    <Button fx:id="newButton" text="+ Nuevo Personal"
+                            onAction="#onNewStaff" styleClass="primary-button"/>
                     <Button fx:id="editButton" text="Editar"
-                            onAction="#onEditStudent" styleClass="secondary-button"
+                            onAction="#onEditStaff" styleClass="secondary-button"
                             disable="true"/>
                     <Button fx:id="deleteButton" text="Eliminar"
-                            onAction="#onDeleteStudent" styleClass="danger-button"
+                            onAction="#onDeleteStaff" styleClass="danger-button"
                             disable="true"/>
-
-                    <Separator orientation="VERTICAL"/>
-
-                    <!-- Botones de importación CSV -->
-                    <Button fx:id="importCsvButton" text="Importar CSV"
-                            onAction="#onImportCsv" styleClass="secondary-button"/>
-                    <Button fx:id="templateButton" text="Plantilla"
-                            onAction="#onGenerateTemplate" styleClass="small-button"/>
                 </HBox>
 
-                <!-- Tabla de estudiantes -->
-                <TableView fx:id="studentsTable" VBox.vgrow="ALWAYS"
+                <!-- Tabla de personal -->
+                <TableView fx:id="staffTable" VBox.vgrow="ALWAYS"
                            styleClass="students-table">
                     <columns>
                         <TableColumn fx:id="colBarcode" text="Código" prefWidth="100">
@@ -128,15 +120,9 @@
                             </cellValueFactory>
                         </TableColumn>
 
-                        <TableColumn fx:id="colGrade" text="Grado" prefWidth="100">
+                        <TableColumn fx:id="colDepartment" text="Departamento" prefWidth="130">
                             <cellValueFactory>
-                                <PropertyValueFactory property="grade"/>
-                            </cellValueFactory>
-                        </TableColumn>
-
-                        <TableColumn fx:id="colRequiresGuardian" text="Req. Acomp." prefWidth="90">
-                            <cellValueFactory>
-                                <PropertyValueFactory property="requiresGuardian"/>
+                                <PropertyValueFactory property="department"/>
                             </cellValueFactory>
                         </TableColumn>
 
@@ -155,7 +141,7 @@
                     <Insets top="15" right="15" bottom="15" left="10"/>
                 </padding>
 
-                <Label fx:id="formTitle" text="Nuevo Estudiante" styleClass="form-title"/>
+                <Label fx:id="formTitle" text="Nuevo Personal" styleClass="form-title"/>
 
                 <Separator/>
 
@@ -169,31 +155,26 @@
                     <!-- Nombre -->
                     <Label text="Nombre: *" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
                     <TextField fx:id="firstNameField" GridPane.columnIndex="1" GridPane.rowIndex="1"
-                               promptText="Nombre(s) del estudiante"/>
+                               promptText="Nombre(s)"/>
 
                     <!-- Apellido -->
                     <Label text="Apellido: *" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
                     <TextField fx:id="lastNameField" GridPane.columnIndex="1" GridPane.rowIndex="2"
-                               promptText="Apellido(s) del estudiante"/>
+                               promptText="Apellido(s)"/>
 
-                    <!-- Grado -->
-                    <Label text="Grado/Curso:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-                    <TextField fx:id="gradeField" GridPane.columnIndex="1" GridPane.rowIndex="3"
-                               promptText="Ej: 5to Primaria"/>
+                    <!-- Número de identificación -->
+                    <Label text="Cédula:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    <TextField fx:id="idNumberField" GridPane.columnIndex="1" GridPane.rowIndex="3"
+                               promptText="Número de cédula"/>
 
-                    <!-- Es menor de edad -->
-                    <Label text="Menor de edad:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-                    <CheckBox fx:id="isMinorCheck" GridPane.columnIndex="1" GridPane.rowIndex="4"
-                              selected="true"/>
-
-                    <!-- Requiere acompañante -->
-                    <Label text="Requiere acompañante:" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
-                    <CheckBox fx:id="requiresGuardianCheck" GridPane.columnIndex="1" GridPane.rowIndex="5"
-                              selected="true"/>
+                    <!-- Departamento -->
+                    <Label text="Departamento:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                    <TextField fx:id="departmentField" GridPane.columnIndex="1" GridPane.rowIndex="4"
+                               promptText="Ej: Administración, Docencia"/>
 
                     <!-- Estado -->
-                    <Label text="Estado:" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
-                    <ComboBox fx:id="statusCombo" GridPane.columnIndex="1" GridPane.rowIndex="6"
+                    <Label text="Estado:" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+                    <ComboBox fx:id="statusCombo" GridPane.columnIndex="1" GridPane.rowIndex="5"
                               prefWidth="200"/>
 
                     <columnConstraints>
@@ -201,25 +182,6 @@
                         <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
                     </columnConstraints>
                 </GridPane>
-
-                <Separator/>
-
-                <!-- Sección de tutores legales -->
-                <VBox spacing="10">
-                    <Label text="Tutores Legales *" styleClass="section-title"/>
-                    <Label text="(Obligatorio si requiere acompañante)" styleClass="hint-label"/>
-
-                    <ListView fx:id="guardiansListView" prefHeight="120"
-                              styleClass="guardians-list"/>
-
-                    <HBox spacing="10">
-                        <Button fx:id="addGuardianButton" text="Agregar Tutor"
-                                onAction="#onAddGuardian" styleClass="small-button"/>
-                        <Button fx:id="removeGuardianButton" text="Eliminar"
-                                onAction="#onRemoveGuardian" styleClass="small-button"
-                                disable="true"/>
-                    </HBox>
-                </VBox>
 
                 <Region VBox.vgrow="ALWAYS"/>
 
@@ -244,6 +206,7 @@
                 <Insets top="10" right="20" bottom="10" left="20"/>
             </padding>
 
+            <Label fx:id="countLabel2" text="0 personal" styleClass="count-label" visible="false" managed="false"/>
             <Label fx:id="statusMessage" text="Listo" styleClass="status-message"/>
 
             <Region HBox.hgrow="ALWAYS"/>

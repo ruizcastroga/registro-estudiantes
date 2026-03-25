@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.layout.*?>
+
+<!--
+    Vista de configuración del sistema.
+    Permite ajustar opciones generales y administrar usuarios.
+-->
+<BorderPane xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.tuempresa.registro.controllers.SettingsController"
+            styleClass="crud-container">
+
+    <!-- Barra superior -->
+    <top>
+        <VBox>
+            <!-- Barra de sesión -->
+            <HBox fx:id="sessionBar" alignment="CENTER_LEFT" spacing="15" styleClass="session-bar" visible="false" managed="false">
+                <padding><Insets top="8" right="20" bottom="8" left="20"/></padding>
+                <Label fx:id="sessionUserLabel" text="" styleClass="session-user-label"/>
+                <Label fx:id="sessionRoleLabel" text="" styleClass="session-role-label"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="sessionTimerLabel" text="00:00" styleClass="session-timer-label"/>
+                <Button fx:id="sessionLoginBtn" text="Iniciar Sesión" onAction="#onLogin" styleClass="session-button"/>
+                <Button fx:id="sessionLogoutBtn" text="Cerrar Sesión" onAction="#onLogout" styleClass="session-button" visible="false" managed="false"/>
+            </HBox>
+
+            <!-- Header -->
+            <VBox styleClass="header-box">
+                <HBox alignment="CENTER_LEFT" spacing="20">
+                    <padding>
+                        <Insets top="15" right="20" bottom="15" left="20"/>
+                    </padding>
+
+                    <!-- Botones de navegación -->
+                    <Button fx:id="backButton" text="Scanner"
+                            onAction="#onBackToScanner" styleClass="secondary-button"/>
+                    <Button text="Estudiantes"
+                            onAction="#onManageStudents" styleClass="secondary-button"/>
+                    <Button text="Visitantes"
+                            onAction="#onManageVisitors" styleClass="secondary-button"/>
+                    <Button text="Personal"
+                            onAction="#onManageStaff" styleClass="secondary-button"/>
+                    <Button text="Creador de Carné"
+                            onAction="#onManageCarne" styleClass="secondary-button"/>
+
+                    <Region HBox.hgrow="ALWAYS"/>
+
+                    <!-- Título -->
+                    <Label text="Ajustes del Sistema" styleClass="page-title"/>
+
+                    <Region HBox.hgrow="ALWAYS"/>
+                </HBox>
+            </VBox>
+        </VBox>
+    </top>
+
+    <!-- Contenido principal con TabPane -->
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE" styleClass="management-tabs">
+
+            <!-- Tab 1: Configuración general -->
+            <Tab text="Configuración">
+                <VBox spacing="20" alignment="TOP_LEFT">
+                    <padding>
+                        <Insets top="25" right="30" bottom="25" left="30"/>
+                    </padding>
+
+                    <Label text="Configuración General" styleClass="section-title"/>
+
+                    <Separator/>
+
+                    <!-- Tiempo de expiración de sesión -->
+                    <HBox spacing="15" alignment="CENTER_LEFT">
+                        <Label text="Tiempo de expiración de sesión:" styleClass="form-label"/>
+                        <ComboBox fx:id="timeoutCombo" prefWidth="200"/>
+                        <Label text="(minutos de inactividad antes de cerrar sesión)" styleClass="hint-label"/>
+                    </HBox>
+
+                    <Region VBox.vgrow="ALWAYS"/>
+
+                    <!-- Botón guardar -->
+                    <HBox alignment="CENTER_RIGHT">
+                        <Button text="Guardar Configuración"
+                                onAction="#onSaveSettings" styleClass="primary-button"/>
+                    </HBox>
+
+                    <Label fx:id="settingsStatusLabel" text="" styleClass="status-message"/>
+                </VBox>
+            </Tab>
+
+            <!-- Tab 2: Usuarios administradores -->
+            <Tab text="Usuarios">
+                <SplitPane dividerPositions="0.6" orientation="HORIZONTAL">
+
+                    <!-- Panel izquierdo: Tabla de usuarios -->
+                    <VBox spacing="10">
+                        <padding>
+                            <Insets top="15" right="10" bottom="15" left="15"/>
+                        </padding>
+
+                        <Label text="Usuarios del Sistema" styleClass="section-title"/>
+
+                        <!-- Barra de acciones -->
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Button fx:id="newUserButton" text="+ Nuevo Usuario"
+                                    onAction="#onNewUser" styleClass="primary-button"/>
+                            <Button fx:id="editUserButton" text="Editar"
+                                    onAction="#onEditUser" styleClass="secondary-button"
+                                    disable="true"/>
+                            <Button fx:id="deleteUserButton" text="Eliminar"
+                                    onAction="#onDeleteUser" styleClass="danger-button"
+                                    disable="true"/>
+                        </HBox>
+
+                        <!-- Tabla de usuarios -->
+                        <TableView fx:id="usersTable" VBox.vgrow="ALWAYS"
+                                   styleClass="students-table">
+                            <columns>
+                                <TableColumn fx:id="colUsername" text="Usuario" prefWidth="180">
+                                    <cellValueFactory>
+                                        <PropertyValueFactory property="username"/>
+                                    </cellValueFactory>
+                                </TableColumn>
+
+                                <TableColumn fx:id="colRole" text="Rol" prefWidth="120">
+                                    <cellValueFactory>
+                                        <PropertyValueFactory property="role"/>
+                                    </cellValueFactory>
+                                </TableColumn>
+
+                                <TableColumn fx:id="colActive" text="Activo" prefWidth="80">
+                                    <cellValueFactory>
+                                        <PropertyValueFactory property="active"/>
+                                    </cellValueFactory>
+                                </TableColumn>
+                            </columns>
+                            <placeholder>
+                                <Label text="Sin usuarios registrados" styleClass="table-placeholder"/>
+                            </placeholder>
+                        </TableView>
+                    </VBox>
+
+                    <!-- Panel derecho: Formulario de usuario -->
+                    <VBox spacing="15" styleClass="form-panel">
+                        <padding>
+                            <Insets top="15" right="15" bottom="15" left="10"/>
+                        </padding>
+
+                        <Label fx:id="userFormTitle" text="Nuevo Usuario" styleClass="form-title"/>
+
+                        <Separator/>
+
+                        <GridPane hgap="10" vgap="15" styleClass="student-form">
+                            <!-- Usuario -->
+                            <Label text="Usuario: *" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                            <TextField fx:id="usernameField" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                                       promptText="Nombre de usuario"/>
+
+                            <!-- Contraseña -->
+                            <Label text="Contraseña: *" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                            <PasswordField fx:id="passwordField" GridPane.columnIndex="1" GridPane.rowIndex="1"
+                                           promptText="Contraseña"/>
+
+                            <!-- Rol -->
+                            <Label text="Rol:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                            <ComboBox fx:id="roleCombo" GridPane.columnIndex="1" GridPane.rowIndex="2"
+                                      prefWidth="200"/>
+
+                            <!-- Activo -->
+                            <Label text="Activo:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                            <CheckBox fx:id="activeCheck" GridPane.columnIndex="1" GridPane.rowIndex="3"
+                                      selected="true"/>
+
+                            <columnConstraints>
+                                <ColumnConstraints minWidth="100" halignment="RIGHT"/>
+                                <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+                            </columnConstraints>
+                        </GridPane>
+
+                        <Region VBox.vgrow="ALWAYS"/>
+
+                        <!-- Botones de acción -->
+                        <HBox spacing="15" alignment="CENTER_RIGHT">
+                            <Button fx:id="cancelUserButton" text="Cancelar"
+                                    onAction="#onCancelUser" styleClass="secondary-button"/>
+                            <Button fx:id="saveUserButton" text="Guardar"
+                                    onAction="#onSaveUser" styleClass="primary-button"/>
+                        </HBox>
+
+                        <!-- Mensaje de validación -->
+                        <Label fx:id="userValidationMessage" text="" styleClass="validation-message"/>
+                    </VBox>
+                </SplitPane>
+            </Tab>
+        </TabPane>
+    </center>
+
+    <!-- Barra inferior -->
+    <bottom>
+        <HBox styleClass="footer-box" alignment="CENTER_LEFT" spacing="20">
+            <padding>
+                <Insets top="10" right="20" bottom="10" left="20"/>
+            </padding>
+
+            <Label fx:id="statusMessage" text="Listo" styleClass="status-message"/>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Label text="* Campos obligatorios" styleClass="required-note"/>
+        </HBox>
+    </bottom>
+</BorderPane>

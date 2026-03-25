@@ -1,10 +1,12 @@
 package com.tuempresa.registro.controllers;
 
+import com.tuempresa.registro.models.AdminUser;
 import com.tuempresa.registro.models.Guardian;
 import com.tuempresa.registro.models.Student;
 import com.tuempresa.registro.services.CsvImportService;
 import com.tuempresa.registro.services.StudentService;
 import com.tuempresa.registro.utils.SecurityManager;
+import com.tuempresa.registro.utils.SessionManager;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -18,6 +20,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -36,7 +40,7 @@ import java.util.ResourceBundle;
 /**
  * Controlador para la gestión CRUD de estudiantes.
  * Permite agregar, editar, eliminar y buscar estudiantes.
- * Incluye verificación de contraseña para operaciones sensibles.
+ * Usa SessionManager para control de sesiones y permisos.
  */
 public class StudentCRUDController implements Initializable {
 
@@ -71,6 +75,14 @@ public class StudentCRUDController implements Initializable {
     @FXML private Button removeGuardianButton;
     @FXML private Button clearSearchButton;
 
+    // Session bar
+    @FXML private HBox sessionBar;
+    @FXML private Label sessionUserLabel;
+    @FXML private Label sessionRoleLabel;
+    @FXML private Label sessionTimerLabel;
+    @FXML private Button sessionLoginBtn;
+    @FXML private Button sessionLogoutBtn;
+
     // Labels de estado
     @FXML private Label countLabel;
     @FXML private Label validationMessage;
@@ -79,6 +91,7 @@ public class StudentCRUDController implements Initializable {
     // Servicios
     private StudentService studentService;
     private SecurityManager securityManager;
+    private SessionManager sessionManager;
     private CsvImportService csvImportService;
 
     // Datos
@@ -100,6 +113,7 @@ public class StudentCRUDController implements Initializable {
         // Inicializar servicios
         studentService = new StudentService();
         securityManager = SecurityManager.getInstance();
+        sessionManager = SessionManager.getInstance();
         csvImportService = new CsvImportService();
 
         // Inicializar listas
@@ -115,6 +129,9 @@ public class StudentCRUDController implements Initializable {
 
         // Configurar lista de guardianes
         guardiansListView.setItems(guardianDisplayList);
+
+        // Configurar session bar
+        setupSessionBar();
 
         // Cargar datos
         loadStudents();
@@ -355,6 +372,7 @@ public class StudentCRUDController implements Initializable {
 
     /**
      * Manejador para eliminar estudiante.
+     * Requiere sesión activa con permisos de modificación.
      */
     @FXML
     private void onDeleteStudent() {
@@ -364,8 +382,13 @@ public class StudentCRUDController implements Initializable {
             return;
         }
 
-        // Verificar contraseña primero
-        if (!verifyPasswordDialog("Eliminar Estudiante")) {
+        if (!requireSession()) {
+            return;
+        }
+
+        if (!sessionManager.canModifyData()) {
+            showAlert(Alert.AlertType.WARNING, "Sin Permisos",
+                    "No tiene permisos para eliminar.");
             return;
         }
 
@@ -394,6 +417,7 @@ public class StudentCRUDController implements Initializable {
 
     /**
      * Manejador para guardar estudiante.
+     * Valida el formulario y verifica permisos de sesión.
      */
     @FXML
     private void onSave() {
@@ -402,9 +426,13 @@ public class StudentCRUDController implements Initializable {
             return;
         }
 
-        // Verificar contraseña
-        String actionName = isEditMode ? "Editar Estudiante" : "Agregar Estudiante";
-        if (!verifyPasswordDialog(actionName)) {
+        if (!requireSession()) {
+            return;
+        }
+
+        if (!sessionManager.canModifyData()) {
+            showAlert(Alert.AlertType.WARNING, "Sin Permisos",
+                    "No tiene permisos para modificar registros.");
             return;
         }
 
@@ -420,10 +448,12 @@ public class StudentCRUDController implements Initializable {
             student.setStatus(mapStatusToDb(statusCombo.getValue()));
 
             if (isEditMode) {
+                student.setUpdatedBy(sessionManager.getActiveUsername());
                 studentService.updateStudent(student);
                 setStatusMessage("Estudiante actualizado: " + student.getFullName());
                 logger.info("Estudiante actualizado: {}", student);
             } else {
+                student.setCreatedBy(sessionManager.getActiveUsername());
                 studentService.saveStudent(student);
                 setStatusMessage("Estudiante creado: " + student.getFullName());
                 logger.info("Estudiante creado: {}", student);
@@ -529,11 +559,17 @@ public class StudentCRUDController implements Initializable {
 
     /**
      * Manejador para importar desde CSV.
+     * Requiere sesión activa con permisos de modificación.
      */
     @FXML
     private void onImportCsv() {
-        // Verificar contraseña primero
-        if (!verifyPasswordDialog("Importar Estudiantes")) {
+        if (!requireSession()) {
+            return;
+        }
+
+        if (!sessionManager.canModifyData()) {
+            showAlert(Alert.AlertType.WARNING, "Sin Permisos",
+                    "No tiene permisos para importar registros.");
             return;
         }
 
@@ -549,6 +585,7 @@ public class StudentCRUDController implements Initializable {
         if (file != null) {
             logger.info("Importando desde: {}", file.getAbsolutePath());
 
+            csvImportService.setImportedBy(sessionManager.getActiveUsername());
             CsvImportService.ImportResult result = csvImportService.importFromCsv(file);
 
             // Mostrar resultado
@@ -668,53 +705,156 @@ public class StudentCRUDController implements Initializable {
     }
 
     /**
-     * Muestra diálogo para verificar contraseña.
-     *
-     * @param action Descripción de la acción a realizar
-     * @return true si la contraseña es correcta
+     * Configura la barra de sesión vinculando las propiedades del SessionManager.
      */
-    private boolean verifyPasswordDialog(String action) {
-        Dialog<String> dialog = new Dialog<>();
-        dialog.setTitle("Verificación de Seguridad");
-        dialog.setHeaderText(action);
+    private void setupSessionBar() {
+        sessionBar.setVisible(true);
+        sessionBar.setManaged(true);
 
-        ButtonType okButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
+        // Bind labels to session properties
+        sessionUserLabel.textProperty().bind(sessionManager.currentUsernameProperty());
+        sessionRoleLabel.textProperty().bind(sessionManager.currentRoleProperty());
+        sessionTimerLabel.textProperty().bind(sessionManager.remainingTimeFormattedProperty());
 
-        VBox content = new VBox(10);
-        content.setPadding(new Insets(20));
-
-        Label label = new Label("Por favor ingresa la contraseña:");
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Contraseña");
-        passwordField.setPrefWidth(250);
-
-        content.getChildren().addAll(label, passwordField);
-        dialog.getDialogPane().setContent(content);
-
-        Platform.runLater(passwordField::requestFocus);
-
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == okButtonType) {
-                return passwordField.getText();
-            }
-            return null;
+        // Show/hide login/logout buttons based on session state
+        sessionManager.sessionActiveProperty().addListener((obs, wasActive, isActive) -> {
+            sessionLoginBtn.setVisible(!isActive);
+            sessionLoginBtn.setManaged(!isActive);
+            sessionLogoutBtn.setVisible(isActive);
+            sessionLogoutBtn.setManaged(isActive);
         });
 
-        Optional<String> result = dialog.showAndWait();
-
-        if (result.isPresent()) {
-            String password = result.get();
-            if (securityManager.verifyPassword(password)) {
-                return true;
+        // Timer warning when < 120 seconds
+        sessionManager.remainingSecondsProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.intValue() > 0 && newVal.intValue() < 120) {
+                sessionTimerLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
             } else {
-                showAlert(Alert.AlertType.ERROR, "Contraseña Incorrecta",
-                        "La contraseña ingresada no es correcta.");
-                return false;
+                sessionTimerLabel.setStyle("");
+            }
+        });
+
+        // Set initial button state
+        boolean active = sessionManager.isSessionActive();
+        sessionLoginBtn.setVisible(!active);
+        sessionLoginBtn.setManaged(!active);
+        sessionLogoutBtn.setVisible(active);
+        sessionLogoutBtn.setManaged(active);
+    }
+
+    /**
+     * Muestra diálogo de login con usuario y contraseña.
+     * Loop en credenciales incorrectas hasta que el usuario cancele.
+     */
+    @FXML
+    private void onLogin() {
+        SecurityManager secMgr = SecurityManager.getInstance();
+
+        while (true) {
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Iniciar Sesión");
+            dialog.setHeaderText("Ingrese sus credenciales");
+
+            ButtonType loginButtonType = new ButtonType("Iniciar Sesión", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
+
+            VBox content = new VBox(10);
+            content.setPadding(new Insets(20));
+
+            TextField usernameField = new TextField();
+            usernameField.setPromptText("Usuario");
+            PasswordField passwordField = new PasswordField();
+            passwordField.setPromptText("Contraseña");
+            Label errorLabel = new Label();
+            errorLabel.setStyle("-fx-text-fill: red;");
+
+            content.getChildren().addAll(
+                    new Label("Usuario:"), usernameField,
+                    new Label("Contraseña:"), passwordField,
+                    errorLabel
+            );
+            dialog.getDialogPane().setContent(content);
+            Platform.runLater(usernameField::requestFocus);
+
+            Optional<ButtonType> result = dialog.showAndWait();
+
+            if (result.isEmpty() || result.get() == ButtonType.CANCEL) {
+                return;
+            }
+
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText();
+
+            Optional<AdminUser> authResult = secMgr.authenticate(username, password);
+
+            if (authResult.isPresent()) {
+                AdminUser adminUser = authResult.get();
+                int timeoutMinutes = sessionManager.getTimeoutMinutes();
+                sessionManager.startSession(adminUser, timeoutMinutes);
+
+                showAlert(Alert.AlertType.INFORMATION, "Sesión Iniciada",
+                        "Usuario " + username + " logueado correctamente. " +
+                                "Tu sesión estará activa por " + timeoutMinutes + " minutos. " +
+                                "Si terminas antes, recuerda cerrar la sesión para cuidar los datos.");
+                return;
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Error de Autenticación",
+                        "Usuario o contraseña incorrectos. Intente de nuevo.");
             }
         }
+    }
 
-        return false;
+    /**
+     * Cierra la sesión actual.
+     */
+    @FXML
+    private void onLogout() {
+        sessionManager.endSession();
+        setStatusMessage("Sesión cerrada");
+    }
+
+    @FXML
+    private void onManageVisitors() {
+        navigateTo("/fxml/visitor-view.fxml", "Control de Visitantes");
+    }
+
+    @FXML
+    private void onManageStaff() {
+        navigateTo("/fxml/staff-admin.fxml", "Administración de Personal");
+    }
+
+    @FXML
+    private void onManageSettings() {
+        navigateTo("/fxml/settings-view.fxml", "Ajustes del Sistema");
+    }
+
+    private void navigateTo(String fxmlPath, String title) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            Stage stage = (Stage) studentsTable.getScene().getWindow();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            stage.setMaximized(false);
+            stage.setScene(scene);
+            stage.setTitle(title);
+            Platform.runLater(() -> stage.setMaximized(true));
+        } catch (IOException e) {
+            logger.error("Error al navegar a " + fxmlPath, e);
+        }
+    }
+
+    /**
+     * Verifica que haya una sesión activa. Muestra alerta si no.
+     *
+     * @return true si hay sesión activa
+     */
+    private boolean requireSession() {
+        if (!sessionManager.isSessionActive()) {
+            showAlert(Alert.AlertType.WARNING, "Sesión Requerida",
+                    "Debe iniciar sesión para realizar esta operación.");
+            return false;
+        }
+        return true;
     }
 
     /**

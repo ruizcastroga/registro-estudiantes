@@ -15,36 +15,54 @@
             fx:controller="com.tuempresa.registro.controllers.ScannerController"
             styleClass="main-container">
 
-    <!-- Barra superior con información general -->
+    <!-- Barra superior con sesión + información general -->
     <top>
-        <VBox styleClass="header-box">
-            <HBox alignment="CENTER_LEFT" spacing="20">
-                <padding>
-                    <Insets top="15" right="20" bottom="15" left="20"/>
-                </padding>
-
-                <!-- Título de la aplicación -->
-                <VBox HBox.hgrow="ALWAYS">
-                    <Label fx:id="schoolNameLabel" text="Sistema de Registro de Estudiantes"
-                           styleClass="app-title"/>
-                    <Label fx:id="dateTimeLabel" text="Fecha y hora"
-                           styleClass="datetime-label"/>
-                </VBox>
-
-                <!-- Estadísticas del día -->
-                <VBox alignment="CENTER_RIGHT">
-                    <Label text="Escaneos hoy:" styleClass="stats-label"/>
-                    <Label fx:id="todayScansLabel" text="0" styleClass="stats-value"/>
-                </VBox>
-
-                <!-- Botones de gestión -->
-                <Button fx:id="manageButton" text="Gestionar Estudiantes"
-                        onAction="#onManageStudents" styleClass="secondary-button"/>
-                <Button text="Control de Visitantes"
-                        onAction="#onManageVisitors" styleClass="secondary-button"/>
-                <Button text="Creador de Carné"
-                        onAction="#onManageCarne" styleClass="secondary-button"/>
+        <VBox>
+            <!-- Barra de sesión -->
+            <HBox fx:id="sessionBar" alignment="CENTER_LEFT" spacing="15" styleClass="session-bar" visible="false" managed="false">
+                <padding><Insets top="8" right="20" bottom="8" left="20"/></padding>
+                <Label fx:id="sessionUserLabel" text="" styleClass="session-user-label"/>
+                <Label fx:id="sessionRoleLabel" text="" styleClass="session-role-label"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="sessionTimerLabel" text="00:00" styleClass="session-timer-label"/>
+                <Button fx:id="sessionLoginBtn" text="Iniciar Sesión" onAction="#onLogin" styleClass="session-button"/>
+                <Button fx:id="sessionLogoutBtn" text="Cerrar Sesión" onAction="#onLogout" styleClass="session-button" visible="false" managed="false"/>
             </HBox>
+
+            <!-- Header original -->
+            <VBox styleClass="header-box">
+                <HBox alignment="CENTER_LEFT" spacing="20">
+                    <padding>
+                        <Insets top="15" right="20" bottom="15" left="20"/>
+                    </padding>
+
+                    <!-- Título de la aplicación -->
+                    <VBox HBox.hgrow="ALWAYS">
+                        <Label fx:id="schoolNameLabel" text="Sistema de Registro de Estudiantes"
+                               styleClass="app-title"/>
+                        <Label fx:id="dateTimeLabel" text="Fecha y hora"
+                               styleClass="datetime-label"/>
+                    </VBox>
+
+                    <!-- Estadísticas del día -->
+                    <VBox alignment="CENTER_RIGHT">
+                        <Label text="Escaneos hoy:" styleClass="stats-label"/>
+                        <Label fx:id="todayScansLabel" text="0" styleClass="stats-value"/>
+                    </VBox>
+
+                    <!-- Botones de navegación -->
+                    <Button fx:id="manageButton" text="Estudiantes"
+                            onAction="#onManageStudents" styleClass="secondary-button"/>
+                    <Button text="Visitantes"
+                            onAction="#onManageVisitors" styleClass="secondary-button"/>
+                    <Button text="Personal"
+                            onAction="#onManageStaff" styleClass="secondary-button"/>
+                    <Button text="Creador de Carné"
+                            onAction="#onManageCarne" styleClass="secondary-button"/>
+                    <Button text="Ajustes"
+                            onAction="#onManageSettings" styleClass="secondary-button"/>
+                </HBox>
+            </VBox>
         </VBox>
     </top>
 
@@ -57,7 +75,7 @@
 
             <!-- Campo de entrada del scanner (oculto visualmente pero funcional) -->
             <TextField fx:id="barcodeInput"
-                       promptText="Escanee el carné del estudiante..."
+                       promptText="Escanee el carné (estudiante, personal o visitante)..."
                        onAction="#onBarcodeScanned"
                        styleClass="barcode-input"
                        maxWidth="500"
@@ -65,10 +83,10 @@
 
             <!-- Instrucciones -->
             <Label fx:id="instructionLabel"
-                   text="Escanee el carné del estudiante o escriba el código"
+                   text="Escanee cualquier carné o escriba el código"
                    styleClass="instruction-label"/>
 
-            <!-- Panel de resultado del escaneo -->
+            <!-- Panel de resultado del escaneo (estudiante) -->
             <VBox fx:id="resultPanel" alignment="CENTER" spacing="15"
                   styleClass="result-panel" visible="false" managed="false">
                 <padding>
@@ -100,14 +118,48 @@
                 </VBox>
             </VBox>
 
-            <!-- Panel cuando no se encuentra el estudiante -->
+            <!-- Panel de resultado del escaneo (personal) -->
+            <VBox fx:id="staffResultPanel" alignment="CENTER" spacing="15"
+                  styleClass="result-panel" visible="false" managed="false">
+                <padding>
+                    <Insets top="30" right="40" bottom="30" left="40"/>
+                </padding>
+
+                <Label fx:id="staffNameLabel" text=""
+                       styleClass="student-name"/>
+
+                <Label fx:id="staffDepartmentLabel" text=""
+                       styleClass="student-grade"/>
+
+                <Label fx:id="staffStatusLabel" text=""
+                       styleClass="status-label"/>
+            </VBox>
+
+            <!-- Panel de resultado del escaneo (visitante) -->
+            <VBox fx:id="visitorResultPanel" alignment="CENTER" spacing="15"
+                  styleClass="result-panel" visible="false" managed="false">
+                <padding>
+                    <Insets top="30" right="40" bottom="30" left="40"/>
+                </padding>
+
+                <Label fx:id="visitorNameLabel" text=""
+                       styleClass="student-name"/>
+
+                <Label fx:id="visitorBadgeLabel" text=""
+                       styleClass="student-grade"/>
+
+                <Label fx:id="visitorEntryExitLabel" text=""
+                       styleClass="status-label"/>
+            </VBox>
+
+            <!-- Panel cuando no se encuentra -->
             <VBox fx:id="notFoundPanel" alignment="CENTER" spacing="15"
                   styleClass="not-found-panel" visible="false" managed="false">
                 <padding>
                     <Insets top="20" right="30" bottom="20" left="30"/>
                 </padding>
 
-                <Label fx:id="notFoundLabel" text="Estudiante no encontrado"
+                <Label fx:id="notFoundLabel" text="No encontrado en el sistema"
                        styleClass="not-found-message"/>
 
                 <Label fx:id="scannedCodeLabel" text=""
