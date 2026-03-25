@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.stream.Collectors;
@@ -104,8 +105,7 @@ public class DatabaseConnection {
     }
 
     /**
-     * Inicializa la base de datos ejecutando el schema SQL.
-     * Crea todas las tablas e índices si no existen.
+     * Inicializa la base de datos ejecutando el schema SQL y migraciones pendientes.
      *
      * @throws SQLException Si ocurre un error al ejecutar el schema
      * @throws IOException Si ocurre un error al leer el archivo de schema
@@ -113,69 +113,105 @@ public class DatabaseConnection {
     public void initializeDatabase() throws SQLException, IOException {
         logger.info("Inicializando base de datos...");
 
-        String schema = loadSchema();
+        // Ejecutar schema base
+        String schema = loadSchemaFile(SCHEMA_PATH);
+        executeSqlScript(schema);
 
-        if (schema == null || schema.trim().isEmpty()) {
-            logger.error("El schema SQL está vacío o no se pudo cargar");
-            throw new IOException("No se pudo cargar el schema SQL");
+        // Ejecutar migraciones pendientes
+        runMigrations();
+
+        logger.info("Base de datos inicializada correctamente");
+    }
+
+    /**
+     * Ejecuta migraciones pendientes según la versión actual de la BD.
+     */
+    private void runMigrations() throws IOException {
+        int currentVersion = getDbVersion();
+        logger.info("Versión actual de BD: {}", currentVersion);
+
+        // Migración v2: staff, admin_users, activity_logs, audit trail
+        if (currentVersion < 2) {
+            logger.info("Ejecutando migración v2...");
+            String migration = loadSchemaFile("/database/migration_v2.sql");
+            executeSqlScript(migration);
+            logger.info("Migración v2 completada");
         }
+    }
 
-        Connection conn = getConnection();
+    /**
+     * Obtiene la versión actual del esquema de la base de datos.
+     */
+    private int getDbVersion() {
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(
+                     "SELECT value FROM app_config WHERE key = 'db_version'")) {
+            if (rs.next()) {
+                return Integer.parseInt(rs.getString("value"));
+            }
+        } catch (Exception e) {
+            logger.debug("No se encontró versión de BD, asumiendo v1");
+        }
+        return 1;
+    }
 
-        // Primero, eliminar comentarios línea por línea
-        StringBuilder cleanSchema = new StringBuilder();
-        for (String line : schema.split("\n")) {
+    /**
+     * Ejecuta un script SQL completo (múltiples sentencias separadas por ;).
+     */
+    private void executeSqlScript(String script) {
+        if (script == null || script.trim().isEmpty()) return;
+
+        // Limpiar comentarios
+        StringBuilder cleanSql = new StringBuilder();
+        for (String line : script.split("\n")) {
             String trimmedLine = line.trim();
-            // Ignorar líneas que son solo comentarios
             if (!trimmedLine.startsWith("--") && !trimmedLine.isEmpty()) {
-                // Eliminar comentarios al final de la línea
                 int commentIndex = line.indexOf("--");
                 if (commentIndex > 0) {
-                    cleanSchema.append(line.substring(0, commentIndex));
+                    cleanSql.append(line, 0, commentIndex);
                 } else {
-                    cleanSchema.append(line);
+                    cleanSql.append(line);
                 }
-                cleanSchema.append("\n");
+                cleanSql.append("\n");
             }
         }
 
-        // Dividir el schema limpio en sentencias individuales
-        String[] statements = cleanSchema.toString().split(";");
-
+        String[] statements = cleanSql.toString().split(";");
         int executedCount = 0;
-        try (Statement stmt = conn.createStatement()) {
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement()) {
             for (String sql : statements) {
                 String trimmedSql = sql.trim();
-
-                // Ignorar sentencias vacías
                 if (!trimmedSql.isEmpty()) {
                     try {
                         stmt.execute(trimmedSql);
                         executedCount++;
-                        logger.debug("Ejecutado: {}",
-                            trimmedSql.length() > 50 ? trimmedSql.substring(0, 50) + "..." : trimmedSql);
                     } catch (SQLException e) {
-                        // Algunos errores son esperados (ej: tabla ya existe con INSERT OR IGNORE)
                         logger.debug("Advertencia al ejecutar SQL: {}", e.getMessage());
                     }
                 }
             }
+        } catch (SQLException e) {
+            logger.error("Error al ejecutar script SQL", e);
         }
 
-        logger.info("Base de datos inicializada correctamente. {} sentencias ejecutadas.", executedCount);
+        logger.debug("{} sentencias ejecutadas", executedCount);
     }
 
     /**
-     * Carga el contenido del archivo de schema SQL desde los recursos.
+     * Carga el contenido de un archivo SQL desde los recursos.
      *
-     * @return Contenido del archivo de schema
+     * @param path Ruta al archivo SQL en resources
+     * @return Contenido del archivo
      * @throws IOException Si ocurre un error al leer el archivo
      */
-    private String loadSchema() throws IOException {
-        try (InputStream inputStream = getClass().getResourceAsStream(SCHEMA_PATH)) {
+    private String loadSchemaFile(String path) throws IOException {
+        try (InputStream inputStream = getClass().getResourceAsStream(path)) {
             if (inputStream == null) {
-                logger.error("No se encontró el archivo de schema: {}", SCHEMA_PATH);
-                throw new IOException("Archivo de schema no encontrado: " + SCHEMA_PATH);
+                logger.error("No se encontró el archivo: {}", path);
+                throw new IOException("Archivo no encontrado: " + path);
             }
 
             try (BufferedReader reader = new BufferedReader(

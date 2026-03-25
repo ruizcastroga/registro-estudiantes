@@ -28,9 +28,19 @@ public class CsvImportService {
     // Separadores soportados
     private static final char[] SEPARATORS = {',', ';', '\t'};
 
+    // Usuario que realiza la importación (audit trail)
+    private String importedBy;
+
     public CsvImportService() {
         this.studentDAO = new StudentDAO();
         this.guardianDAO = new GuardianDAO();
+    }
+
+    /**
+     * Establece el usuario que realiza la importación para audit trail.
+     */
+    public void setImportedBy(String username) {
+        this.importedBy = username;
     }
 
     /**
@@ -257,6 +267,8 @@ public class CsvImportService {
         student.setRequiresGuardian(requires);
         student.setMinor(true);
         student.setStatus("active");
+        student.setCreatedBy(importedBy);
+        student.setUpdatedBy(importedBy);
 
         try {
             // Guardar estudiante

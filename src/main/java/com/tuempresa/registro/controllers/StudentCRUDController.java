@@ -1,10 +1,12 @@
 package com.tuempresa.registro.controllers;
 
+import com.tuempresa.registro.models.AdminUser;
 import com.tuempresa.registro.models.Guardian;
 import com.tuempresa.registro.models.Student;
 import com.tuempresa.registro.services.CsvImportService;
 import com.tuempresa.registro.services.StudentService;
 import com.tuempresa.registro.utils.SecurityManager;
+import com.tuempresa.registro.utils.SessionManager;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -18,6 +20,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -71,6 +75,14 @@ public class StudentCRUDController implements Initializable {
     @FXML private Button removeGuardianButton;
     @FXML private Button clearSearchButton;
 
+    // Session bar
+    @FXML private HBox sessionBar;
+    @FXML private Label sessionUserLabel;
+    @FXML private Label sessionRoleLabel;
+    @FXML private Label sessionTimerLabel;
+    @FXML private Button sessionLoginBtn;
+    @FXML private Button sessionLogoutBtn;
+
     // Labels de estado
     @FXML private Label countLabel;
     @FXML private Label validationMessage;
@@ -79,6 +91,7 @@ public class StudentCRUDController implements Initializable {
     // Servicios
     private StudentService studentService;
     private SecurityManager securityManager;
+    private SessionManager sessionManager;
     private CsvImportService csvImportService;
 
     // Datos
@@ -100,6 +113,7 @@ public class StudentCRUDController implements Initializable {
         // Inicializar servicios
         studentService = new StudentService();
         securityManager = SecurityManager.getInstance();
+        sessionManager = SessionManager.getInstance();
         csvImportService = new CsvImportService();
 
         // Inicializar listas
@@ -115,6 +129,9 @@ public class StudentCRUDController implements Initializable {
 
         // Configurar lista de guardianes
         guardiansListView.setItems(guardianDisplayList);
+
+        // Configurar session bar
+        setupSessionBar();
 
         // Cargar datos
         loadStudents();
@@ -364,8 +381,10 @@ public class StudentCRUDController implements Initializable {
             return;
         }
 
-        // Verificar contraseña primero
-        if (!verifyPasswordDialog("Eliminar Estudiante")) {
+        // Verificar sesión activa
+        if (!sessionManager.canModifyData()) {
+            showAlert(Alert.AlertType.WARNING, "Acceso Denegado",
+                    "Necesita una sesión de Administrador activa para esta operación.");
             return;
         }
 
@@ -402,9 +421,10 @@ public class StudentCRUDController implements Initializable {
             return;
         }
 
-        // Verificar contraseña
-        String actionName = isEditMode ? "Editar Estudiante" : "Agregar Estudiante";
-        if (!verifyPasswordDialog(actionName)) {
+        // Verificar sesión activa
+        if (!sessionManager.canModifyData()) {
+            showAlert(Alert.AlertType.WARNING, "Acceso Denegado",
+                    "Necesita una sesión de Administrador activa para esta operación.");
             return;
         }
 
@@ -418,6 +438,11 @@ public class StudentCRUDController implements Initializable {
             student.setMinor(isMinorCheck.isSelected());
             student.setRequiresGuardian(requiresGuardianCheck.isSelected());
             student.setStatus(mapStatusToDb(statusCombo.getValue()));
+            student.setUpdatedBy(sessionManager.getActiveUsername());
+
+            if (!isEditMode) {
+                student.setCreatedBy(sessionManager.getActiveUsername());
+            }
 
             if (isEditMode) {
                 studentService.updateStudent(student);
@@ -532,8 +557,10 @@ public class StudentCRUDController implements Initializable {
      */
     @FXML
     private void onImportCsv() {
-        // Verificar contraseña primero
-        if (!verifyPasswordDialog("Importar Estudiantes")) {
+        // Verificar sesión activa
+        if (!sessionManager.canModifyData()) {
+            showAlert(Alert.AlertType.WARNING, "Acceso Denegado",
+                    "Necesita una sesión de Administrador activa para esta operación.");
             return;
         }
 
@@ -549,6 +576,7 @@ public class StudentCRUDController implements Initializable {
         if (file != null) {
             logger.info("Importando desde: {}", file.getAbsolutePath());
 
+            csvImportService.setImportedBy(sessionManager.getActiveUsername());
             CsvImportService.ImportResult result = csvImportService.importFromCsv(file);
 
             // Mostrar resultado
@@ -667,54 +695,116 @@ public class StudentCRUDController implements Initializable {
         });
     }
 
-    /**
-     * Muestra diálogo para verificar contraseña.
-     *
-     * @param action Descripción de la acción a realizar
-     * @return true si la contraseña es correcta
-     */
-    private boolean verifyPasswordDialog(String action) {
-        Dialog<String> dialog = new Dialog<>();
-        dialog.setTitle("Verificación de Seguridad");
-        dialog.setHeaderText(action);
+    private void setupSessionBar() {
+        sessionBar.setVisible(true);
+        sessionBar.setManaged(true);
+        sessionUserLabel.textProperty().bind(sessionManager.currentUsernameProperty());
+        sessionRoleLabel.textProperty().bind(sessionManager.currentRoleProperty());
+        sessionTimerLabel.textProperty().bind(sessionManager.remainingTimeFormattedProperty());
 
-        ButtonType okButtonType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(okButtonType, ButtonType.CANCEL);
+        sessionManager.sessionActiveProperty().addListener((obs, wasActive, isActive) -> {
+            sessionLoginBtn.setVisible(!isActive);
+            sessionLoginBtn.setManaged(!isActive);
+            sessionLogoutBtn.setVisible(isActive);
+            sessionLogoutBtn.setManaged(isActive);
+        });
+        sessionManager.remainingSecondsProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal.intValue() <= 120 && newVal.intValue() > 0) {
+                sessionTimerLabel.getStyleClass().setAll("session-timer-warning");
+                sessionBar.getStyleClass().setAll("session-bar", "session-bar-warning");
+            } else {
+                sessionTimerLabel.getStyleClass().setAll("session-timer-label");
+                sessionBar.getStyleClass().setAll("session-bar");
+            }
+        });
+        boolean active = sessionManager.isSessionActive();
+        sessionLoginBtn.setVisible(!active);
+        sessionLoginBtn.setManaged(!active);
+        sessionLogoutBtn.setVisible(active);
+        sessionLogoutBtn.setManaged(active);
+    }
+
+    @FXML
+    private void onLogin() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Iniciar Sesión");
+        dialog.setHeaderText("Ingrese sus credenciales");
+        ButtonType loginButtonType = new ButtonType("Iniciar Sesión", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
 
         VBox content = new VBox(10);
         content.setPadding(new Insets(20));
-
-        Label label = new Label("Por favor ingresa la contraseña:");
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Contraseña");
-        passwordField.setPrefWidth(250);
-
-        content.getChildren().addAll(label, passwordField);
+        TextField usernameField2 = new TextField();
+        usernameField2.setPromptText("Usuario");
+        PasswordField passwordField2 = new PasswordField();
+        passwordField2.setPromptText("Contraseña");
+        Label errorLabel = new Label();
+        errorLabel.setStyle("-fx-text-fill: red;");
+        errorLabel.setVisible(false);
+        content.getChildren().addAll(new Label("Usuario:"), usernameField2, new Label("Contraseña:"), passwordField2, errorLabel);
         dialog.getDialogPane().setContent(content);
+        Platform.runLater(usernameField2::requestFocus);
 
-        Platform.runLater(passwordField::requestFocus);
+        while (true) {
+            Optional<ButtonType> result = dialog.showAndWait();
+            if (result.isEmpty() || result.get() != loginButtonType) return;
 
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == okButtonType) {
-                return passwordField.getText();
-            }
-            return null;
-        });
-
-        Optional<String> result = dialog.showAndWait();
-
-        if (result.isPresent()) {
-            String password = result.get();
-            if (securityManager.verifyPassword(password)) {
-                return true;
+            Optional<AdminUser> userOpt = securityManager.authenticate(usernameField2.getText(), passwordField2.getText());
+            if (userOpt.isPresent()) {
+                AdminUser user = userOpt.get();
+                int timeout = sessionManager.getTimeoutMinutes();
+                sessionManager.startSession(user, timeout);
+                Alert success = new Alert(Alert.AlertType.INFORMATION);
+                success.setTitle("Sesión Iniciada");
+                success.setHeaderText(null);
+                success.setContentText("Usuario " + user.getUsername() + " logueado correctamente.\n" +
+                        "Tu sesión estará activa por " + timeout + " minutos.\n" +
+                        "Si terminas antes, recuerda cerrar la sesión para cuidar los datos.");
+                success.showAndWait();
+                return;
             } else {
-                showAlert(Alert.AlertType.ERROR, "Contraseña Incorrecta",
-                        "La contraseña ingresada no es correcta.");
-                return false;
+                errorLabel.setText("Credenciales incorrectas. Intente de nuevo.");
+                errorLabel.setVisible(true);
+                passwordField2.clear();
             }
         }
+    }
 
-        return false;
+    @FXML
+    private void onLogout() {
+        sessionManager.endSession();
+        setStatusMessage("Sesión cerrada");
+    }
+
+    @FXML
+    private void onManageVisitors() {
+        navigateTo("/fxml/visitor-view.fxml", "Control de Visitantes");
+    }
+
+    @FXML
+    private void onManageStaff() {
+        navigateTo("/fxml/staff-admin.fxml", "Administración de Personal");
+    }
+
+    @FXML
+    private void onManageSettings() {
+        navigateTo("/fxml/settings-view.fxml", "Ajustes del Sistema");
+    }
+
+    private void navigateTo(String fxmlPath, String title) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            Stage stage = (Stage) studentsTable.getScene().getWindow();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            stage.setMaximized(false);
+            stage.setScene(scene);
+            stage.setTitle(title);
+            Platform.runLater(() -> stage.setMaximized(true));
+        } catch (IOException e) {
+            logger.error("Error al navegar a " + fxmlPath, e);
+        }
     }
 
     /**

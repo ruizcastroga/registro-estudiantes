@@ -4,6 +4,8 @@ import com.tuempresa.registro.models.VisitorBadge;
 import com.tuempresa.registro.models.VisitorLog;
 import com.tuempresa.registro.services.VisitorService;
 import com.tuempresa.registro.utils.SecurityManager;
+import com.tuempresa.registro.utils.SessionManager;
+import com.tuempresa.registro.models.AdminUser;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
@@ -49,6 +51,14 @@ public class VisitorController implements Initializable {
     private static final Logger logger = LoggerFactory.getLogger(VisitorController.class);
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("hh:mm:ss a");
     private static final int AUTO_CLEAR_SECONDS = 8;
+
+    // Session bar
+    @FXML private HBox sessionBar;
+    @FXML private Label sessionUserLabel;
+    @FXML private Label sessionRoleLabel;
+    @FXML private Label sessionTimerLabel;
+    @FXML private Button sessionLoginBtn;
+    @FXML private Button sessionLogoutBtn;
 
     // Header
     @FXML private Label subtitleLabel;
@@ -107,6 +117,7 @@ public class VisitorController implements Initializable {
     // Servicio y estado
     private VisitorService visitorService;
     private SecurityManager securityManager;
+    private SessionManager sessionManager;
     private VisitorBadge pendingBadge; // carné que espera que el guardia ingrese la cédula
     private PauseTransition autoClear;
 
@@ -120,6 +131,7 @@ public class VisitorController implements Initializable {
     public void initialize(URL location, ResourceBundle resources) {
         visitorService = new VisitorService();
         securityManager = SecurityManager.getInstance();
+        sessionManager = SessionManager.getInstance();
 
         insideList = FXCollections.observableArrayList();
         badgesList = FXCollections.observableArrayList();
@@ -136,6 +148,7 @@ public class VisitorController implements Initializable {
         autoClear.setOnFinished(e -> clearResultPanels());
 
         loadAllData();
+        setupSessionBar();
 
         Platform.runLater(() -> badgeInput.requestFocus());
     }
@@ -176,30 +189,36 @@ public class VisitorController implements Initializable {
                 box.setPadding(new Insets(2));
 
                 btnLost.setOnAction(e -> {
-                    VisitorBadge badge = getTableView().getItems().get(getIndex());
-                    if (confirmAdminAction("marcar el carné '" + badge.getCode() + "' como perdido")) {
-                        visitorService.markBadgeLost(badge.getId());
-                        loadAllData();
+                    if (!sessionManager.canModifyData()) {
+                        showAlert(Alert.AlertType.WARNING, "Acceso Denegado", "Necesita una sesión de Administrador activa para esta operación.");
+                        return;
                     }
+                    VisitorBadge badge = getTableView().getItems().get(getIndex());
+                    visitorService.markBadgeLost(badge.getId());
+                    loadAllData();
                 });
 
                 btnAvailable.setOnAction(e -> {
-                    VisitorBadge badge = getTableView().getItems().get(getIndex());
-                    if (confirmAdminAction("restaurar el carné '" + badge.getCode() + "' a disponible")) {
-                        visitorService.markBadgeAvailable(badge.getId());
-                        loadAllData();
+                    if (!sessionManager.canModifyData()) {
+                        showAlert(Alert.AlertType.WARNING, "Acceso Denegado", "Necesita una sesión de Administrador activa para esta operación.");
+                        return;
                     }
+                    VisitorBadge badge = getTableView().getItems().get(getIndex());
+                    visitorService.markBadgeAvailable(badge.getId());
+                    loadAllData();
                 });
 
                 btnDelete.setOnAction(e -> {
+                    if (!sessionManager.canModifyData()) {
+                        showAlert(Alert.AlertType.WARNING, "Acceso Denegado", "Necesita una sesión de Administrador activa para esta operación.");
+                        return;
+                    }
                     VisitorBadge badge = getTableView().getItems().get(getIndex());
-                    if (confirmAdminAction("eliminar el carné '" + badge.getCode() + "'")) {
-                        try {
-                            visitorService.deleteBadge(badge.getId());
-                            loadAllData();
-                        } catch (SQLException ex) {
-                            showError("No se pudo eliminar el carné: " + ex.getMessage());
-                        }
+                    try {
+                        visitorService.deleteBadge(badge.getId());
+                        loadAllData();
+                    } catch (SQLException ex) {
+                        showError("No se pudo eliminar el carné: " + ex.getMessage());
                     }
                 });
             }
@@ -379,7 +398,8 @@ public class VisitorController implements Initializable {
             showError("Ingrese un código para el carné.");
             return;
         }
-        if (!confirmAdminAction("agregar el carné '" + code + "'")) {
+        if (!sessionManager.canModifyData()) {
+            showAlert(Alert.AlertType.WARNING, "Acceso Denegado", "Necesita una sesión de Administrador activa para esta operación.");
             return;
         }
         try {
@@ -400,7 +420,10 @@ public class VisitorController implements Initializable {
 
     @FXML
     private void onImportBadgesCsv() {
-        if (!confirmAdminAction("importar carnés desde CSV")) return;
+        if (!sessionManager.canModifyData()) {
+            showAlert(Alert.AlertType.WARNING, "Acceso Denegado", "Necesita una sesión de Administrador activa para esta operación.");
+            return;
+        }
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Seleccionar archivo CSV de carnés");
@@ -540,7 +563,10 @@ public class VisitorController implements Initializable {
         Optional<ButtonType> res = confirm.showAndWait();
         if (res.isEmpty() || res.get() != ButtonType.OK) return;
 
-        if (!confirmAdminAction("borrar registros históricos")) return;
+        if (!sessionManager.canModifyData()) {
+            showAlert(Alert.AlertType.WARNING, "Acceso Denegado", "Necesita una sesión de Administrador activa para esta operación.");
+            return;
+        }
 
         int deleted = visitorService.purgeLogsBefore(date.atStartOfDay());
         showInfo("Se eliminaron " + deleted + " registros.");
@@ -641,8 +667,138 @@ public class VisitorController implements Initializable {
     }
 
     // -----------------------------------------------------------------------
+    // Sesión
+    // -----------------------------------------------------------------------
+
+    private void setupSessionBar() {
+        sessionBar.setVisible(true);
+        sessionBar.setManaged(true);
+        sessionManager.sessionActiveProperty().addListener((obs, wasActive, isActive) -> {
+            sessionLoginBtn.setVisible(!isActive);
+            sessionLoginBtn.setManaged(!isActive);
+            sessionLogoutBtn.setVisible(isActive);
+            sessionLogoutBtn.setManaged(isActive);
+            if (isActive) {
+                sessionUserLabel.setText("Usuario: " + sessionManager.getCurrentUser().getUsername());
+                sessionRoleLabel.setText("Rol: " + sessionManager.getCurrentUser().getRole());
+            } else {
+                sessionUserLabel.setText("");
+                sessionRoleLabel.setText("");
+                sessionTimerLabel.setText("");
+            }
+        });
+        sessionManager.remainingTimeFormattedProperty().addListener((obs, oldVal, newVal) -> {
+            sessionTimerLabel.setText(newVal);
+            int remaining = sessionManager.remainingSecondsProperty().get();
+            if (remaining <= 120 && remaining > 0) {
+                sessionTimerLabel.getStyleClass().setAll("session-timer-warning");
+                sessionBar.getStyleClass().setAll("session-bar", "session-bar-warning");
+            } else {
+                sessionTimerLabel.getStyleClass().setAll("session-timer-label");
+                sessionBar.getStyleClass().setAll("session-bar");
+            }
+        });
+        boolean active = sessionManager.isSessionActive();
+        sessionLoginBtn.setVisible(!active);
+        sessionLoginBtn.setManaged(!active);
+        sessionLogoutBtn.setVisible(active);
+        sessionLogoutBtn.setManaged(active);
+        if (active) {
+            sessionUserLabel.setText("Usuario: " + sessionManager.getCurrentUser().getUsername());
+            sessionRoleLabel.setText("Rol: " + sessionManager.getCurrentUser().getRole());
+            sessionTimerLabel.setText(sessionManager.remainingTimeFormattedProperty().get());
+        }
+    }
+
+    @FXML
+    private void onLogin() {
+        SecurityManager security = SecurityManager.getInstance();
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Iniciar Sesión");
+        dialog.setHeaderText("Ingrese sus credenciales");
+        ButtonType loginButtonType = new ButtonType("Iniciar Sesión", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
+
+        VBox content = new VBox(10);
+        content.setPadding(new Insets(20));
+        TextField usernameInput = new TextField();
+        usernameInput.setPromptText("Usuario");
+        PasswordField passwordInput = new PasswordField();
+        passwordInput.setPromptText("Contraseña");
+        Label errorLabel = new Label();
+        errorLabel.setStyle("-fx-text-fill: red;");
+        errorLabel.setVisible(false);
+        content.getChildren().addAll(new Label("Usuario:"), usernameInput, new Label("Contraseña:"), passwordInput, errorLabel);
+        dialog.getDialogPane().setContent(content);
+        Platform.runLater(usernameInput::requestFocus);
+
+        while (true) {
+            Optional<ButtonType> result = dialog.showAndWait();
+            if (result.isEmpty() || result.get() != loginButtonType) return;
+
+            Optional<AdminUser> userOpt = security.authenticate(usernameInput.getText(), passwordInput.getText());
+            if (userOpt.isPresent()) {
+                AdminUser user = userOpt.get();
+                int timeout = sessionManager.getTimeoutMinutes();
+                sessionManager.startSession(user, timeout);
+                Alert success = new Alert(Alert.AlertType.INFORMATION);
+                success.setTitle("Sesión Iniciada");
+                success.setHeaderText(null);
+                success.setContentText("Usuario " + user.getUsername() + " logueado correctamente.\nTu sesión estará activa por " + timeout + " minutos.\nSi terminas antes, recuerda cerrar la sesión para cuidar los datos.");
+                success.showAndWait();
+                return;
+            } else {
+                errorLabel.setText("Credenciales incorrectas. Intente de nuevo.");
+                errorLabel.setVisible(true);
+                passwordInput.clear();
+            }
+        }
+    }
+
+    @FXML
+    private void onLogout() {
+        sessionManager.endSession();
+    }
+
+    // -----------------------------------------------------------------------
     // Navegación
     // -----------------------------------------------------------------------
+
+    @FXML
+    private void onManageStudents() {
+        navigateTo("/fxml/student-crud.fxml", "Gestión de Estudiantes");
+    }
+
+    @FXML
+    private void onManageStaff() {
+        navigateTo("/fxml/staff-admin.fxml", "Administración de Personal");
+    }
+
+    @FXML
+    private void onManageSettings() {
+        navigateTo("/fxml/settings-view.fxml", "Ajustes del Sistema");
+    }
+
+    @FXML
+    private void onManageCarne() {
+        navigateTo("/fxml/carne-view.fxml", "Creador de Carné");
+    }
+
+    private void navigateTo(String fxmlPath, String title) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
+            Parent root = loader.load();
+            Stage stage = (Stage) badgeInput.getScene().getWindow();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
+            stage.setMaximized(false);
+            stage.setScene(scene);
+            stage.setTitle(title);
+            Platform.runLater(() -> stage.setMaximized(true));
+        } catch (IOException e) {
+            logger.error("Error al navegar a " + fxmlPath, e);
+        }
+    }
 
     @FXML
     private void onBack() {
@@ -710,34 +866,12 @@ public class VisitorController implements Initializable {
         alert.showAndWait();
     }
 
-    /**
-     * Muestra un diálogo de verificación de contraseña admin.
-     * Retorna true si la contraseña es correcta.
-     */
-    private boolean confirmAdminAction(String action) {
-        Dialog<String> dialog = new Dialog<>();
-        dialog.setTitle("Verificación de Administrador");
-        dialog.setHeaderText("Para " + action + "\nIngrese la contraseña de administrador:");
-
-        PasswordField passField = new PasswordField();
-        passField.setPromptText("Contraseña");
-        VBox content = new VBox(8, new Label("Contraseña:"), passField);
-        content.setPadding(new Insets(10));
-        dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-
-        Platform.runLater(passField::requestFocus);
-
-        dialog.setResultConverter(btn -> btn == ButtonType.OK ? passField.getText() : null);
-
-        Optional<String> result = dialog.showAndWait();
-        if (result.isEmpty() || result.get() == null) return false;
-
-        if (!securityManager.verifyPassword(result.get())) {
-            showError("Contraseña incorrecta.");
-            return false;
-        }
-        return true;
+    private void showAlert(Alert.AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     // -----------------------------------------------------------------------

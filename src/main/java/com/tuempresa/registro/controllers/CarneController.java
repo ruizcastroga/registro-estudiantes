@@ -7,6 +7,8 @@ import com.tuempresa.registro.dao.DatabaseConnection;
 import com.tuempresa.registro.models.Student;
 import com.tuempresa.registro.services.StudentService;
 import com.tuempresa.registro.utils.SecurityManager;
+import com.tuempresa.registro.utils.SessionManager;
+import com.tuempresa.registro.models.AdminUser;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -21,7 +23,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.geometry.Insets;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -55,6 +60,14 @@ public class CarneController implements Initializable {
     // Directorio de datos de la aplicación
     private static final String APP_DATA_DIR =
             System.getProperty("user.home") + File.separator + ".registro-estudiantes";
+
+    // --- Session bar ---
+    @FXML private HBox sessionBar;
+    @FXML private Label sessionUserLabel;
+    @FXML private Label sessionRoleLabel;
+    @FXML private Label sessionTimerLabel;
+    @FXML private Button sessionLoginBtn;
+    @FXML private Button sessionLogoutBtn;
 
     // --- Componentes del panel izquierdo (formulario) ---
     @FXML private TextField searchField;
@@ -90,6 +103,7 @@ public class CarneController implements Initializable {
     // --- Servicios ---
     private StudentService studentService;
     private SecurityManager securityManager;
+    private SessionManager sessionManager;
 
     // --- Estado ---
     private ObservableList<Student> searchResults;
@@ -106,16 +120,117 @@ public class CarneController implements Initializable {
 
         studentService = new StudentService();
         securityManager = SecurityManager.getInstance();
+        sessionManager = SessionManager.getInstance();
 
         searchResults = FXCollections.observableArrayList();
         searchResultsList.setItems(searchResults);
 
         setupSearchList();
+        setupSessionBar();
         loadSchoolName();
         loadSchoolShield();
         setFormEditable(false);
 
         logger.info("CarneController inicializado");
+    }
+
+    // ============================================================
+    //  Session bar
+    // ============================================================
+
+    private void setupSessionBar() {
+        if (sessionBar == null) return;
+        SessionManager sm = SessionManager.getInstance();
+        sm.sessionActiveProperty().addListener((obs, oldVal, newVal) -> {
+            sessionBar.setVisible(true);
+            sessionBar.setManaged(true);
+            if (newVal) {
+                sessionUserLabel.setText("Usuario: " + sm.getCurrentUser().getUsername());
+                sessionRoleLabel.setText("Rol: " + sm.getCurrentUser().getRole());
+                sessionLoginBtn.setVisible(false); sessionLoginBtn.setManaged(false);
+                sessionLogoutBtn.setVisible(true); sessionLogoutBtn.setManaged(true);
+            } else {
+                sessionUserLabel.setText(""); sessionRoleLabel.setText("");
+                sessionLoginBtn.setVisible(true); sessionLoginBtn.setManaged(true);
+                sessionLogoutBtn.setVisible(false); sessionLogoutBtn.setManaged(false);
+                sessionTimerLabel.setText("");
+            }
+        });
+        sm.remainingTimeFormattedProperty().addListener((obs, oldVal, newVal) -> {
+            sessionTimerLabel.setText(newVal);
+            int remaining = sm.remainingSecondsProperty().get();
+            if (remaining <= 120 && remaining > 0) {
+                sessionTimerLabel.getStyleClass().setAll("session-timer-warning");
+                sessionBar.getStyleClass().setAll("session-bar", "session-bar-warning");
+            } else {
+                sessionTimerLabel.getStyleClass().setAll("session-timer-label");
+                sessionBar.getStyleClass().setAll("session-bar");
+            }
+        });
+        sessionBar.setVisible(true);
+        sessionBar.setManaged(true);
+        if (sm.isSessionActive()) {
+            sessionUserLabel.setText("Usuario: " + sm.getCurrentUser().getUsername());
+            sessionRoleLabel.setText("Rol: " + sm.getCurrentUser().getRole());
+            sessionTimerLabel.setText(sm.remainingTimeFormattedProperty().get());
+            sessionLoginBtn.setVisible(false); sessionLoginBtn.setManaged(false);
+            sessionLogoutBtn.setVisible(true); sessionLogoutBtn.setManaged(true);
+        }
+    }
+
+    @FXML
+    private void onLogin() {
+        Dialog<String[]> dialog = new Dialog<>();
+        dialog.setTitle("Iniciar Sesión");
+        dialog.setHeaderText("Ingrese sus credenciales");
+        ButtonType loginType = new ButtonType("Ingresar", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(loginType, ButtonType.CANCEL);
+
+        javafx.scene.layout.GridPane grid = new javafx.scene.layout.GridPane();
+        grid.setHgap(10); grid.setVgap(10);
+        grid.setPadding(new Insets(20));
+        TextField userField = new TextField(); userField.setPromptText("Usuario");
+        PasswordField passField = new PasswordField(); passField.setPromptText("Contraseña");
+        Label errorLabel = new Label(); errorLabel.setStyle("-fx-text-fill: red;");
+        grid.add(new Label("Usuario:"), 0, 0); grid.add(userField, 1, 0);
+        grid.add(new Label("Contraseña:"), 0, 1); grid.add(passField, 1, 1);
+        grid.add(errorLabel, 0, 2, 2, 1);
+        dialog.getDialogPane().setContent(grid);
+        Platform.runLater(userField::requestFocus);
+
+        dialog.setResultConverter(btn -> btn == loginType ?
+                new String[]{userField.getText(), passField.getText()} : null);
+
+        while (true) {
+            Optional<String[]> result = dialog.showAndWait();
+            if (result.isEmpty()) return;
+            String[] creds = result.get();
+            Optional<AdminUser> authResult = securityManager.authenticate(creds[0], creds[1]);
+            if (authResult.isPresent()) {
+                int timeout = sessionManager.getTimeoutMinutes();
+                sessionManager.startSession(authResult.get(), timeout);
+                showAlert(Alert.AlertType.INFORMATION, "Sesión Iniciada",
+                    "Usuario " + creds[0] + " logueado correctamente.\n" +
+                    "Tu sesión estará activa por " + timeout + " minutos.\n" +
+                    "Si terminas antes, recuerda cerrar la sesión para cuidar los datos.");
+                return;
+            }
+            errorLabel.setText("Credenciales incorrectas. Intente de nuevo.");
+        }
+    }
+
+    @FXML
+    private void onLogout() {
+        SessionManager.getInstance().endSession();
+    }
+
+    private boolean requireSession() {
+        if (!sessionManager.isSessionActive()) {
+            showAlert(Alert.AlertType.WARNING, "Sesión Requerida",
+                "Debe iniciar sesión para realizar esta operación.");
+            return false;
+        }
+        return true;
     }
 
     // ============================================================
@@ -548,7 +663,10 @@ public class CarneController implements Initializable {
      * @return true si se guardó correctamente
      */
     private boolean saveNewStudent() {
-        if (!verifyPasswordDialog("Guardar Nuevo Estudiante")) {
+        if (!requireSession()) return false;
+        if (!sessionManager.canModifyData()) {
+            showAlert(Alert.AlertType.WARNING, "Sin Permisos",
+                "No tiene permisos para guardar estudiantes.");
             return false;
         }
 
@@ -561,6 +679,8 @@ public class CarneController implements Initializable {
             student.setMinor(true);
             student.setRequiresGuardian(true);
             student.setStatus("active");
+            student.setCreatedBy(sessionManager.getActiveUsername());
+            student.setUpdatedBy(sessionManager.getActiveUsername());
 
             Student saved = studentService.saveStudent(student);
 
@@ -669,49 +789,33 @@ public class CarneController implements Initializable {
         alert.showAndWait();
     }
 
-    private boolean verifyPasswordDialog(String action) {
-        Dialog<String> dialog = new Dialog<>();
-        dialog.setTitle("Verificación de Seguridad");
-        dialog.setHeaderText(action);
-
-        ButtonType okType = new ButtonType("OK", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(okType, ButtonType.CANCEL);
-
-        javafx.scene.layout.VBox content = new javafx.scene.layout.VBox(10);
-        content.setPadding(new javafx.geometry.Insets(20));
-        Label label = new Label("Ingresa la contraseña:");
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Contraseña");
-        content.getChildren().addAll(label, passwordField);
-        dialog.getDialogPane().setContent(content);
-
-        Platform.runLater(passwordField::requestFocus);
-
-        dialog.setResultConverter(btn -> btn == okType ? passwordField.getText() : null);
-
-        Optional<String> result = dialog.showAndWait();
-        if (result.isPresent()) {
-            if (securityManager.verifyPassword(result.get())) {
-                return true;
-            }
-            showAlert(Alert.AlertType.ERROR, "Contraseña incorrecta",
-                    "La contraseña ingresada no es correcta.");
-        }
-        return false;
-    }
-
     // ============================================================
     //  Navegación
     // ============================================================
 
     @FXML
     private void onBackToScanner() {
-        navigateTo("/fxml/scanner-view.fxml", "Scanner de Estudiantes");
+        navigateTo("/fxml/scanner-view.fxml", "Scanner");
     }
 
     @FXML
     private void onManageStudents() {
         navigateTo("/fxml/student-crud.fxml", "Gestión de Estudiantes");
+    }
+
+    @FXML
+    private void onManageVisitors() {
+        navigateTo("/fxml/visitor-view.fxml", "Control de Visitantes");
+    }
+
+    @FXML
+    private void onManageStaff() {
+        navigateTo("/fxml/staff-admin.fxml", "Gestión de Personal");
+    }
+
+    @FXML
+    private void onManageSettings() {
+        navigateTo("/fxml/settings-view.fxml", "Ajustes");
     }
 
     private void navigateTo(String fxmlPath, String title) {

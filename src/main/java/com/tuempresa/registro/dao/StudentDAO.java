@@ -177,8 +177,8 @@ public class StudentDAO {
      */
     public Student save(Student student) throws SQLException {
         String sql = "INSERT INTO students (barcode, first_name, last_name, grade, " +
-                "is_minor, requires_guardian, photo_path, status) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                "is_minor, requires_guardian, photo_path, status, created_by, updated_by) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         Connection conn = dbConnection.getConnection();
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -191,6 +191,8 @@ public class StudentDAO {
             stmt.setInt(6, student.isRequiresGuardian() ? 1 : 0);
             stmt.setString(7, student.getPhotoPath());
             stmt.setString(8, student.getStatus() != null ? student.getStatus() : "active");
+            stmt.setString(9, student.getCreatedBy());
+            stmt.setString(10, student.getUpdatedBy());
 
             int affectedRows = stmt.executeUpdate();
 
@@ -224,7 +226,7 @@ public class StudentDAO {
     public boolean update(Student student) throws SQLException {
         String sql = "UPDATE students SET barcode = ?, first_name = ?, last_name = ?, " +
                 "grade = ?, is_minor = ?, requires_guardian = ?, photo_path = ?, " +
-                "status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
+                "status = ?, updated_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?";
 
         try (Connection conn = dbConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -237,7 +239,8 @@ public class StudentDAO {
             stmt.setInt(6, student.isRequiresGuardian() ? 1 : 0);
             stmt.setString(7, student.getPhotoPath());
             stmt.setString(8, student.getStatus());
-            stmt.setLong(9, student.getId());
+            stmt.setString(9, student.getUpdatedBy());
+            stmt.setLong(10, student.getId());
 
             int affectedRows = stmt.executeUpdate();
 
@@ -380,6 +383,10 @@ public class StudentDAO {
         student.setRequiresGuardian(rs.getInt("requires_guardian") == 1);
         student.setPhotoPath(rs.getString("photo_path"));
         student.setStatus(rs.getString("status"));
+
+        // Audit trail
+        try { student.setCreatedBy(rs.getString("created_by")); } catch (SQLException ignored) {}
+        try { student.setUpdatedBy(rs.getString("updated_by")); } catch (SQLException ignored) {}
 
         // Convertir timestamps
         String createdAt = rs.getString("created_at");

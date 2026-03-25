@@ -3,6 +3,7 @@ package com.tuempresa.registro;
 import com.tuempresa.registro.dao.DatabaseConnection;
 import com.tuempresa.registro.utils.LicenseManager;
 import com.tuempresa.registro.utils.SecurityManager;
+import com.tuempresa.registro.utils.SessionManager;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -62,9 +63,9 @@ public class Main extends Application {
             // Inicializar base de datos
             initializeDatabase();
 
-            // Verificar configuración inicial de contraseña
-            if (!checkPasswordSetup()) {
-                logger.info("Usuario canceló configuración de contraseña. Cerrando aplicación.");
+            // Verificar configuración inicial del primer administrador
+            if (!checkFirstRunSetup()) {
+                logger.info("Usuario canceló configuración inicial. Cerrando aplicación.");
                 Platform.exit();
                 return;
             }
@@ -107,31 +108,22 @@ public class Main extends Application {
     }
 
     /**
-     * Verifica si es necesario configurar la contraseña inicial.
-     * Si no hay contraseña configurada, muestra el diálogo de configuración.
+     * Verifica si es la primera ejecución y necesita crear el primer administrador.
+     * Si no hay usuarios configurados, muestra el diálogo de configuración inicial.
      *
-     * @return true si la contraseña está configurada o se configuró exitosamente
+     * @return true si ya hay usuarios o se creó el primer administrador exitosamente
      */
-    private boolean checkPasswordSetup() {
+    private boolean checkFirstRunSetup() {
         SecurityManager securityManager = SecurityManager.getInstance();
 
         if (securityManager.isPasswordConfigured()) {
-            logger.info("Contraseña del sistema ya configurada");
+            logger.info("Sistema ya configurado con usuarios existentes");
             return true;
         }
 
-        logger.info("Primera ejecución - solicitando configuración de contraseña");
-        return showPasswordSetupDialog(securityManager);
-    }
+        logger.info("Primera ejecución - solicitando creación del primer administrador");
 
-    /**
-     * Muestra el diálogo para configurar la contraseña inicial.
-     *
-     * @param securityManager Gestor de seguridad
-     * @return true si se configuró la contraseña exitosamente
-     */
-    private boolean showPasswordSetupDialog(SecurityManager securityManager) {
-        Dialog<String> dialog = new Dialog<>();
+        Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle("Configuración Inicial");
         dialog.setHeaderText("Bienvenido al Sistema de Registro de Estudiantes");
 
@@ -143,33 +135,68 @@ public class Main extends Application {
 
         Label infoLabel = new Label(
                 "Esta es la primera vez que se ejecuta el sistema.\n" +
-                "Por favor, configure una contraseña de administrador.\n\n" +
-                "Esta contraseña se requerirá para:\n" +
-                "• Agregar nuevos estudiantes\n" +
-                "• Editar información existente\n" +
-                "• Eliminar registros\n" +
-                "• Importar datos desde CSV"
+                "Debe crear un usuario Administrador para comenzar."
         );
         infoLabel.setWrapText(true);
 
-        Label passwordLabel = new Label("Nueva contraseña (mínimo 4 caracteres):");
+        // Username field
+        Label usernameLabel = new Label("Nombre de usuario:");
+        TextField usernameField = new TextField();
+        usernameField.setPromptText("Ingrese nombre de usuario");
+        usernameField.setPrefWidth(300);
+
+        // Password field
+        Label passwordLabel = new Label("Contraseña (mínimo 4 caracteres):");
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Ingrese contraseña");
         passwordField.setPrefWidth(300);
 
+        // Confirm password field
         Label confirmLabel = new Label("Confirmar contraseña:");
         PasswordField confirmField = new PasswordField();
         confirmField.setPromptText("Repita la contraseña");
         confirmField.setPrefWidth(300);
 
+        // Role (disabled, forced to Administrador)
+        Label roleLabel = new Label("Rol:");
+        ComboBox<String> roleComboBox = new ComboBox<>();
+        roleComboBox.getItems().add("Administrador");
+        roleComboBox.setValue("Administrador");
+        roleComboBox.setDisable(true);
+        roleComboBox.setPrefWidth(300);
+
+        // Session timeout
+        Label timeoutLabel = new Label("Tiempo de inactividad para cierre de sesión:");
+        ComboBox<String> timeoutComboBox = new ComboBox<>();
+        timeoutComboBox.getItems().addAll(
+                "1 minuto", "2 minutos", "5 minutos", "15 minutos",
+                "30 minutos", "45 minutos", "60 minutos"
+        );
+        timeoutComboBox.setValue("15 minutos");
+        timeoutComboBox.setPrefWidth(300);
+
+        // Warning label
+        Label warningLabel = new Label(
+                "Este usuario será Administrador con acceso completo. " +
+                "Recuerda crear usuarios Operadores u otros Administradores desde el módulo de Ajustes."
+        );
+        warningLabel.setWrapText(true);
+        warningLabel.setStyle("-fx-text-fill: #e67e22; -fx-font-weight: bold;");
+
+        // Error label
         Label errorLabel = new Label();
         errorLabel.setStyle("-fx-text-fill: red;");
 
         content.getChildren().addAll(
                 infoLabel,
                 new Separator(),
+                usernameLabel, usernameField,
                 passwordLabel, passwordField,
                 confirmLabel, confirmField,
+                roleLabel, roleComboBox,
+                timeoutLabel, timeoutComboBox,
+                new Separator(),
+                warningLabel,
                 errorLabel
         );
 
@@ -180,52 +207,54 @@ public class Main extends Application {
         configureButton.setDisable(true);
 
         // Validar campos en tiempo real
-        passwordField.textProperty().addListener((obs, oldVal, newVal) -> {
-            boolean valid = newVal.length() >= 4 && newVal.equals(confirmField.getText());
+        Runnable validateFields = () -> {
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText();
+            String confirm = confirmField.getText();
+
+            boolean valid = !username.isEmpty() && password.length() >= 4 && password.equals(confirm);
             configureButton.setDisable(!valid);
-            if (!newVal.equals(confirmField.getText()) && !confirmField.getText().isEmpty()) {
-                errorLabel.setText("Las contraseñas no coinciden");
-            } else if (newVal.length() < 4 && newVal.length() > 0) {
+
+            if (username.isEmpty() && !usernameField.getText().isEmpty()) {
+                errorLabel.setText("El nombre de usuario no puede estar vacío");
+            } else if (password.length() > 0 && password.length() < 4) {
                 errorLabel.setText("La contraseña debe tener al menos 4 caracteres");
-            } else {
-                errorLabel.setText("");
-            }
-        });
-
-        confirmField.textProperty().addListener((obs, oldVal, newVal) -> {
-            boolean valid = passwordField.getText().length() >= 4 && passwordField.getText().equals(newVal);
-            configureButton.setDisable(!valid);
-            if (!newVal.equals(passwordField.getText())) {
+            } else if (!confirm.isEmpty() && !password.equals(confirm)) {
                 errorLabel.setText("Las contraseñas no coinciden");
             } else {
                 errorLabel.setText("");
             }
-        });
+        };
 
-        Platform.runLater(passwordField::requestFocus);
+        usernameField.textProperty().addListener((obs, oldVal, newVal) -> validateFields.run());
+        passwordField.textProperty().addListener((obs, oldVal, newVal) -> validateFields.run());
+        confirmField.textProperty().addListener((obs, oldVal, newVal) -> validateFields.run());
 
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == configureButtonType) {
-                return passwordField.getText();
-            }
-            return null;
-        });
+        Platform.runLater(usernameField::requestFocus);
 
-        Optional<String> result = dialog.showAndWait();
+        Optional<ButtonType> result = dialog.showAndWait();
 
-        if (result.isPresent()) {
-            String password = result.get();
-            if (securityManager.setPassword(password)) {
+        if (result.isPresent() && result.get() == configureButtonType) {
+            String username = usernameField.getText().trim();
+            String password = passwordField.getText();
+
+            // Parse timeout minutes from selection
+            String timeoutSelection = timeoutComboBox.getValue();
+            int timeoutMinutes = Integer.parseInt(timeoutSelection.split(" ")[0]);
+
+            if (securityManager.createFirstAdmin(username, password, timeoutMinutes)) {
                 Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
                 successAlert.setTitle("Configuración Completada");
                 successAlert.setHeaderText(null);
-                successAlert.setContentText("La contraseña ha sido configurada exitosamente.\n" +
-                        "Recuerde esta contraseña para futuras operaciones.");
+                successAlert.setContentText(
+                        "Usuario " + username + " creado correctamente como Administrador.\n" +
+                        "Recuerda crear usuarios Operadores u otros Administradores desde el módulo de Ajustes."
+                );
                 successAlert.showAndWait();
-                logger.info("Contraseña del sistema configurada exitosamente");
+                logger.info("Primer administrador '{}' creado exitosamente", username);
                 return true;
             } else {
-                showFatalError("Error de Configuración", "No se pudo guardar la contraseña.");
+                showFatalError("Error de Configuración", "No se pudo crear el usuario administrador.");
                 return false;
             }
         }

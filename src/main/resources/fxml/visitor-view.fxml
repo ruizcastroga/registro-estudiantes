@@ -16,35 +16,58 @@
 
     <!-- Barra superior -->
     <top>
-        <VBox styleClass="header-box">
-            <HBox alignment="CENTER_LEFT" spacing="20">
-                <padding>
-                    <Insets top="15" right="20" bottom="15" left="20"/>
-                </padding>
-
-                <VBox HBox.hgrow="ALWAYS">
-                    <Label text="Control de Visitantes" styleClass="app-title"/>
-                    <Label fx:id="subtitleLabel" text="Escanee un carné para registrar entrada o salida"
-                           styleClass="datetime-label"/>
-                </VBox>
-
-                <!-- Stats rápidas -->
-                <VBox alignment="CENTER" spacing="2">
-                    <Label text="Dentro ahora" styleClass="stats-label"/>
-                    <Label fx:id="insideCountLabel" text="0" styleClass="stats-value"/>
-                </VBox>
-                <VBox alignment="CENTER" spacing="2">
-                    <Label text="Visitas hoy" styleClass="stats-label"/>
-                    <Label fx:id="todayCountLabel" text="0" styleClass="stats-value"/>
-                </VBox>
-                <VBox alignment="CENTER" spacing="2">
-                    <Label text="Carnés disponibles" styleClass="stats-label"/>
-                    <Label fx:id="availableCountLabel" text="0" styleClass="stats-value"/>
-                </VBox>
-
-                <Button text="&#8592; Volver al Scanner"
-                        onAction="#onBack" styleClass="secondary-button"/>
+        <VBox>
+            <!-- Barra de sesión -->
+            <HBox fx:id="sessionBar" alignment="CENTER_LEFT" spacing="15" styleClass="session-bar" visible="false" managed="false">
+                <padding><Insets top="8" right="20" bottom="8" left="20"/></padding>
+                <Label fx:id="sessionUserLabel" text="" styleClass="session-user-label"/>
+                <Label fx:id="sessionRoleLabel" text="" styleClass="session-role-label"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="sessionTimerLabel" text="00:00" styleClass="session-timer-label"/>
+                <Button fx:id="sessionLoginBtn" text="Iniciar Sesión" onAction="#onLogin" styleClass="session-button"/>
+                <Button fx:id="sessionLogoutBtn" text="Cerrar Sesión" onAction="#onLogout" styleClass="session-button" visible="false" managed="false"/>
             </HBox>
+
+            <!-- Header original -->
+            <VBox styleClass="header-box">
+                <HBox alignment="CENTER_LEFT" spacing="20">
+                    <padding>
+                        <Insets top="15" right="20" bottom="15" left="20"/>
+                    </padding>
+
+                    <VBox HBox.hgrow="ALWAYS">
+                        <Label text="Control de Visitantes" styleClass="app-title"/>
+                        <Label fx:id="subtitleLabel" text="Escanee un carné para registrar entrada o salida"
+                               styleClass="datetime-label"/>
+                    </VBox>
+
+                    <!-- Stats rápidas -->
+                    <VBox alignment="CENTER" spacing="2">
+                        <Label text="Dentro ahora" styleClass="stats-label"/>
+                        <Label fx:id="insideCountLabel" text="0" styleClass="stats-value"/>
+                    </VBox>
+                    <VBox alignment="CENTER" spacing="2">
+                        <Label text="Visitas hoy" styleClass="stats-label"/>
+                        <Label fx:id="todayCountLabel" text="0" styleClass="stats-value"/>
+                    </VBox>
+                    <VBox alignment="CENTER" spacing="2">
+                        <Label text="Carnés disponibles" styleClass="stats-label"/>
+                        <Label fx:id="availableCountLabel" text="0" styleClass="stats-value"/>
+                    </VBox>
+
+                    <!-- Botones de navegación -->
+                    <Button text="Scanner"
+                            onAction="#onBack" styleClass="secondary-button"/>
+                    <Button text="Estudiantes"
+                            onAction="#onManageStudents" styleClass="secondary-button"/>
+                    <Button text="Personal"
+                            onAction="#onManageStaff" styleClass="secondary-button"/>
+                    <Button text="Creador de Carné"
+                            onAction="#onManageCarne" styleClass="secondary-button"/>
+                    <Button text="Ajustes"
+                            onAction="#onManageSettings" styleClass="secondary-button"/>
+                </HBox>
+            </VBox>
         </VBox>
     </top>
 

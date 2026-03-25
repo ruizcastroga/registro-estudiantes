@@ -1,31 +1,33 @@
 package com.tuempresa.registro.utils;
 
-import com.tuempresa.registro.dao.DatabaseConnection;
+import com.tuempresa.registro.dao.AdminUserDAO;
+import com.tuempresa.registro.models.AdminUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.*;
+import java.sql.SQLException;
 import java.util.Base64;
+import java.util.Optional;
 
 /**
  * Gestor de seguridad para el sistema.
- * Maneja la contraseña de administrador para operaciones sensibles.
+ * Autenticación basada en tabla admin_users con sesiones temporales.
  */
 public class SecurityManager {
 
     private static final Logger logger = LoggerFactory.getLogger(SecurityManager.class);
 
     private static SecurityManager instance;
-    private final DatabaseConnection dbConnection;
+    private final AdminUserDAO adminUserDAO;
 
     // Salt para el hash de contraseña
     private static final String SALT = "RegistroEstudiantes2024!";
 
     private SecurityManager() {
-        this.dbConnection = DatabaseConnection.getInstance();
+        this.adminUserDAO = new AdminUserDAO();
     }
 
     public static synchronized SecurityManager getInstance() {
@@ -36,113 +38,113 @@ public class SecurityManager {
     }
 
     /**
-     * Verifica si ya existe una contraseña configurada en el sistema.
-     *
-     * @return true si ya hay contraseña configurada
+     * Verifica si ya existe al menos un usuario administrador configurado.
      */
     public boolean isPasswordConfigured() {
-        String sql = "SELECT value FROM app_config WHERE key = 'admin_password'";
-
-        try (Connection conn = dbConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            if (rs.next()) {
-                String value = rs.getString("value");
-                return value != null && !value.isEmpty();
-            }
-
-        } catch (SQLException e) {
-            logger.error("Error al verificar configuración de contraseña", e);
-        }
-
-        return false;
+        return adminUserDAO.countAll() > 0;
     }
 
     /**
-     * Configura la contraseña del sistema por primera vez.
+     * Crea el primer usuario administrador del sistema.
      *
-     * @param password Contraseña a configurar
-     * @return true si se configuró correctamente
+     * @param username Nombre de usuario
+     * @param password Contraseña
+     * @param timeoutMinutes Timeout de sesión en minutos
+     * @return true si se creó correctamente
      */
-    public boolean setPassword(String password) {
+    public boolean createFirstAdmin(String username, String password, int timeoutMinutes) {
         if (password == null || password.length() < 4) {
             logger.warn("Contraseña muy corta (mínimo 4 caracteres)");
             return false;
         }
 
-        String hashedPassword = hashPassword(password);
-        String sql = "INSERT OR REPLACE INTO app_config (key, value, description, updated_at) " +
-                "VALUES ('admin_password', ?, 'Contraseña de administrador (hash)', CURRENT_TIMESTAMP)";
+        try {
+            AdminUser admin = new AdminUser(username, AdminUser.ROLE_ADMIN);
+            admin.setPasswordHash(hashPassword(password));
+            adminUserDAO.save(admin);
 
-        try (Connection conn = dbConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            // Guardar timeout en SessionManager
+            SessionManager.getInstance().setTimeoutMinutes(timeoutMinutes);
 
-            stmt.setString(1, hashedPassword);
-            stmt.executeUpdate();
-
-            logger.info("Contraseña del sistema configurada correctamente");
+            logger.info("Primer usuario administrador creado: {}", username);
             return true;
-
         } catch (SQLException e) {
-            logger.error("Error al configurar contraseña", e);
+            logger.error("Error al crear primer administrador", e);
             return false;
         }
     }
 
     /**
-     * Verifica si la contraseña ingresada es correcta.
+     * Autentica un usuario contra la tabla admin_users.
      *
-     * @param password Contraseña a verificar
-     * @return true si la contraseña es correcta
+     * @param username Nombre de usuario
+     * @param password Contraseña
+     * @return Optional con el AdminUser si la autenticación es exitosa
      */
-    public boolean verifyPassword(String password) {
-        if (password == null || password.isEmpty()) {
+    public Optional<AdminUser> authenticate(String username, String password) {
+        if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Optional<AdminUser> userOpt = adminUserDAO.findByUsername(username);
+        if (userOpt.isPresent()) {
+            AdminUser user = userOpt.get();
+            if (!user.isActive()) {
+                logger.warn("Intento de login con usuario inactivo: {}", username);
+                return Optional.empty();
+            }
+            String inputHash = hashPassword(password);
+            if (user.getPasswordHash() != null && user.getPasswordHash().equals(inputHash)) {
+                logger.info("Autenticación exitosa: {}", username);
+                return Optional.of(user);
+            }
+        }
+
+        logger.warn("Autenticación fallida para usuario: {}", username);
+        return Optional.empty();
+    }
+
+    /**
+     * Crea un nuevo usuario administrador u operador.
+     */
+    public AdminUser createUser(String username, String password, String role) throws SQLException {
+        if (password == null || password.length() < 4) {
+            throw new IllegalArgumentException("La contraseña debe tener al menos 4 caracteres");
+        }
+        if (adminUserDAO.existsByUsername(username)) {
+            throw new IllegalArgumentException("Ya existe un usuario con ese nombre");
+        }
+
+        AdminUser user = new AdminUser(username, role);
+        user.setPasswordHash(hashPassword(password));
+        return adminUserDAO.save(user);
+    }
+
+    /**
+     * Actualiza la contraseña de un usuario.
+     */
+    public boolean updatePassword(Long userId, String newPassword) {
+        if (newPassword == null || newPassword.length() < 4) {
             return false;
         }
 
-        String sql = "SELECT value FROM app_config WHERE key = 'admin_password'";
-
-        try (Connection conn = dbConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            if (rs.next()) {
-                String storedHash = rs.getString("value");
-                String inputHash = hashPassword(password);
-                return storedHash != null && storedHash.equals(inputHash);
+        Optional<AdminUser> userOpt = adminUserDAO.findById(userId);
+        if (userOpt.isPresent()) {
+            AdminUser user = userOpt.get();
+            user.setPasswordHash(hashPassword(newPassword));
+            try {
+                return adminUserDAO.update(user);
+            } catch (SQLException e) {
+                logger.error("Error al actualizar contraseña", e);
             }
-
-        } catch (SQLException e) {
-            logger.error("Error al verificar contraseña", e);
         }
-
         return false;
     }
 
     /**
-     * Cambia la contraseña del sistema.
-     *
-     * @param currentPassword Contraseña actual
-     * @param newPassword     Nueva contraseña
-     * @return true si se cambió correctamente
-     */
-    public boolean changePassword(String currentPassword, String newPassword) {
-        if (!verifyPassword(currentPassword)) {
-            logger.warn("Contraseña actual incorrecta");
-            return false;
-        }
-
-        return setPassword(newPassword);
-    }
-
-    /**
      * Genera un hash SHA-256 de la contraseña con salt.
-     *
-     * @param password Contraseña en texto plano
-     * @return Hash de la contraseña
      */
-    private String hashPassword(String password) {
+    public String hashPassword(String password) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             String saltedPassword = SALT + password + SALT;
@@ -150,8 +152,17 @@ public class SecurityManager {
             return Base64.getEncoder().encodeToString(hash);
         } catch (NoSuchAlgorithmException e) {
             logger.error("Error al generar hash de contraseña", e);
-            // Fallback simple (no recomendado en producción)
             return Base64.getEncoder().encodeToString(password.getBytes());
         }
+    }
+
+    /**
+     * Backwards compatibility: verifies password against old app_config storage.
+     * Used during migration from old password system.
+     */
+    public boolean verifyPassword(String password) {
+        // Check if there's an active session
+        SessionManager sessionManager = SessionManager.getInstance();
+        return sessionManager.isSessionActive();
     }
 }
