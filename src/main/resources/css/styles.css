@@ -465,19 +465,40 @@
     -fx-background-color: rgba(0, 0, 0, 0.02);
 }
 
-/* Global table selection — consistent across all TableViews */
-.table-row-cell:filled:selected {
+/* Global table selection — override JavaFX modena defaults for ALL TableViews.
+   Modena sets both -fx-background AND -fx-background-color on rows, including
+   the :odd alternating variant, so we must override both properties here. */
+.table-row-cell:filled:selected,
+.table-row-cell:odd:filled:selected,
+.table-row-cell:filled:focused:selected,
+.table-row-cell:odd:filled:focused:selected {
+    -fx-background: -primary-color;
     -fx-background-color: -primary-color;
+    -fx-background-insets: 0;
 }
-.table-row-cell:filled:selected > .table-cell {
+/* Ensure text inside selected cells is always white */
+.table-row-cell:filled:selected > .table-cell,
+.table-row-cell:odd:filled:selected > .table-cell {
     -fx-text-fill: white;
 }
-/* Empty rows should never appear "selected" */
+.table-row-cell:filled:selected .text,
+.table-row-cell:odd:filled:selected .text {
+    -fx-fill: white;
+}
+/* Students-table odd:selected override (higher specificity to beat .students-table :odd rule) */
+.students-table .table-row-cell:odd:selected {
+    -fx-background: -primary-color;
+    -fx-background-color: -primary-color;
+}
+/* Empty rows: hide completely, never show as "selected" */
 .table-row-cell:empty {
     -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-color: transparent;
 }
 .table-row-cell:empty:selected {
     -fx-background-color: transparent;
+    -fx-background: transparent;
 }
 
 /* ============================================
