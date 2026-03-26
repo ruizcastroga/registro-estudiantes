@@ -6,6 +6,7 @@ import com.tuempresa.registro.services.VisitorService;
 import com.tuempresa.registro.utils.SecurityManager;
 import com.tuempresa.registro.utils.SessionManager;
 import com.tuempresa.registro.models.AdminUser;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -30,6 +31,7 @@ import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -672,7 +674,7 @@ public class VisitorController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Parent root = loader.load();
-            Stage stage = (Stage) badgeInput.getScene().getWindow();
+            Stage stage = (Stage) badgesTable.getScene().getWindow();
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
             stage.setMaximized(false);
@@ -689,7 +691,7 @@ public class VisitorController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/scanner-view.fxml"));
             Parent root = loader.load();
-            Stage stage = (Stage) badgeInput.getScene().getWindow();
+            Stage stage = (Stage) badgesTable.getScene().getWindow();
             Scene scene = new Scene(root);
             scene.getStylesheets().add(getClass().getResource("/css/styles.css").toExternalForm());
             stage.setMaximized(false);
