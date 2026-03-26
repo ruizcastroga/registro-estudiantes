@@ -6,8 +6,6 @@ import com.tuempresa.registro.services.VisitorService;
 import com.tuempresa.registro.utils.SecurityManager;
 import com.tuempresa.registro.utils.SessionManager;
 import com.tuempresa.registro.models.AdminUser;
-import javafx.animation.PauseTransition;
-import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -23,7 +21,6 @@ import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +30,6 @@ import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,29 +61,6 @@ public class VisitorController implements Initializable {
     @FXML private Label todayCountLabel;
     @FXML private Label availableCountLabel;
 
-    // Scanner
-    @FXML private TextField badgeInput;
-    @FXML private Label instructionLabel;
-
-    // Paneles de resultado
-    @FXML private VBox entryFormPanel;
-    @FXML private Label entryBadgeLabel;
-    @FXML private TextField idNumberField;
-    @FXML private TextField firstNameField;
-    @FXML private TextField lastNameField;
-    @FXML private TextField justificationField;
-    @FXML private Label entryValidationLabel;
-
-    @FXML private VBox exitResultPanel;
-    @FXML private Label exitStatusLabel;
-    @FXML private Label exitVisitorLabel;
-    @FXML private Label exitBadgeLabel;
-    @FXML private Label exitTimeLabel;
-
-    @FXML private VBox notFoundPanel;
-    @FXML private Label notFoundCodeLabel;
-
-    @FXML private VBox lostPanel;
 
     // Panel lateral: dentro ahora
     @FXML private TableView<VisitorLog> insideTable;
@@ -118,8 +90,6 @@ public class VisitorController implements Initializable {
     private VisitorService visitorService;
     private SecurityManager securityManager;
     private SessionManager sessionManager;
-    private VisitorBadge pendingBadge; // carné que espera que el guardia ingrese la cédula
-    private PauseTransition autoClear;
 
     private ObservableList<VisitorLog> insideList;
     private ObservableList<VisitorBadge> badgesList;
@@ -144,13 +114,8 @@ public class VisitorController implements Initializable {
         setupLogsTable();
         setupLogsSearch();
 
-        autoClear = new PauseTransition(Duration.seconds(AUTO_CLEAR_SECONDS));
-        autoClear.setOnFinished(e -> clearResultPanels());
-
         loadAllData();
         setupSessionBar();
-
-        Platform.runLater(() -> badgeInput.requestFocus());
     }
 
     // -----------------------------------------------------------------------
@@ -268,130 +233,6 @@ public class VisitorController implements Initializable {
         });
     }
 
-    // -----------------------------------------------------------------------
-    // Escaneo del carné
-    // -----------------------------------------------------------------------
-
-    @FXML
-    private void onBadgeScanned() {
-        String code = badgeInput.getText().trim().toUpperCase();
-        badgeInput.clear();
-
-        if (code.isEmpty()) {
-            badgeInput.requestFocus();
-            return;
-        }
-
-        logger.info("Carné escaneado: {}", code);
-        VisitorService.ScanResult result = visitorService.processBadgeScan(code);
-
-        clearResultPanels();
-
-        switch (result.getStatus()) {
-            case BADGE_AVAILABLE -> showEntryForm(result.getBadge());
-            case EXIT_REGISTERED -> showExitResult(result.getLog(), result.getBadge().getCode());
-            case BADGE_LOST -> showPanel(lostPanel);
-            case BADGE_NOT_FOUND -> {
-                notFoundCodeLabel.setText("Código: " + code);
-                showPanel(notFoundPanel);
-            }
-            case ERROR -> showError(result.getMessage());
-        }
-
-        updateStats();
-        loadInsideList();
-    }
-
-    // -----------------------------------------------------------------------
-    // Registro de entrada
-    // -----------------------------------------------------------------------
-
-    private void showEntryForm(VisitorBadge badge) {
-        pendingBadge = badge;
-        entryBadgeLabel.setText("Carné: " + badge.getCode());
-        idNumberField.clear();
-        firstNameField.clear();
-        lastNameField.clear();
-        justificationField.clear();
-        hideValidationError();
-        showPanel(entryFormPanel);
-        Platform.runLater(() -> idNumberField.requestFocus());
-        // No iniciar auto-clear: hay un formulario pendiente
-        autoClear.stop();
-    }
-
-    @FXML
-    private void onConfirmEntry() {
-        if (pendingBadge == null) return;
-
-        String idNumber = idNumberField.getText().trim();
-        if (idNumber.isEmpty()) {
-            showValidationError("La cédula es obligatoria.");
-            idNumberField.requestFocus();
-            return;
-        }
-
-        try {
-            VisitorLog log = visitorService.registerEntry(
-                    pendingBadge,
-                    idNumber,
-                    firstNameField.getText(),
-                    lastNameField.getText(),
-                    justificationField.getText()
-            );
-
-            String registeredBadgeCode = pendingBadge.getCode();
-            clearResultPanels();
-
-            exitStatusLabel.setText("ENTRADA REGISTRADA");
-            exitVisitorLabel.setText(log.getDisplayName());
-            exitBadgeLabel.setText("Carné: " + registeredBadgeCode);
-            exitTimeLabel.setText("Entrada: " + LocalDateTime.now().format(TIME_FMT));
-            exitResultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive");
-            exitResultPanel.getStyleClass().add("can-exit");
-            showPanel(exitResultPanel);
-
-            pendingBadge = null;
-            updateStats();
-            loadInsideList();
-            loadBadgesTable();
-            loadLogsTable();
-            autoClear.playFromStart();
-            badgeInput.requestFocus();
-
-        } catch (SQLException e) {
-            logger.error("Error al registrar entrada", e);
-            showValidationError("Error al guardar: " + e.getMessage());
-        } catch (IllegalArgumentException e) {
-            showValidationError(e.getMessage());
-        }
-    }
-
-    @FXML
-    private void onCancelEntry() {
-        pendingBadge = null;
-        clearResultPanels();
-        badgeInput.requestFocus();
-    }
-
-    // -----------------------------------------------------------------------
-    // Resultado de salida
-    // -----------------------------------------------------------------------
-
-    private void showExitResult(VisitorLog log, String badgeCode) {
-        exitStatusLabel.setText("SALIDA REGISTRADA");
-        exitVisitorLabel.setText(log.getDisplayName());
-        exitBadgeLabel.setText("Carné: " + badgeCode);
-        exitTimeLabel.setText("Salida: " + LocalDateTime.now().format(TIME_FMT));
-        exitResultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive");
-        exitResultPanel.getStyleClass().add("can-exit");
-        showPanel(exitResultPanel);
-        autoClear.playFromStart();
-        badgeInput.requestFocus();
-        loadInsideList();
-        loadBadgesTable();
-        loadLogsTable();
-    }
 
     // -----------------------------------------------------------------------
     // Gestión de carnés
@@ -863,35 +704,6 @@ public class VisitorController implements Initializable {
     // -----------------------------------------------------------------------
     // Helpers de UI
     // -----------------------------------------------------------------------
-
-    private void showPanel(VBox panel) {
-        instructionLabel.setVisible(false);
-        instructionLabel.setManaged(false);
-        panel.setVisible(true);
-        panel.setManaged(true);
-    }
-
-    private void clearResultPanels() {
-        for (VBox panel : List.of(entryFormPanel, exitResultPanel, notFoundPanel, lostPanel)) {
-            panel.setVisible(false);
-            panel.setManaged(false);
-        }
-        instructionLabel.setVisible(true);
-        instructionLabel.setManaged(true);
-        pendingBadge = null;
-        autoClear.stop();
-    }
-
-    private void showValidationError(String msg) {
-        entryValidationLabel.setText(msg);
-        entryValidationLabel.setVisible(true);
-        entryValidationLabel.setManaged(true);
-    }
-
-    private void hideValidationError() {
-        entryValidationLabel.setVisible(false);
-        entryValidationLabel.setManaged(false);
-    }
 
     private void showError(String msg) {
         Alert alert = new Alert(Alert.AlertType.ERROR);

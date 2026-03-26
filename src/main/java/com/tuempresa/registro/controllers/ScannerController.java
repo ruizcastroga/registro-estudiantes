@@ -143,6 +143,9 @@ public class ScannerController implements Initializable {
     // Carné de visitante actual (para formulario de entrada)
     private VisitorBadge currentVisitorBadge;
 
+    // Indica si el formulario inline de visitante está activo (no recapturar foco a barcodeInput)
+    private boolean visitorFormActive = false;
+
     // Timer para actualizar la hora
     private Timer clockTimer;
 
@@ -257,12 +260,11 @@ public class ScannerController implements Initializable {
         // El scanner funciona como teclado, así que capturamos el input
         // y procesamos cuando se presiona Enter
 
-        // Mantener el foco en el campo de entrada
+        // Mantener el foco en el campo de entrada (solo cuando el formulario de visitante no está activo)
         barcodeInput.focusedProperty().addListener((obs, oldVal, newVal) -> {
-            if (!newVal) {
-                // Si pierde el foco, recuperarlo después de un pequeño delay
+            if (!newVal && !visitorFormActive) {
                 Platform.runLater(() -> {
-                    if (!barcodeInput.isFocused()) {
+                    if (!barcodeInput.isFocused() && !visitorFormActive) {
                         barcodeInput.requestFocus();
                     }
                 });
@@ -542,6 +544,8 @@ public class ScannerController implements Initializable {
                 visitorEntryValidationLabel.setManaged(false);
                 visitorEntryFormPanel.setVisible(true);
                 visitorEntryFormPanel.setManaged(true);
+                visitorFormActive = true;
+                autoClearTransition.stop(); // No auto-limpiar mientras el formulario está activo
                 Platform.runLater(() -> visitorCedulaField.requestFocus());
             }
             case EXIT_REGISTERED -> {
@@ -602,6 +606,7 @@ public class ScannerController implements Initializable {
             visitorBadgeLabel.setText("Carné: " + currentVisitorBadge.getCode() + " | Cédula: " + cedula);
             visitorEntryExitLabel.setText("ENTRADA REGISTRADA");
 
+            visitorFormActive = false;
             addToHistory("visitor", currentVisitorBadge.getCode(), "[VIS ENTRADA]");
             updateTodayScansCount();
             autoClearTransition.playFromStart();
@@ -620,6 +625,7 @@ public class ScannerController implements Initializable {
      */
     @FXML
     private void onCancelVisitorEntry() {
+        visitorFormActive = false;
         hideAllResultPanels();
         barcodeInput.clear();
         barcodeInput.requestFocus();

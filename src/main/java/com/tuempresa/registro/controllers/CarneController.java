@@ -4,7 +4,9 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.oned.Code128Writer;
 import com.tuempresa.registro.dao.DatabaseConnection;
+import com.tuempresa.registro.models.StaffMember;
 import com.tuempresa.registro.models.Student;
+import com.tuempresa.registro.services.StaffService;
 import com.tuempresa.registro.services.StudentService;
 import com.tuempresa.registro.utils.SecurityManager;
 import com.tuempresa.registro.utils.SessionManager;
@@ -86,6 +88,31 @@ public class CarneController implements Initializable {
     @FXML private Button printButton;
     @FXML private Label statusLabel;
 
+    // --- Type selector ---
+    @FXML private ToggleButton typeStudentBtn;
+    @FXML private ToggleButton typeVisitorBtn;
+    @FXML private ToggleButton typeStaffBtn;
+    @FXML private Label searchSectionLabel;
+
+    // --- Form sections ---
+    @FXML private VBox studentFormSection;
+    @FXML private VBox visitorFormSection;
+    @FXML private VBox staffFormSection;
+    @FXML private VBox photoSection;
+
+    // --- Visitor form fields ---
+    @FXML private TextField visitorBadgeCodeField;
+
+    // --- Staff form fields ---
+    @FXML private TextField staffCedulaField;
+    @FXML private TextField staffNombreField;
+    @FXML private TextField staffApellidoField;
+    @FXML private TextField staffDepartamentoField;
+    @FXML private ComboBox<String> staffEstadoCombo;
+
+    // --- Staff search list ---
+    @FXML private ListView<StaffMember> staffSearchResultsList;
+
     // --- Componentes del carné (panel derecho) ---
     @FXML private VBox cardPane;
     @FXML private Label cardSchoolName;
@@ -102,17 +129,23 @@ public class CarneController implements Initializable {
 
     // --- Servicios ---
     private StudentService studentService;
+    private StaffService staffService;
     private SecurityManager securityManager;
     private SessionManager sessionManager;
 
     // --- Estado ---
     private ObservableList<Student> searchResults;
+    private ObservableList<StaffMember> staffSearchResults;
     // Estudiante actualmente cargado (null = modo nuevo)
     private Student currentStudent;
+    private StaffMember currentStaff;
     // Foto seleccionada pendiente de guardar (modo nuevo)
     private File pendingPhotoFile;
     // Modo: true = editando datos de un estudiante existente (solo lectura)
     private boolean isExistingStudent = false;
+
+    enum CardType { STUDENT, VISITOR, STAFF }
+    private CardType currentCardType = CardType.STUDENT;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -125,7 +158,23 @@ public class CarneController implements Initializable {
         searchResults = FXCollections.observableArrayList();
         searchResultsList.setItems(searchResults);
 
+        staffService = new StaffService();
+        staffSearchResults = FXCollections.observableArrayList();
+        staffSearchResultsList.setItems(staffSearchResults);
+        staffSearchResultsList.setCellFactory(lv -> new ListCell<>() {
+            @Override protected void updateItem(StaffMember s, boolean empty) {
+                super.updateItem(s, empty);
+                setText(empty || s == null ? null : s.getFullName() + "  |  " + s.getIdNumber()
+                        + (s.getDepartment() != null && !s.getDepartment().isEmpty() ? "  —  " + s.getDepartment() : ""));
+            }
+        });
+        staffSearchResultsList.getSelectionModel().selectedItemProperty().addListener(
+            (obs, old, selected) -> { if (selected != null) loadExistingStaff(selected); });
+        staffEstadoCombo.getItems().addAll("Activo", "Inactivo");
+        staffEstadoCombo.setValue("Activo");
+
         setupSearchList();
+
         setupSessionBar();
         loadSchoolName();
         loadSchoolShield();
@@ -267,13 +316,22 @@ public class CarneController implements Initializable {
             clearSearchButton.setVisible(newVal != null && !newVal.isEmpty());
             if (newVal == null || newVal.trim().isEmpty()) {
                 searchResults.clear();
+                staffSearchResults.clear();
                 return;
             }
-            List<Student> results = studentService.searchStudents(newVal.trim());
-            searchResults.setAll(results);
-            // Auto-seleccionar si hay exactamente un resultado
-            if (results.size() == 1) {
-                Platform.runLater(() -> searchResultsList.getSelectionModel().selectFirst());
+            if (currentCardType == CardType.STAFF) {
+                List<StaffMember> results = staffService.searchStaff(newVal.trim());
+                staffSearchResults.setAll(results);
+                if (results.size() == 1) {
+                    Platform.runLater(() -> staffSearchResultsList.getSelectionModel().selectFirst());
+                }
+            } else {
+                List<Student> results = studentService.searchStudents(newVal.trim());
+                searchResults.setAll(results);
+                // Auto-seleccionar si hay exactamente un resultado
+                if (results.size() == 1) {
+                    Platform.runLater(() -> searchResultsList.getSelectionModel().selectFirst());
+                }
             }
         });
     }
@@ -327,6 +385,57 @@ public class CarneController implements Initializable {
     }
 
     // ============================================================
+    //  Selector de tipo
+    // ============================================================
+
+    @FXML
+    private void onTypeChanged() {
+        if (typeStudentBtn.isSelected()) {
+            currentCardType = CardType.STUDENT;
+        } else if (typeVisitorBtn.isSelected()) {
+            currentCardType = CardType.VISITOR;
+        } else {
+            currentCardType = CardType.STAFF;
+        }
+        if (!typeStudentBtn.isSelected() && !typeVisitorBtn.isSelected() && !typeStaffBtn.isSelected()) {
+            typeStudentBtn.setSelected(true);
+            currentCardType = CardType.STUDENT;
+        }
+        studentFormSection.setVisible(currentCardType == CardType.STUDENT);
+        studentFormSection.setManaged(currentCardType == CardType.STUDENT);
+        visitorFormSection.setVisible(currentCardType == CardType.VISITOR);
+        visitorFormSection.setManaged(currentCardType == CardType.VISITOR);
+        staffFormSection.setVisible(currentCardType == CardType.STAFF);
+        staffFormSection.setManaged(currentCardType == CardType.STAFF);
+        if (photoSection != null) {
+            photoSection.setVisible(currentCardType == CardType.STUDENT);
+            photoSection.setManaged(currentCardType == CardType.STUDENT);
+        }
+        searchResultsList.setVisible(currentCardType == CardType.STUDENT);
+        searchResultsList.setManaged(currentCardType == CardType.STUDENT);
+        staffSearchResultsList.setVisible(currentCardType == CardType.STAFF);
+        staffSearchResultsList.setManaged(currentCardType == CardType.STAFF);
+        searchSectionLabel.setText(currentCardType == CardType.STUDENT ? "Buscar estudiante existente"
+                : currentCardType == CardType.STAFF ? "Buscar personal existente"
+                : "Visitante (sin búsqueda)");
+        currentStudent = null;
+        currentStaff = null;
+        isExistingStudent = false;
+        clearCardPreview();
+        clearValidation();
+        searchResults.clear();
+        if (staffSearchResults != null) staffSearchResults.clear();
+        searchField.clear();
+        clearSearchButton.setVisible(false);
+        printButton.setDisable(true);
+        setStatus(currentCardType == CardType.VISITOR ? "Ingrese el código del carné de visitante"
+                : currentCardType == CardType.STAFF ? "Busque personal o complete los datos"
+                : "Busque un estudiante o cree un nuevo carné");
+        modeLabel.setText("");
+        formTitle.setText("Datos del Carné");
+    }
+
+    // ============================================================
     //  Búsqueda
     // ============================================================
 
@@ -337,17 +446,24 @@ public class CarneController implements Initializable {
 
         if (term.isEmpty()) {
             searchResults.clear();
+            staffSearchResults.clear();
             return;
         }
 
-        List<Student> results = studentService.searchStudents(term);
-        searchResults.setAll(results);
+        if (currentCardType == CardType.STAFF) {
+            List<StaffMember> results = staffService.searchStaff(term);
+            staffSearchResults.setAll(results);
+        } else {
+            List<Student> results = studentService.searchStudents(term);
+            searchResults.setAll(results);
+        }
     }
 
     @FXML
     private void onClearSearch() {
         searchField.clear();
         searchResults.clear();
+        staffSearchResults.clear();
         clearSearchButton.setVisible(false);
     }
 
@@ -408,6 +524,27 @@ public class CarneController implements Initializable {
         }
     }
 
+    private void loadExistingStaff(StaffMember staff) {
+        currentStaff = staff;
+        isExistingStudent = false;
+        staffCedulaField.setText(staff.getIdNumber() != null ? staff.getIdNumber() : staff.getBarcode());
+        staffNombreField.setText(staff.getFirstName());
+        staffApellidoField.setText(staff.getLastName());
+        staffDepartamentoField.setText(staff.getDepartment() != null ? staff.getDepartment() : "");
+        staffEstadoCombo.setValue(staff.isActive() ? "Activo" : "Inactivo");
+        staffCedulaField.setEditable(false);
+        staffNombreField.setEditable(false);
+        staffApellidoField.setEditable(false);
+        staffDepartamentoField.setEditable(false);
+        staffEstadoCombo.setDisable(true);
+        formTitle.setText("Carné de personal existente");
+        modeLabel.setText("(datos de solo lectura)");
+        updateCardPreview();
+        printButton.setDisable(false);
+        setStatus("Personal cargado: " + staff.getFullName());
+        clearValidation();
+    }
+
     // ============================================================
     //  Acciones del formulario
     // ============================================================
@@ -434,7 +571,19 @@ public class CarneController implements Initializable {
 
         setFormEditable(true);
         formTitle.setText("Nuevo Carné");
-        modeLabel.setText("(nuevo estudiante)");
+
+        if (visitorBadgeCodeField != null) visitorBadgeCodeField.clear();
+        if (staffCedulaField != null) { staffCedulaField.clear(); staffCedulaField.setEditable(true); }
+        if (staffNombreField != null) { staffNombreField.clear(); staffNombreField.setEditable(true); }
+        if (staffApellidoField != null) { staffApellidoField.clear(); staffApellidoField.setEditable(true); }
+        if (staffDepartamentoField != null) { staffDepartamentoField.clear(); staffDepartamentoField.setEditable(true); }
+        if (staffEstadoCombo != null) { staffEstadoCombo.setValue("Activo"); staffEstadoCombo.setDisable(false); }
+        if (staffSearchResultsList != null) staffSearchResultsList.getSelectionModel().clearSelection();
+        currentStaff = null;
+        modeLabel.setText(currentCardType == CardType.STUDENT ? "(nuevo estudiante)"
+                : currentCardType == CardType.VISITOR ? "(nuevo visitante)"
+                : "(nuevo personal)");
+
         printButton.setDisable(true);
 
         clearCardPreview();
@@ -454,12 +603,20 @@ public class CarneController implements Initializable {
     /** Llamado cuando el usuario escribe en cualquier campo del formulario. */
     @FXML
     private void onFormFieldChanged() {
-        if (!isExistingStudent) {
-            updateCardPreview();
-            boolean hasMinimumData = !cedulaField.getText().trim().isEmpty()
+        updateCardPreview();
+        if (currentCardType == CardType.VISITOR) {
+            boolean hasData = visitorBadgeCodeField != null && !visitorBadgeCodeField.getText().trim().isEmpty();
+            printButton.setDisable(!hasData);
+        } else if (currentCardType == CardType.STAFF && currentStaff == null) {
+            boolean hasData = staffCedulaField != null && !staffCedulaField.getText().trim().isEmpty()
+                    && staffNombreField != null && !staffNombreField.getText().trim().isEmpty()
+                    && staffApellidoField != null && !staffApellidoField.getText().trim().isEmpty();
+            printButton.setDisable(!hasData);
+        } else if (currentCardType == CardType.STUDENT && !isExistingStudent) {
+            boolean hasData = !cedulaField.getText().trim().isEmpty()
                     && !firstNameField.getText().trim().isEmpty()
                     && !lastNameField.getText().trim().isEmpty();
-            printButton.setDisable(!hasMinimumData);
+            printButton.setDisable(!hasData);
         }
     }
 
@@ -557,26 +714,52 @@ public class CarneController implements Initializable {
      * Actualiza todos los campos de la vista previa del carné con los datos del formulario.
      */
     private void updateCardPreview() {
-        String cedula = cedulaField.getText().trim();
-        String nombre = firstNameField.getText().trim();
-        String apellido = lastNameField.getText().trim();
-        String grado = gradeField.getText().trim();
-
-        cardCedula.setText("Cédula:  " + (cedula.isEmpty() ? "—" : cedula));
-        cardNombre.setText("Nombre:  " + (nombre.isEmpty() ? "—" : nombre));
-        cardApellido.setText("Apellido:  " + (apellido.isEmpty() ? "—" : apellido));
-        cardGrado.setText("Grado:  " + (grado.isEmpty() ? "—" : grado));
-
-        // Generar código de barras si hay cédula
-        if (!cedula.isEmpty()) {
-            Image barcode = generateBarcode(cedula, 195, 60);
-            if (barcode != null) {
-                cardBarcodeView.setImage(barcode);
-                cardBarcodeText.setText(cedula);
-            }
+        if (currentCardType == CardType.VISITOR) {
+            String code = visitorBadgeCodeField != null ? visitorBadgeCodeField.getText().trim() : "";
+            cardCedula.setText("Carné:  " + (code.isEmpty() ? "—" : code));
+            cardNombre.setText("VISITANTE");
+            cardApellido.setText("");
+            cardGrado.setText("");
+            if (!code.isEmpty()) {
+                Image barcode = generateBarcode(code, 195, 60);
+                if (barcode != null) { cardBarcodeView.setImage(barcode); cardBarcodeText.setText(code); }
+            } else { cardBarcodeView.setImage(null); cardBarcodeText.setText(""); }
+        } else if (currentCardType == CardType.STAFF) {
+            String cedula = staffCedulaField != null ? staffCedulaField.getText().trim() : "";
+            String nombre = staffNombreField != null ? staffNombreField.getText().trim() : "";
+            String apellido = staffApellidoField != null ? staffApellidoField.getText().trim() : "";
+            String depto = staffDepartamentoField != null ? staffDepartamentoField.getText().trim() : "";
+            cardCedula.setText("Cédula:  " + (cedula.isEmpty() ? "—" : cedula));
+            cardNombre.setText("Nombre:  " + (nombre.isEmpty() ? "—" : nombre));
+            cardApellido.setText("Apellido:  " + (apellido.isEmpty() ? "—" : apellido));
+            cardGrado.setText("Depto:  " + (depto.isEmpty() ? "—" : depto));
+            if (!cedula.isEmpty()) {
+                Image barcode = generateBarcode(cedula, 195, 60);
+                if (barcode != null) { cardBarcodeView.setImage(barcode); cardBarcodeText.setText(cedula); }
+            } else { cardBarcodeView.setImage(null); cardBarcodeText.setText(""); }
         } else {
-            cardBarcodeView.setImage(null);
-            cardBarcodeText.setText("");
+            // STUDENT — existing logic
+            String cedula = cedulaField.getText().trim();
+            String nombre = firstNameField.getText().trim();
+            String apellido = lastNameField.getText().trim();
+            String grado = gradeField.getText().trim();
+
+            cardCedula.setText("Cédula:  " + (cedula.isEmpty() ? "—" : cedula));
+            cardNombre.setText("Nombre:  " + (nombre.isEmpty() ? "—" : nombre));
+            cardApellido.setText("Apellido:  " + (apellido.isEmpty() ? "—" : apellido));
+            cardGrado.setText("Grado:  " + (grado.isEmpty() ? "—" : grado));
+
+            // Generar código de barras si hay cédula
+            if (!cedula.isEmpty()) {
+                Image barcode = generateBarcode(cedula, 195, 60);
+                if (barcode != null) {
+                    cardBarcodeView.setImage(barcode);
+                    cardBarcodeText.setText(cedula);
+                }
+            } else {
+                cardBarcodeView.setImage(null);
+                cardBarcodeText.setText("");
+            }
         }
     }
 
@@ -634,6 +817,35 @@ public class CarneController implements Initializable {
      */
     @FXML
     private void onPrint() {
+        if (currentCardType == CardType.VISITOR) {
+            // Visitor: just validate badge code and print (no DB save needed)
+            if (visitorBadgeCodeField.getText().trim().isEmpty()) {
+                showValidation("El código del carné es obligatorio");
+                visitorBadgeCodeField.requestFocus();
+                return;
+            }
+            clearValidation();
+            printCard();
+            return;
+        }
+        if (currentCardType == CardType.STAFF) {
+            if (currentStaff == null) {
+                // Validate minimum fields for new staff card (just print, don't save)
+                if (staffCedulaField.getText().trim().isEmpty()) {
+                    showValidation("La cédula es obligatoria"); return;
+                }
+                if (staffNombreField.getText().trim().isEmpty()) {
+                    showValidation("El nombre es obligatorio"); return;
+                }
+                if (staffApellidoField.getText().trim().isEmpty()) {
+                    showValidation("El apellido es obligatorio"); return;
+                }
+            }
+            clearValidation();
+            printCard();
+            return;
+        }
+        // STUDENT — existing logic
         if (!isExistingStudent) {
             // Validar datos del nuevo estudiante
             if (!validateNewStudentForm()) {

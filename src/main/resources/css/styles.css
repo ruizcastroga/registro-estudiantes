@@ -461,12 +461,67 @@
     -fx-padding: 8;
 }
 
-.students-table .table-row-cell:selected {
-    -fx-background-color: -primary-light;
-}
-
 .students-table .table-row-cell:odd {
     -fx-background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Global table selection — consistent across all TableViews */
+.table-row-cell:filled:selected {
+    -fx-background-color: -primary-color;
+}
+.table-row-cell:filled:selected > .table-cell {
+    -fx-text-fill: white;
+}
+/* Empty rows should never appear "selected" */
+.table-row-cell:empty {
+    -fx-background-color: transparent;
+}
+.table-row-cell:empty:selected {
+    -fx-background-color: transparent;
+}
+
+/* ============================================
+   Type selector bar (Carné creator)
+   ============================================ */
+
+.type-selector-bar {
+    -fx-background-color: -surface-color;
+    -fx-border-color: -border-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 0;
+}
+
+.type-btn-left, .type-btn-middle, .type-btn-right {
+    -fx-background-color: transparent;
+    -fx-text-fill: -text-primary;
+    -fx-border-color: transparent;
+    -fx-font-size: 13px;
+    -fx-padding: 6 16;
+    -fx-cursor: hand;
+}
+
+.type-btn-left {
+    -fx-background-radius: 5 0 0 5;
+    -fx-border-radius: 5 0 0 5;
+}
+
+.type-btn-middle {
+    -fx-background-radius: 0;
+    -fx-border-radius: 0;
+    -fx-border-color: transparent -border-color transparent -border-color;
+    -fx-border-width: 0 1 0 1;
+}
+
+.type-btn-right {
+    -fx-background-radius: 0 5 5 0;
+    -fx-border-radius: 0 5 5 0;
+}
+
+.type-btn-left:selected, .type-btn-middle:selected, .type-btn-right:selected {
+    -fx-background-color: -primary-color;
+    -fx-text-fill: white;
 }
 
 /* ============================================
