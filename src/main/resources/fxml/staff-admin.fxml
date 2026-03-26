@@ -147,34 +147,29 @@
 
                 <!-- Formulario -->
                 <GridPane hgap="10" vgap="15" styleClass="student-form">
-                    <!-- Código de barras -->
-                    <Label text="Código de Barras: *" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                    <TextField fx:id="barcodeField" GridPane.columnIndex="1" GridPane.rowIndex="0"
-                               promptText="Escanee o ingrese el código"/>
-
                     <!-- Nombre -->
-                    <Label text="Nombre: *" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                    <TextField fx:id="firstNameField" GridPane.columnIndex="1" GridPane.rowIndex="1"
+                    <Label text="Nombre: *" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                    <TextField fx:id="firstNameField" GridPane.columnIndex="1" GridPane.rowIndex="0"
                                promptText="Nombre(s)"/>
 
                     <!-- Apellido -->
-                    <Label text="Apellido: *" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                    <TextField fx:id="lastNameField" GridPane.columnIndex="1" GridPane.rowIndex="2"
+                    <Label text="Apellido: *" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                    <TextField fx:id="lastNameField" GridPane.columnIndex="1" GridPane.rowIndex="1"
                                promptText="Apellido(s)"/>
 
-                    <!-- Número de identificación -->
-                    <Label text="Cédula:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-                    <TextField fx:id="idNumberField" GridPane.columnIndex="1" GridPane.rowIndex="3"
-                               promptText="Número de cédula"/>
+                    <!-- Número de identificación (también usado como código de barras) -->
+                    <Label text="Cédula: *" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                    <TextField fx:id="idNumberField" GridPane.columnIndex="1" GridPane.rowIndex="2"
+                               promptText="Número de cédula (se usará como código de barras)"/>
 
                     <!-- Departamento -->
-                    <Label text="Departamento:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-                    <TextField fx:id="departmentField" GridPane.columnIndex="1" GridPane.rowIndex="4"
+                    <Label text="Departamento:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                    <TextField fx:id="departmentField" GridPane.columnIndex="1" GridPane.rowIndex="3"
                                promptText="Ej: Administración, Docencia"/>
 
                     <!-- Estado -->
-                    <Label text="Estado:" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
-                    <ComboBox fx:id="statusCombo" GridPane.columnIndex="1" GridPane.rowIndex="5"
+                    <Label text="Estado:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                    <ComboBox fx:id="statusCombo" GridPane.columnIndex="1" GridPane.rowIndex="4"
                               prefWidth="200"/>
 
                     <columnConstraints>

@@ -59,7 +59,6 @@ public class StaffAdminController implements Initializable {
 
     // Componentes del formulario
     @FXML private Label formTitle;
-    @FXML private TextField barcodeField;
     @FXML private TextField firstNameField;
     @FXML private TextField lastNameField;
     @FXML private TextField idNumberField;
@@ -292,8 +291,7 @@ public class StaffAdminController implements Initializable {
         currentStaff = null;
         clearForm();
         formTitle.setText("Nuevo Personal");
-        barcodeField.setDisable(false);
-        barcodeField.requestFocus();
+        firstNameField.requestFocus();
         setStatusMessage("Ingrese los datos del nuevo miembro del personal");
     }
 
@@ -314,7 +312,6 @@ public class StaffAdminController implements Initializable {
         currentStaff = selected;
         loadStaffToForm(selected);
         formTitle.setText("Editar Personal");
-        barcodeField.setDisable(true);
         firstNameField.requestFocus();
         setStatusMessage("Editando: " + selected.getFullName());
     }
@@ -388,7 +385,8 @@ public class StaffAdminController implements Initializable {
         try {
             StaffMember staff = isEditMode ? currentStaff : new StaffMember();
 
-            staff.setBarcode(barcodeField.getText().trim());
+            // El código de barras se genera automáticamente a partir de la cédula
+            staff.setBarcode(idNumberField.getText().trim());
             staff.setFirstName(firstNameField.getText().trim());
             staff.setLastName(lastNameField.getText().trim());
             staff.setIdNumber(idNumberField.getText().trim());
@@ -616,7 +614,6 @@ public class StaffAdminController implements Initializable {
      * Carga los datos de un miembro del personal en el formulario.
      */
     private void loadStaffToForm(StaffMember staff) {
-        barcodeField.setText(staff.getBarcode());
         firstNameField.setText(staff.getFirstName());
         lastNameField.setText(staff.getLastName());
         idNumberField.setText(staff.getIdNumber() != null ? staff.getIdNumber() : "");
@@ -632,8 +629,6 @@ public class StaffAdminController implements Initializable {
         isEditMode = false;
         formTitle.setText("Nuevo Personal");
 
-        barcodeField.clear();
-        barcodeField.setDisable(false);
         firstNameField.clear();
         lastNameField.clear();
         idNumberField.clear();
@@ -649,9 +644,9 @@ public class StaffAdminController implements Initializable {
     private boolean validateForm() {
         clearValidationError();
 
-        if (barcodeField.getText().trim().isEmpty()) {
-            showValidationError("El código de barras es obligatorio");
-            barcodeField.requestFocus();
+        if (idNumberField.getText().trim().isEmpty()) {
+            showValidationError("La cédula es obligatoria (se usará como código de barras)");
+            idNumberField.requestFocus();
             return false;
         }
 

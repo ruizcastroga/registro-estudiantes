@@ -35,12 +35,12 @@
                         <Insets top="12" right="20" bottom="12" left="20"/>
                     </padding>
 
-                    <Button text="Scanner" onAction="#onBackToScanner" styleClass="nav-button"/>
-                    <Button text="Estudiantes" onAction="#onManageStudents" styleClass="nav-button"/>
-                    <Button text="Visitantes" onAction="#onManageVisitors" styleClass="nav-button"/>
-                    <Button text="Personal" onAction="#onManageStaff" styleClass="nav-button"/>
-                    <Button text="Creador de Carné" styleClass="nav-button-active"/>
-                    <Button text="Ajustes" onAction="#onManageSettings" styleClass="nav-button"/>
+                    <Button text="Scanner" onAction="#onBackToScanner" styleClass="secondary-button"/>
+                    <Button text="Estudiantes" onAction="#onManageStudents" styleClass="secondary-button"/>
+                    <Button text="Visitantes" onAction="#onManageVisitors" styleClass="secondary-button"/>
+                    <Button text="Personal" onAction="#onManageStaff" styleClass="secondary-button"/>
+                    <Button text="Creador de Carné" styleClass="secondary-button" disable="true"/>
+                    <Button text="Ajustes" onAction="#onManageSettings" styleClass="secondary-button"/>
 
                     <Region HBox.hgrow="ALWAYS"/>
 

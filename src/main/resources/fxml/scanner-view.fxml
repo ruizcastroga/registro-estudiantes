@@ -136,10 +136,10 @@
             </VBox>
 
             <!-- Panel de resultado del escaneo (visitante) -->
-            <VBox fx:id="visitorResultPanel" alignment="CENTER" spacing="15"
+            <VBox fx:id="visitorResultPanel" alignment="CENTER" spacing="12"
                   styleClass="result-panel" visible="false" managed="false">
                 <padding>
-                    <Insets top="30" right="40" bottom="30" left="40"/>
+                    <Insets top="20" right="40" bottom="20" left="40"/>
                 </padding>
 
                 <Label fx:id="visitorNameLabel" text=""
@@ -150,6 +150,55 @@
 
                 <Label fx:id="visitorEntryExitLabel" text=""
                        styleClass="status-label"/>
+
+                <!-- Formulario inline de entrada (solo cuando carné disponible) -->
+                <VBox fx:id="visitorEntryFormPanel" visible="false" managed="false"
+                      spacing="10" alignment="CENTER">
+                    <Separator/>
+                    <Label text="Registrar datos del visitante" styleClass="section-title"/>
+
+                    <GridPane hgap="15" vgap="8" alignment="CENTER">
+                        <Label text="Cédula *:" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="form-label"/>
+                        <TextField fx:id="visitorCedulaField"
+                                   promptText="Número de cédula (obligatorio)"
+                                   prefWidth="240"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="0"
+                                   onAction="#onConfirmVisitorEntry"/>
+
+                        <Label text="Nombre:" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="form-label"/>
+                        <TextField fx:id="visitorNombreField"
+                                   promptText="Nombre (opcional)"
+                                   prefWidth="240"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+                        <Label text="Apellido:" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="form-label"/>
+                        <TextField fx:id="visitorApellidoField"
+                                   promptText="Apellido (opcional)"
+                                   prefWidth="240"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+                        <Label text="Motivo:" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="form-label"/>
+                        <TextField fx:id="visitorJustificacionField"
+                                   promptText="Motivo de visita (opcional)"
+                                   prefWidth="240"
+                                   GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="70" halignment="RIGHT"/>
+                            <ColumnConstraints hgrow="SOMETIMES"/>
+                        </columnConstraints>
+                    </GridPane>
+
+                    <Label fx:id="visitorEntryValidationLabel" text=""
+                           styleClass="validation-message" visible="false" managed="false"/>
+
+                    <HBox spacing="15" alignment="CENTER">
+                        <Button text="Confirmar Entrada" onAction="#onConfirmVisitorEntry"
+                                styleClass="primary-button"/>
+                        <Button text="Cancelar" onAction="#onCancelVisitorEntry"
+                                styleClass="secondary-button"/>
+                    </HBox>
+                </VBox>
             </VBox>
 
             <!-- Panel cuando no se encuentra -->

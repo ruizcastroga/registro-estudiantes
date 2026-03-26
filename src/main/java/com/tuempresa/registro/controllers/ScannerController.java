@@ -105,6 +105,12 @@ public class ScannerController implements Initializable {
     @FXML private Label visitorNameLabel;
     @FXML private Label visitorBadgeLabel;
     @FXML private Label visitorEntryExitLabel;
+    @FXML private VBox visitorEntryFormPanel;
+    @FXML private TextField visitorCedulaField;
+    @FXML private TextField visitorNombreField;
+    @FXML private TextField visitorApellidoField;
+    @FXML private TextField visitorJustificacionField;
+    @FXML private Label visitorEntryValidationLabel;
 
     // Componentes FXML - Panel no encontrado
     @FXML private VBox notFoundPanel;
@@ -133,6 +139,9 @@ public class ScannerController implements Initializable {
 
     // Lista observable para el historial
     private ObservableList<String> historyItems;
+
+    // Carné de visitante actual (para formulario de entrada)
+    private VisitorBadge currentVisitorBadge;
 
     // Timer para actualizar la hora
     private Timer clockTimer;
@@ -506,56 +515,115 @@ public class ScannerController implements Initializable {
     private void displayVisitorResult(VisitorService.ScanResult result, String barcode) {
         hideAllResultPanels();
 
-        // Usar panel de estudiante como fallback para mostrar info del visitante
-        resultPanel.setVisible(true);
-        resultPanel.setManaged(true);
-        resultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive");
+        visitorResultPanel.setVisible(true);
+        visitorResultPanel.setManaged(true);
+        visitorResultPanel.getStyleClass().removeAll("can-exit", "requires-guardian", "inactive");
+        visitorEntryExitLabel.getStyleClass().removeAll("status-ok", "status-warning", "status-inactive");
 
-        statusLabel.getStyleClass().removeAll("status-ok", "status-warning", "status-inactive");
-        activityStatusLabel.getStyleClass().removeAll("status-active", "status-inactive");
-        activityStatusLabel.setVisible(true);
-        activityStatusLabel.setManaged(true);
-        guardiansPanel.setVisible(false);
-        guardiansPanel.setManaged(false);
+        // Ocultar formulario de entrada por defecto
+        visitorEntryFormPanel.setVisible(false);
+        visitorEntryFormPanel.setManaged(false);
 
         switch (result.getStatus()) {
             case BADGE_AVAILABLE -> {
-                studentNameLabel.setText("VISITANTE - Carné: " + barcode);
-                studentGradeLabel.setText("Carné disponible");
-                resultPanel.getStyleClass().add("can-exit");
-                statusLabel.setText("CARNÉ DISPONIBLE");
-                statusLabel.getStyleClass().add("status-ok");
-                activityStatusLabel.setText("Ingrese cédula en módulo de visitantes");
-                activityStatusLabel.getStyleClass().add("status-active");
+                currentVisitorBadge = result.getBadge();
+                visitorNameLabel.setText("VISITANTE - Carné: " + barcode);
+                visitorBadgeLabel.setText("Carné disponible — ingrese los datos para registrar entrada");
+                visitorEntryExitLabel.setText("CARNÉ DISPONIBLE");
+                visitorEntryExitLabel.getStyleClass().add("status-ok");
+                visitorResultPanel.getStyleClass().add("can-exit");
+
+                // Mostrar formulario inline de entrada
+                visitorCedulaField.clear();
+                visitorNombreField.clear();
+                visitorApellidoField.clear();
+                visitorJustificacionField.clear();
+                visitorEntryValidationLabel.setVisible(false);
+                visitorEntryValidationLabel.setManaged(false);
+                visitorEntryFormPanel.setVisible(true);
+                visitorEntryFormPanel.setManaged(true);
+                Platform.runLater(() -> visitorCedulaField.requestFocus());
             }
             case EXIT_REGISTERED -> {
                 String visitorName = result.getLog() != null ? result.getLog().getDisplayName() : barcode;
-                studentNameLabel.setText("VISITANTE - " + visitorName);
-                studentGradeLabel.setText("Salida registrada");
-                resultPanel.getStyleClass().add("can-exit");
-                statusLabel.setText("SALIDA REGISTRADA");
-                statusLabel.getStyleClass().add("status-ok");
-                activityStatusLabel.setText("COMPLETADO");
-                activityStatusLabel.getStyleClass().add("status-active");
+                visitorNameLabel.setText("VISITANTE - " + visitorName);
+                visitorBadgeLabel.setText("Carné: " + barcode);
+                visitorEntryExitLabel.setText("SALIDA REGISTRADA");
+                visitorEntryExitLabel.getStyleClass().add("status-ok");
+                visitorResultPanel.getStyleClass().add("can-exit");
             }
             case BADGE_LOST -> {
-                studentNameLabel.setText("VISITANTE - Carné: " + barcode);
-                studentGradeLabel.setText("Carné perdido");
-                resultPanel.getStyleClass().add("inactive");
-                statusLabel.setText("CARNÉ PERDIDO");
-                statusLabel.getStyleClass().add("status-inactive");
-                activityStatusLabel.setText("Contacte al administrador");
-                activityStatusLabel.getStyleClass().add("status-inactive");
+                visitorNameLabel.setText("VISITANTE - Carné: " + barcode);
+                visitorBadgeLabel.setText("Carné perdido");
+                visitorEntryExitLabel.setText("CARNÉ PERDIDO — Contacte al administrador");
+                visitorEntryExitLabel.getStyleClass().add("status-inactive");
+                visitorResultPanel.getStyleClass().add("inactive");
             }
             default -> {
-                studentNameLabel.setText("VISITANTE - Carné: " + barcode);
-                studentGradeLabel.setText(result.getMessage());
-                resultPanel.getStyleClass().add("requires-guardian");
-                statusLabel.setText("ERROR");
-                statusLabel.getStyleClass().add("status-warning");
-                activityStatusLabel.setText("");
+                visitorNameLabel.setText("VISITANTE - Carné: " + barcode);
+                visitorBadgeLabel.setText(result.getMessage());
+                visitorEntryExitLabel.setText("ERROR");
+                visitorEntryExitLabel.getStyleClass().add("status-warning");
+                visitorResultPanel.getStyleClass().add("requires-guardian");
             }
         }
+    }
+
+    /**
+     * Confirma la entrada del visitante desde el formulario inline del scanner.
+     */
+    @FXML
+    private void onConfirmVisitorEntry() {
+        if (currentVisitorBadge == null) return;
+
+        String cedula = visitorCedulaField.getText().trim();
+        if (cedula.isEmpty()) {
+            visitorEntryValidationLabel.setText("La cédula es obligatoria");
+            visitorEntryValidationLabel.setVisible(true);
+            visitorEntryValidationLabel.setManaged(true);
+            visitorCedulaField.requestFocus();
+            return;
+        }
+
+        try {
+            com.tuempresa.registro.models.VisitorLog log = visitorService.registerEntry(
+                currentVisitorBadge,
+                cedula,
+                visitorNombreField.getText(),
+                visitorApellidoField.getText(),
+                visitorJustificacionField.getText()
+            );
+
+            // Mostrar éxito
+            visitorEntryFormPanel.setVisible(false);
+            visitorEntryFormPanel.setManaged(false);
+            String name = log.getDisplayName();
+            visitorNameLabel.setText("VISITANTE - " + (name != null && !name.isBlank() ? name : cedula));
+            visitorBadgeLabel.setText("Carné: " + currentVisitorBadge.getCode() + " | Cédula: " + cedula);
+            visitorEntryExitLabel.setText("ENTRADA REGISTRADA");
+
+            addToHistory("visitor", currentVisitorBadge.getCode(), "[VIS ENTRADA]");
+            updateTodayScansCount();
+            autoClearTransition.playFromStart();
+            currentVisitorBadge = null;
+
+        } catch (Exception e) {
+            logger.error("Error al registrar entrada del visitante", e);
+            visitorEntryValidationLabel.setText("Error: " + e.getMessage());
+            visitorEntryValidationLabel.setVisible(true);
+            visitorEntryValidationLabel.setManaged(true);
+        }
+    }
+
+    /**
+     * Cancela el formulario de entrada de visitante.
+     */
+    @FXML
+    private void onCancelVisitorEntry() {
+        hideAllResultPanels();
+        barcodeInput.clear();
+        barcodeInput.requestFocus();
+        currentVisitorBadge = null;
     }
 
     /**
@@ -583,6 +651,14 @@ public class ScannerController implements Initializable {
         if (staffResultPanel != null) {
             staffResultPanel.setVisible(false);
             staffResultPanel.setManaged(false);
+        }
+        if (visitorResultPanel != null) {
+            visitorResultPanel.setVisible(false);
+            visitorResultPanel.setManaged(false);
+        }
+        if (visitorEntryFormPanel != null) {
+            visitorEntryFormPanel.setVisible(false);
+            visitorEntryFormPanel.setManaged(false);
         }
         guardiansPanel.setVisible(false);
         guardiansPanel.setManaged(false);

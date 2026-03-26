@@ -175,6 +175,11 @@
                             <CheckBox fx:id="activeCheck" GridPane.columnIndex="1" GridPane.rowIndex="3"
                                       selected="true"/>
 
+                            <!-- Tiempo de sesión -->
+                            <Label text="Tiempo de sesión:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                            <ComboBox fx:id="userTimeoutCombo" GridPane.columnIndex="1" GridPane.rowIndex="4"
+                                      prefWidth="200"/>
+
                             <columnConstraints>
                                 <ColumnConstraints minWidth="100" halignment="RIGHT"/>
                                 <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>

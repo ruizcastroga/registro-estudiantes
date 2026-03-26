@@ -61,6 +61,7 @@ public class SettingsController implements Initializable {
     @FXML private PasswordField passwordField;
     @FXML private ComboBox<String> roleCombo;
     @FXML private CheckBox activeCheck;
+    @FXML private ComboBox<String> userTimeoutCombo;
 
     // Users tab - buttons
     @FXML private Button editUserButton;
@@ -102,6 +103,7 @@ public class SettingsController implements Initializable {
         setupSessionBar();
         setupTimeoutCombo();
         setupRoleCombo();
+        setupUserTimeoutCombo();
         setupUsersTable();
         setupListeners();
         loadUsers();
@@ -205,6 +207,24 @@ public class SettingsController implements Initializable {
         roleCombo.setValue(AdminUser.ROLE_OPERATOR);
     }
 
+    private void setupUserTimeoutCombo() {
+        userTimeoutCombo.getItems().addAll(
+                "1 minuto",
+                "2 minutos",
+                "5 minutos",
+                "15 minutos",
+                "30 minutos",
+                "45 minutos",
+                "60 minutos"
+        );
+        userTimeoutCombo.setValue(currentTimeoutLabel());
+    }
+
+    private String currentTimeoutLabel() {
+        int t = sessionManager.getTimeoutMinutes();
+        return t == 1 ? "1 minuto" : t + " minutos";
+    }
+
     private void setupUsersTable() {
         colUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
         colRole.setCellValueFactory(new PropertyValueFactory<>("role"));
@@ -267,6 +287,7 @@ public class SettingsController implements Initializable {
         passwordField.clear(); // Leave blank - only fill if changing password
         roleCombo.setValue(selected.getRole());
         activeCheck.setSelected(selected.isActive());
+        userTimeoutCombo.setValue(currentTimeoutLabel());
 
         setStatusMessage("Editando usuario: " + selected.getUsername());
     }
@@ -358,6 +379,14 @@ public class SettingsController implements Initializable {
                 logger.info("Usuario creado: {}", username);
             }
 
+            // Apply selected session timeout
+            String selectedTimeout = userTimeoutCombo.getValue();
+            if (selectedTimeout != null && !selectedTimeout.isEmpty()) {
+                sessionManager.setTimeoutMinutes(parseMinutesFromCombo(selectedTimeout));
+                // Sync the config tab combo
+                timeoutCombo.setValue(selectedTimeout);
+            }
+
             loadUsers();
             clearUserForm();
 
@@ -386,6 +415,7 @@ public class SettingsController implements Initializable {
         passwordField.clear();
         roleCombo.setValue(AdminUser.ROLE_OPERATOR);
         activeCheck.setSelected(true);
+        if (userTimeoutCombo != null) userTimeoutCombo.setValue(currentTimeoutLabel());
         clearUserValidationError();
     }
 
