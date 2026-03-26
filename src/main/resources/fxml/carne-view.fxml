@@ -60,22 +60,44 @@
                     <Insets top="15" right="15" bottom="15" left="15"/>
                 </padding>
 
+                <!-- Selector de tipo de carné -->
+                <HBox spacing="0" alignment="CENTER_LEFT" styleClass="type-selector-bar">
+                    <ToggleButton fx:id="typeStudentBtn" text="Estudiante" selected="true"
+                                  onAction="#onTypeChanged" styleClass="type-btn-left">
+                        <toggleGroup><ToggleGroup fx:id="typeGroup"/></toggleGroup>
+                    </ToggleButton>
+                    <ToggleButton fx:id="typeVisitorBtn" text="Visitante"
+                                  onAction="#onTypeChanged" styleClass="type-btn-middle">
+                        <toggleGroup><fx:reference source="typeGroup"/></toggleGroup>
+                    </ToggleButton>
+                    <ToggleButton fx:id="typeStaffBtn" text="Personal"
+                                  onAction="#onTypeChanged" styleClass="type-btn-right">
+                        <toggleGroup><fx:reference source="typeGroup"/></toggleGroup>
+                    </ToggleButton>
+                </HBox>
+                <Separator/>
+
                 <!-- Sección de búsqueda -->
-                <Label text="Buscar estudiante existente" styleClass="section-title"/>
+                <Label fx:id="searchSectionLabel" text="Buscar estudiante existente" styleClass="section-title"/>
 
                 <HBox spacing="8" alignment="CENTER_LEFT">
                     <TextField fx:id="searchField"
                                promptText="Buscar por nombre o cédula..."
                                HBox.hgrow="ALWAYS"
                                styleClass="search-field"
-                               onKeyReleased="#onSearch"/>
+                               onKeyReleased="#onSearch"
+                               onAction="#onSearch"/>
                     <Button text="✕" fx:id="clearSearchButton"
                             onAction="#onClearSearch" styleClass="small-button"
                             visible="false"/>
+                    <Button text="Buscar" onAction="#onSearch" styleClass="small-button"/>
                 </HBox>
 
                 <ListView fx:id="searchResultsList" prefHeight="130"
                           styleClass="students-table"/>
+
+                <ListView fx:id="staffSearchResultsList" prefHeight="120"
+                          styleClass="students-table" visible="false" managed="false"/>
 
                 <Separator/>
 
@@ -91,49 +113,92 @@
                 <!-- Formulario de datos -->
                 <Label fx:id="formTitle" text="Datos del Carné" styleClass="form-title"/>
 
-                <GridPane hgap="10" vgap="10" styleClass="student-form">
-                    <Label text="Cédula: *" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-                    <TextField fx:id="cedulaField" GridPane.columnIndex="1" GridPane.rowIndex="0"
-                               promptText="Número de cédula" onKeyReleased="#onFormFieldChanged"/>
+                <!-- Sección de formulario para Estudiante -->
+                <VBox fx:id="studentFormSection">
+                    <GridPane hgap="10" vgap="10" styleClass="student-form">
+                        <Label text="Cédula: *" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <TextField fx:id="cedulaField" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                                   promptText="Número de cédula" onKeyReleased="#onFormFieldChanged"/>
 
-                    <Label text="Nombre: *" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-                    <TextField fx:id="firstNameField" GridPane.columnIndex="1" GridPane.rowIndex="1"
-                               promptText="Nombre(s)" onKeyReleased="#onFormFieldChanged"/>
+                        <Label text="Nombre: *" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <TextField fx:id="firstNameField" GridPane.columnIndex="1" GridPane.rowIndex="1"
+                                   promptText="Nombre(s)" onKeyReleased="#onFormFieldChanged"/>
 
-                    <Label text="Apellido: *" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-                    <TextField fx:id="lastNameField" GridPane.columnIndex="1" GridPane.rowIndex="2"
-                               promptText="Apellido(s)" onKeyReleased="#onFormFieldChanged"/>
+                        <Label text="Apellido: *" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        <TextField fx:id="lastNameField" GridPane.columnIndex="1" GridPane.rowIndex="2"
+                                   promptText="Apellido(s)" onKeyReleased="#onFormFieldChanged"/>
 
-                    <Label text="Grado:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-                    <TextField fx:id="gradeField" GridPane.columnIndex="1" GridPane.rowIndex="3"
-                               promptText="Ej: 5to Primaria" onKeyReleased="#onFormFieldChanged"/>
+                        <Label text="Grado:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                        <TextField fx:id="gradeField" GridPane.columnIndex="1" GridPane.rowIndex="3"
+                                   promptText="Ej: 5to Primaria" onKeyReleased="#onFormFieldChanged"/>
 
-                    <columnConstraints>
-                        <ColumnConstraints minWidth="80" halignment="RIGHT"/>
-                        <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
-                    </columnConstraints>
-                </GridPane>
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="80" halignment="RIGHT"/>
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
+                        </columnConstraints>
+                    </GridPane>
+                </VBox>
+
+                <!-- Sección de formulario para Visitante -->
+                <VBox fx:id="visitorFormSection" visible="false" managed="false" spacing="10">
+                    <GridPane hgap="10" vgap="10" styleClass="student-form">
+                        <Label text="Código del Carné: *" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <TextField fx:id="visitorBadgeCodeField" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                                   promptText="Ej: VIS-01" onKeyReleased="#onFormFieldChanged"/>
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="120" halignment="RIGHT"/>
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
+                        </columnConstraints>
+                    </GridPane>
+                    <Label text="El código del carné se usará como código de barras." styleClass="hint-label"/>
+                </VBox>
+
+                <!-- Sección de formulario para Personal -->
+                <VBox fx:id="staffFormSection" visible="false" managed="false" spacing="10">
+                    <GridPane hgap="10" vgap="10" styleClass="student-form">
+                        <Label text="Cédula: *" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                        <TextField fx:id="staffCedulaField" GridPane.columnIndex="1" GridPane.rowIndex="0"
+                                   promptText="Número de cédula" onKeyReleased="#onFormFieldChanged"/>
+                        <Label text="Nombre: *" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                        <TextField fx:id="staffNombreField" GridPane.columnIndex="1" GridPane.rowIndex="1"
+                                   promptText="Nombre(s)" onKeyReleased="#onFormFieldChanged"/>
+                        <Label text="Apellido: *" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                        <TextField fx:id="staffApellidoField" GridPane.columnIndex="1" GridPane.rowIndex="2"
+                                   promptText="Apellido(s)" onKeyReleased="#onFormFieldChanged"/>
+                        <Label text="Departamento:" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                        <TextField fx:id="staffDepartamentoField" GridPane.columnIndex="1" GridPane.rowIndex="3"
+                                   promptText="Departamento (opcional)" onKeyReleased="#onFormFieldChanged"/>
+                        <Label text="Estado:" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                        <ComboBox fx:id="staffEstadoCombo" GridPane.columnIndex="1" GridPane.rowIndex="4" prefWidth="180"/>
+                        <columnConstraints>
+                            <ColumnConstraints minWidth="100" halignment="RIGHT"/>
+                            <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
+                        </columnConstraints>
+                    </GridPane>
+                </VBox>
 
                 <!-- Foto del estudiante -->
-                <Separator/>
+                <VBox fx:id="photoSection">
+                    <Separator/>
 
-                <HBox spacing="12" alignment="CENTER_LEFT">
-                    <StackPane styleClass="carne-photo-picker" prefWidth="70" prefHeight="70"
-                               onMouseClicked="#onSelectPhoto">
-                        <ImageView fx:id="photoPreview" fitWidth="65" fitHeight="65"
-                                   preserveRatio="true"/>
-                        <Label fx:id="photoPickerLabel" text="+ Foto" styleClass="carne-placeholder-text"/>
-                    </StackPane>
+                    <HBox spacing="12" alignment="CENTER_LEFT">
+                        <StackPane styleClass="carne-photo-picker" prefWidth="70" prefHeight="70"
+                                   onMouseClicked="#onSelectPhoto">
+                            <ImageView fx:id="photoPreview" fitWidth="65" fitHeight="65"
+                                       preserveRatio="true"/>
+                            <Label fx:id="photoPickerLabel" text="+ Foto" styleClass="carne-placeholder-text"/>
+                        </StackPane>
 
-                    <VBox spacing="5">
-                        <Label text="Foto del Estudiante" styleClass="section-title"/>
-                        <Label text="Clic en el cuadro para seleccionar" styleClass="hint-label"/>
-                        <Label text="(Opcional — se puede agregar después)" styleClass="hint-label"/>
-                        <Button text="Quitar foto" fx:id="removePhotoButton"
-                                onAction="#onRemovePhoto" styleClass="small-button"
-                                visible="false"/>
-                    </VBox>
-                </HBox>
+                        <VBox spacing="5">
+                            <Label text="Foto del Estudiante" styleClass="section-title"/>
+                            <Label text="Clic en el cuadro para seleccionar" styleClass="hint-label"/>
+                            <Label text="(Opcional — se puede agregar después)" styleClass="hint-label"/>
+                            <Button text="Quitar foto" fx:id="removePhotoButton"
+                                    onAction="#onRemovePhoto" styleClass="small-button"
+                                    visible="false"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
 
                 <Region VBox.vgrow="ALWAYS"/>
 
