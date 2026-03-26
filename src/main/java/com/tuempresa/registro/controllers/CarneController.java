@@ -261,6 +261,21 @@ public class CarneController implements Initializable {
                         loadExistingStudent(selected);
                     }
                 });
+
+        // Búsqueda en tiempo real con textProperty (más robusto que onKeyReleased)
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            clearSearchButton.setVisible(newVal != null && !newVal.isEmpty());
+            if (newVal == null || newVal.trim().isEmpty()) {
+                searchResults.clear();
+                return;
+            }
+            List<Student> results = studentService.searchStudents(newVal.trim());
+            searchResults.setAll(results);
+            // Auto-seleccionar si hay exactamente un resultado
+            if (results.size() == 1) {
+                Platform.runLater(() -> searchResultsList.getSelectionModel().selectFirst());
+            }
+        });
     }
 
     /**
