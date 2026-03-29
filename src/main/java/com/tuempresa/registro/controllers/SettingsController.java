@@ -1,5 +1,6 @@
 package com.tuempresa.registro.controllers;
 
+import com.tuempresa.registro.api.ApiServer;
 import com.tuempresa.registro.dao.AdminUserDAO;
 import com.tuempresa.registro.models.AdminUser;
 import com.tuempresa.registro.utils.SecurityManager;
@@ -22,6 +23,8 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
@@ -67,6 +70,10 @@ public class SettingsController implements Initializable {
     @FXML private Button editUserButton;
     @FXML private Button deleteUserButton;
 
+    // API tab
+    @FXML private TextField apiKeyField;
+    @FXML private Label apiStatusLabel;
+
     // Footer
     @FXML private Label statusMessage;
     @FXML private Label userValidationMessage;
@@ -108,6 +115,7 @@ public class SettingsController implements Initializable {
         setupListeners();
         loadUsers();
         clearUserForm();
+        setupApiTab();
 
         logger.info("SettingsController inicializado correctamente");
     }
@@ -532,6 +540,55 @@ public class SettingsController implements Initializable {
 
         // Navigate back since settings requires admin session
         onBackToScanner();
+    }
+
+    // -----------------------------------------------------------------------
+    // API tab
+    // -----------------------------------------------------------------------
+
+    private void setupApiTab() {
+        if (apiKeyField == null) return;
+        ApiServer api = ApiServer.getInstance();
+        if (api != null) {
+            apiKeyField.setText(api.getApiKey());
+        } else {
+            apiKeyField.setText("(servidor no iniciado)");
+        }
+    }
+
+    @FXML
+    private void onCopyApiKey() {
+        String key = apiKeyField.getText();
+        if (key == null || key.isBlank()) return;
+        ClipboardContent content = new ClipboardContent();
+        content.putString(key);
+        Clipboard.getSystemClipboard().setContent(content);
+        apiStatusLabel.setText("Clave copiada al portapapeles.");
+    }
+
+    @FXML
+    private void onRegenerateApiKey() {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Regenerar clave API");
+        confirm.setHeaderText("¿Regenerar la clave de API?");
+        confirm.setContentText(
+                "La clave actual dejará de funcionar inmediatamente.\n" +
+                "Deberás actualizar todos los scripts y colecciones de Postman que la usen.");
+        Optional<ButtonType> result = confirm.showAndWait();
+        if (result.isEmpty() || result.get() != ButtonType.OK) return;
+
+        try {
+            ApiServer api = ApiServer.getInstance();
+            if (api == null) {
+                apiStatusLabel.setText("Error: el servidor de API no está activo.");
+                return;
+            }
+            String newKey = api.regenerateApiKey();
+            apiKeyField.setText(newKey);
+            apiStatusLabel.setText("Clave regenerada correctamente.");
+        } catch (Exception e) {
+            apiStatusLabel.setText("Error al regenerar: " + e.getMessage());
+        }
     }
 
     // -----------------------------------------------------------------------

@@ -1,0 +1,44 @@
+[
+  {
+    "idNumber": "201980001",
+    "firstName": "Roberto",
+    "lastName": "Fonseca Arce",
+    "department": "Dirección",
+    "status": "active"
+  },
+  {
+    "idNumber": "202000002",
+    "firstName": "Ana",
+    "lastName": "Villalobos Mora",
+    "department": "Docencia",
+    "status": "active"
+  },
+  {
+    "idNumber": "199500003",
+    "firstName": "Luis",
+    "lastName": "Cambronero Ríos",
+    "department": "Docencia",
+    "status": "active"
+  },
+  {
+    "idNumber": "200100004",
+    "firstName": "Mariela",
+    "lastName": "Portuguez Salas",
+    "department": "Administración",
+    "status": "active"
+  },
+  {
+    "idNumber": "198800005",
+    "firstName": "Carlos",
+    "lastName": "Ugarte Chaves",
+    "department": "Conserjería",
+    "status": "active"
+  },
+  {
+    "idNumber": "200500006",
+    "firstName": "Karina",
+    "lastName": "Blanco Fernández",
+    "department": "Docencia",
+    "status": "inactive"
+  }
+]

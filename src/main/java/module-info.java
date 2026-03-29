@@ -20,6 +20,13 @@ module com.tuempresa.registro {
     // Dependencia de ZXing para generación de códigos de barras (Creador de Carné)
     requires com.google.zxing;
 
+    // Jackson - JSON para la API REST
+    requires com.fasterxml.jackson.databind;
+    requires com.fasterxml.jackson.datatype.jsr310;
+
+    // HTTP server embebido (JDK built-in) para la API REST
+    requires jdk.httpserver;
+
     // Abrir paquetes para reflexión de JavaFX FXML
     opens com.tuempresa.registro to javafx.fxml;
     opens com.tuempresa.registro.controllers to javafx.fxml;
@@ -32,4 +39,5 @@ module com.tuempresa.registro {
     exports com.tuempresa.registro.services;
     exports com.tuempresa.registro.dao;
     exports com.tuempresa.registro.utils;
+    exports com.tuempresa.registro.api;
 }

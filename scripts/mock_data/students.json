@@ -1,0 +1,137 @@
+[
+  {
+    "barcode": "100000001",
+    "firstName": "Valentina",
+    "lastName": "Araya Brenes",
+    "grade": "Kinder",
+    "isMinor": true,
+    "requiresGuardian": true,
+    "status": "active"
+  },
+  {
+    "barcode": "100000002",
+    "firstName": "Diego",
+    "lastName": "Mora Calvo",
+    "grade": "1ro Primaria",
+    "isMinor": true,
+    "requiresGuardian": true,
+    "status": "active"
+  },
+  {
+    "barcode": "100000003",
+    "firstName": "Sofía",
+    "lastName": "Jiménez Quesada",
+    "grade": "2do Primaria",
+    "isMinor": true,
+    "requiresGuardian": false,
+    "status": "active"
+  },
+  {
+    "barcode": "100000004",
+    "firstName": "Matías",
+    "lastName": "Solano Rojas",
+    "grade": "3ro Primaria",
+    "isMinor": true,
+    "requiresGuardian": true,
+    "status": "active"
+  },
+  {
+    "barcode": "100000005",
+    "firstName": "Camila",
+    "lastName": "Vargas Montoya",
+    "grade": "4to Primaria",
+    "isMinor": true,
+    "requiresGuardian": false,
+    "status": "active"
+  },
+  {
+    "barcode": "100000006",
+    "firstName": "Sebastián",
+    "lastName": "Castro Ulate",
+    "grade": "5to Primaria",
+    "isMinor": true,
+    "requiresGuardian": true,
+    "status": "active"
+  },
+  {
+    "barcode": "100000007",
+    "firstName": "Isabella",
+    "lastName": "Herrera Núñez",
+    "grade": "6to Primaria",
+    "isMinor": true,
+    "requiresGuardian": false,
+    "status": "active"
+  },
+  {
+    "barcode": "100000008",
+    "firstName": "Andrés",
+    "lastName": "López Picado",
+    "grade": "7mo Secundaria",
+    "isMinor": true,
+    "requiresGuardian": false,
+    "status": "active"
+  },
+  {
+    "barcode": "100000009",
+    "firstName": "Luciana",
+    "lastName": "Pérez Badilla",
+    "grade": "8vo Secundaria",
+    "isMinor": true,
+    "requiresGuardian": false,
+    "status": "active"
+  },
+  {
+    "barcode": "100000010",
+    "firstName": "Emilio",
+    "lastName": "Ramírez Vindas",
+    "grade": "9no Secundaria",
+    "isMinor": false,
+    "requiresGuardian": false,
+    "status": "active"
+  },
+  {
+    "barcode": "100000011",
+    "firstName": "Paula",
+    "lastName": "Gutiérrez Alvarado",
+    "grade": "10mo Secundaria",
+    "isMinor": false,
+    "requiresGuardian": false,
+    "status": "active"
+  },
+  {
+    "barcode": "100000012",
+    "firstName": "Nicolás",
+    "lastName": "Chacón Fallas",
+    "grade": "11mo Secundaria",
+    "isMinor": false,
+    "requiresGuardian": false,
+    "status": "inactive"
+  },
+  {
+    "barcode": "100000013",
+    "firstName": "Valeria",
+    "lastName": "Espinoza Madrigal",
+    "grade": "1ro Primaria",
+    "isMinor": true,
+    "requiresGuardian": true,
+    "status": "active"
+  },
+  {
+    "barcode": "100000014",
+    "firstName": "Gabriel",
+    "lastName": "Méndez Sandoval",
+    "grade": "Kinder",
+    "isMinor": true,
+    "requiresGuardian": true,
+    "status": "suspended"
+  },
+  {
+    "barcode": "100000015",
+    "firstName": "Daniela",
+    "lastName": "Torres Segura",
+    "grade": "5to Primaria",
+    "isMinor": true,
+    "requiresGuardian": false,
+    "status": "active"
+  }
+]
