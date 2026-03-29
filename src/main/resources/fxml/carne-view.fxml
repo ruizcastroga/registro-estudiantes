@@ -35,16 +35,17 @@
                         <Insets top="12" right="20" bottom="12" left="20"/>
                     </padding>
 
+                    <!-- Left: page title (hgrow to push buttons right) -->
+                    <Label text="Creador de Carné" styleClass="page-title" HBox.hgrow="ALWAYS"/>
+
+                    <!-- Right: nav buttons (Creador de Carné greyed out = current module) -->
                     <Button text="Scanner" onAction="#onBackToScanner" styleClass="secondary-button"/>
                     <Button text="Estudiantes" onAction="#onManageStudents" styleClass="secondary-button"/>
                     <Button text="Visitantes" onAction="#onManageVisitors" styleClass="secondary-button"/>
                     <Button text="Personal" onAction="#onManageStaff" styleClass="secondary-button"/>
-                    <Button text="Creador de Carné" styleClass="secondary-button" disable="true"/>
+                    <Button text="Creador de Carné" disable="true" styleClass="secondary-button"/>
                     <Button text="Ajustes" onAction="#onManageSettings" styleClass="secondary-button"/>
-
-                    <Region HBox.hgrow="ALWAYS"/>
-
-                    <Label text="Creador de Carné" styleClass="page-title"/>
+                    <Button text="? Ayuda" onAction="#onHelp" styleClass="help-button"/>
                 </HBox>
             </VBox>
         </VBox>
