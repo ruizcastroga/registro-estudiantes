@@ -30,11 +30,12 @@
 
             <!-- Header original -->
             <VBox styleClass="header-box">
-                <HBox alignment="CENTER_LEFT" spacing="20">
+                <HBox alignment="CENTER_LEFT" spacing="15">
                     <padding>
-                        <Insets top="15" right="20" bottom="15" left="20"/>
+                        <Insets top="12" right="20" bottom="12" left="20"/>
                     </padding>
 
+                    <!-- Left: title + subtitle (hgrow to push buttons right) -->
                     <VBox HBox.hgrow="ALWAYS">
                         <Label text="Control de Visitantes" styleClass="app-title"/>
                         <Label fx:id="subtitleLabel" text="Escanee un carné para registrar entrada o salida"
@@ -55,17 +56,19 @@
                         <Label fx:id="availableCountLabel" text="0" styleClass="stats-value"/>
                     </VBox>
 
-                    <!-- Botones de navegación -->
+                    <!-- Right: nav buttons (Visitantes greyed out = current module) -->
                     <Button text="Scanner"
                             onAction="#onBack" styleClass="secondary-button"/>
                     <Button text="Estudiantes"
                             onAction="#onManageStudents" styleClass="secondary-button"/>
+                    <Button text="Visitantes" disable="true" styleClass="secondary-button"/>
                     <Button text="Personal"
                             onAction="#onManageStaff" styleClass="secondary-button"/>
                     <Button text="Creador de Carné"
                             onAction="#onManageCarne" styleClass="secondary-button"/>
                     <Button text="Ajustes"
                             onAction="#onManageSettings" styleClass="secondary-button"/>
+                    <Button text="? Ayuda" onAction="#onHelp" styleClass="help-button"/>
                 </HBox>
             </VBox>
         </VBox>

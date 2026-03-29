@@ -464,18 +464,28 @@ public class StaffAdminController implements Initializable {
     }
 
     @FXML
-    private void onShowHelp() {
-        Alert helpDialog = new Alert(Alert.AlertType.INFORMATION);
-        helpDialog.setTitle("Ayuda - Personal");
-        helpDialog.setHeaderText("Administración de Personal");
-        helpDialog.setContentText(
-                "Desde esta pantalla puede gestionar los miembros del personal.\n\n" +
-                "• Agregar: Clic en '+ Nuevo Personal' y complete los datos.\n" +
-                "• Editar: Seleccione un registro y clic en 'Editar'.\n" +
-                "• Eliminar: Seleccione un registro y clic en 'Eliminar'.\n" +
-                "• Buscar: Escriba en el campo de búsqueda.\n\n" +
-                "Todas las operaciones de modificación requieren una sesión de Administrador activa.");
-        helpDialog.showAndWait();
+    private void onHelp() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Ayuda — Administración de Personal");
+        alert.setHeaderText("Cómo usar el módulo de Personal");
+        alert.setContentText(
+            "BUSCAR PERSONAL\n" +
+            "• Use la barra de búsqueda para filtrar por nombre o código.\n" +
+            "• Haga clic en un miembro para cargarlo en el formulario.\n\n" +
+            "AGREGAR / EDITAR PERSONAL\n" +
+            "• Nombre y Apellido: obligatorios.\n" +
+            "• Cédula: obligatoria. Se usa automáticamente como código de barras del carné.\n" +
+            "  El guardia escanea la cédula impresa en el carné para registrar la entrada.\n" +
+            "• Departamento: opcional (Ej: Docencia, Administración).\n" +
+            "• Estado: Activo o Inactivo.\n" +
+            "  - Inactivo: el scanner mostrará que el miembro está inactivo.\n\n" +
+            "IMPORTAR CSV\n" +
+            "• Cargue múltiples miembros del personal desde un archivo CSV.\n" +
+            "• Descargue la 'Plantilla' para ver el formato correcto.\n\n" +
+            "PERMISOS\n" +
+            "• Se requiere sesión de administrador para modificar el personal."
+        );
+        alert.showAndWait();
     }
 
     // ========================
@@ -531,7 +541,7 @@ public class StaffAdminController implements Initializable {
         try {
             logger.info("Abriendo control de visitantes");
 
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/visitor-control.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/visitor-view.fxml"));
             Parent root = loader.load();
 
             Stage stage = (Stage) staffTable.getScene().getWindow();

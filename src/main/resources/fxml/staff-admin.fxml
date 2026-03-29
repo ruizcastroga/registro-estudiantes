@@ -30,33 +30,28 @@
 
             <!-- Header -->
             <VBox styleClass="header-box">
-                <HBox alignment="CENTER_LEFT" spacing="20">
+                <HBox alignment="CENTER_LEFT" spacing="15">
                     <padding>
-                        <Insets top="15" right="20" bottom="15" left="20"/>
+                        <Insets top="12" right="20" bottom="12" left="20"/>
                     </padding>
 
-                    <!-- Botones de navegación -->
+                    <!-- Left: page title (hgrow to push buttons right) -->
+                    <Label text="Administración de Personal" styleClass="page-title" HBox.hgrow="ALWAYS"/>
+
+                    <!-- Right: nav buttons (Personal greyed out = current module) -->
                     <Button fx:id="backButton" text="Scanner"
                             onAction="#onBackToScanner" styleClass="secondary-button"/>
                     <Button text="Estudiantes"
                             onAction="#onManageStudents" styleClass="secondary-button"/>
                     <Button text="Visitantes"
                             onAction="#onManageVisitors" styleClass="secondary-button"/>
+                    <Button text="Personal" disable="true" styleClass="secondary-button"/>
                     <Button text="Creador de Carné"
                             onAction="#onManageCarne" styleClass="secondary-button"/>
                     <Button text="Ajustes"
                             onAction="#onManageSettings" styleClass="secondary-button"/>
-
-                    <Region HBox.hgrow="ALWAYS"/>
-
-                    <!-- Título -->
-                    <Label text="Administración de Personal" styleClass="page-title"/>
-
-                    <Region HBox.hgrow="ALWAYS"/>
-
-                    <!-- Botón de ayuda -->
                     <Button fx:id="helpButton" text="? Ayuda"
-                            onAction="#onShowHelp" styleClass="help-button"/>
+                            onAction="#onHelp" styleClass="help-button"/>
                 </HBox>
             </VBox>
         </VBox>

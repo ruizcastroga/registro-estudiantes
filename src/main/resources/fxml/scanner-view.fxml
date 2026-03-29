@@ -36,7 +36,7 @@
                         <Insets top="15" right="20" bottom="15" left="20"/>
                     </padding>
 
-                    <!-- Título de la aplicación -->
+                    <!-- Left: app title -->
                     <VBox HBox.hgrow="ALWAYS">
                         <Label fx:id="schoolNameLabel" text="Sistema de Registro de Estudiantes"
                                styleClass="app-title"/>
@@ -44,13 +44,14 @@
                                styleClass="datetime-label"/>
                     </VBox>
 
-                    <!-- Estadísticas del día -->
+                    <!-- Center: stats -->
                     <VBox alignment="CENTER_RIGHT">
                         <Label text="Escaneos hoy:" styleClass="stats-label"/>
                         <Label fx:id="todayScansLabel" text="0" styleClass="stats-value"/>
                     </VBox>
 
-                    <!-- Botones de navegación -->
+                    <!-- Right: nav buttons (Scanner greyed out = current module) -->
+                    <Button text="Scanner" disable="true" styleClass="secondary-button"/>
                     <Button fx:id="manageButton" text="Estudiantes"
                             onAction="#onManageStudents" styleClass="secondary-button"/>
                     <Button text="Visitantes"
@@ -61,6 +62,7 @@
                             onAction="#onManageCarne" styleClass="secondary-button"/>
                     <Button text="Ajustes"
                             onAction="#onManageSettings" styleClass="secondary-button"/>
+                    <Button text="? Ayuda" onAction="#onHelp" styleClass="help-button"/>
                 </HBox>
             </VBox>
         </VBox>

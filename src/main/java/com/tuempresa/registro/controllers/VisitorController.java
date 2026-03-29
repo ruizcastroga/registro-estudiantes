@@ -647,6 +647,39 @@ public class VisitorController implements Initializable {
     }
 
     // -----------------------------------------------------------------------
+    // Ayuda
+    // -----------------------------------------------------------------------
+
+    @FXML
+    private void onHelp() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Ayuda — Control de Visitantes");
+        alert.setHeaderText("Cómo usar el módulo de Visitantes");
+        alert.setContentText(
+            "REGISTRO DE VISITAS\n" +
+            "• Las entradas y salidas de visitantes se registran desde el Scanner principal.\n" +
+            "• El scanner detecta automáticamente el carné de visitante y solicita los datos.\n\n" +
+            "VISITANTES DENTRO AHORA\n" +
+            "• Muestra en tiempo real qué visitantes están dentro del recinto.\n\n" +
+            "GESTIONAR CARNÉS\n" +
+            "• Agregue nuevos carnés de visitante con un código único (ej: VIS-01).\n" +
+            "• Importe múltiples carnés desde un archivo CSV.\n" +
+            "• Estados del carné:\n" +
+            "  - Disponible: listo para ser usado por un visitante.\n" +
+            "  - En uso: un visitante está actualmente dentro con este carné.\n" +
+            "  - Perdido: carné extraviado, no puede ser usado.\n" +
+            "• Use los botones de acción para cambiar el estado o eliminar un carné.\n\n" +
+            "HISTORIAL DE VISITAS\n" +
+            "• Registro completo de todas las entradas y salidas.\n" +
+            "• Busque por carné, cédula, nombre o motivo.\n" +
+            "• Exporte el historial a CSV o filtre por rango de fechas.\n\n" +
+            "PERMISOS\n" +
+            "• Se requiere sesión de administrador para gestionar carnés."
+        );
+        alert.showAndWait();
+    }
+
+    // -----------------------------------------------------------------------
     // Navegación
     // -----------------------------------------------------------------------
 

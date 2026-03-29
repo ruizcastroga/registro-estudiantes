@@ -30,12 +30,15 @@
 
             <!-- Header -->
             <VBox styleClass="header-box">
-                <HBox alignment="CENTER_LEFT" spacing="20">
+                <HBox alignment="CENTER_LEFT" spacing="15">
                     <padding>
-                        <Insets top="15" right="20" bottom="15" left="20"/>
+                        <Insets top="12" right="20" bottom="12" left="20"/>
                     </padding>
 
-                    <!-- Botones de navegación -->
+                    <!-- Left: page title (hgrow to push buttons right) -->
+                    <Label text="Ajustes del Sistema" styleClass="page-title" HBox.hgrow="ALWAYS"/>
+
+                    <!-- Right: nav buttons (Ajustes greyed out = current module) -->
                     <Button fx:id="backButton" text="Scanner"
                             onAction="#onBackToScanner" styleClass="secondary-button"/>
                     <Button text="Estudiantes"
@@ -46,13 +49,8 @@
                             onAction="#onManageStaff" styleClass="secondary-button"/>
                     <Button text="Creador de Carné"
                             onAction="#onManageCarne" styleClass="secondary-button"/>
-
-                    <Region HBox.hgrow="ALWAYS"/>
-
-                    <!-- Título -->
-                    <Label text="Ajustes del Sistema" styleClass="page-title"/>
-
-                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="Ajustes" disable="true" styleClass="secondary-button"/>
+                    <Button text="? Ayuda" onAction="#onHelp" styleClass="help-button"/>
                 </HBox>
             </VBox>
         </VBox>
