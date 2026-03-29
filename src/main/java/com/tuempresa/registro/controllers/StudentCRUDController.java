@@ -5,6 +5,7 @@ import com.tuempresa.registro.models.Guardian;
 import com.tuempresa.registro.models.Student;
 import com.tuempresa.registro.services.CsvImportService;
 import com.tuempresa.registro.services.StudentService;
+import com.tuempresa.registro.utils.DialogUtils;
 import com.tuempresa.registro.utils.SecurityManager;
 import com.tuempresa.registro.utils.SessionManager;
 import javafx.application.Platform;
@@ -254,10 +255,9 @@ public class StudentCRUDController implements Initializable {
      */
     @FXML
     private void onHelp() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Ayuda — Gestión de Estudiantes");
-        alert.setHeaderText("Cómo usar el módulo de Estudiantes");
-        alert.setContentText(
+        DialogUtils.scrollable(Alert.AlertType.INFORMATION,
+            "Ayuda — Gestión de Estudiantes",
+            "Cómo usar el módulo de Estudiantes",
             "BUSCAR ESTUDIANTES\n" +
             "• Use la barra de búsqueda para filtrar por nombre o código de barras.\n" +
             "• Haga clic en un estudiante de la lista para cargarlo en el formulario.\n\n" +
@@ -275,7 +275,6 @@ public class StudentCRUDController implements Initializable {
             "PERMISOS\n" +
             "• Se requiere sesión de administrador para agregar, editar o eliminar."
         );
-        alert.showAndWait();
     }
 
     /**
@@ -337,13 +336,10 @@ public class StudentCRUDController implements Initializable {
         }
 
         // Confirmar eliminación
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Confirmar Eliminación");
-        confirm.setHeaderText("¿Eliminar estudiante?");
-        confirm.setContentText("¿Está seguro de eliminar a " + selected.getFullName() + "?\n" +
+        Optional<ButtonType> result = DialogUtils.alert(Alert.AlertType.CONFIRMATION,
+                "Confirmar Eliminación", "¿Eliminar estudiante?",
+                "¿Está seguro de eliminar a " + selected.getFullName() + "?\n" +
                 "Esta acción no se puede deshacer.");
-
-        Optional<ButtonType> result = confirm.showAndWait();
 
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
@@ -533,26 +529,19 @@ public class StudentCRUDController implements Initializable {
             CsvImportService.ImportResult result = csvImportService.importFromCsv(file);
 
             // Mostrar resultado
-            Alert alert = new Alert(result.getErrorCount() > 0 ?
-                    Alert.AlertType.WARNING : Alert.AlertType.INFORMATION);
-            alert.setTitle("Resultado de Importación");
-            alert.setHeaderText("Importación completada");
-
             StringBuilder content = new StringBuilder(result.getSummary());
 
             if (!result.getErrors().isEmpty()) {
                 content.append("\n\nErrores:\n");
-                int maxErrors = Math.min(5, result.getErrors().size());
-                for (int i = 0; i < maxErrors; i++) {
-                    content.append("- ").append(result.getErrors().get(i)).append("\n");
-                }
-                if (result.getErrors().size() > 5) {
-                    content.append("... y ").append(result.getErrors().size() - 5).append(" errores más");
+                for (String error : result.getErrors()) {
+                    content.append("- ").append(error).append("\n");
                 }
             }
 
-            alert.setContentText(content.toString());
-            alert.showAndWait();
+            Alert.AlertType resultType = result.getErrorCount() > 0
+                    ? Alert.AlertType.WARNING : Alert.AlertType.INFORMATION;
+            DialogUtils.scrollable(resultType, "Resultado de Importación",
+                    "Importación completada", content.toString());
 
             // Recargar lista
             loadStudents();
@@ -916,11 +905,7 @@ public class StudentCRUDController implements Initializable {
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+        DialogUtils.alert(type, title, null, content);
     }
 
     private String mapStatusToDb(String displayStatus) {

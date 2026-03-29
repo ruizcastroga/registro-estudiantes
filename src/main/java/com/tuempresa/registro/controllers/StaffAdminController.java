@@ -3,6 +3,7 @@ package com.tuempresa.registro.controllers;
 import com.tuempresa.registro.models.AdminUser;
 import com.tuempresa.registro.models.StaffMember;
 import com.tuempresa.registro.services.StaffService;
+import com.tuempresa.registro.utils.DialogUtils;
 import com.tuempresa.registro.utils.SecurityManager;
 import com.tuempresa.registro.utils.SessionManager;
 import javafx.application.Platform;
@@ -339,13 +340,10 @@ public class StaffAdminController implements Initializable {
         }
 
         // Confirmar eliminación
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Confirmar Eliminación");
-        confirm.setHeaderText("¿Eliminar miembro del personal?");
-        confirm.setContentText("¿Está seguro de eliminar a " + selected.getFullName() + "?\n" +
+        Optional<ButtonType> result = DialogUtils.alert(Alert.AlertType.CONFIRMATION,
+                "Confirmar Eliminación", "¿Eliminar miembro del personal?",
+                "¿Está seguro de eliminar a " + selected.getFullName() + "?\n" +
                 "Esta acción no se puede deshacer.");
-
-        Optional<ButtonType> result = confirm.showAndWait();
 
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
@@ -465,10 +463,9 @@ public class StaffAdminController implements Initializable {
 
     @FXML
     private void onHelp() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Ayuda — Administración de Personal");
-        alert.setHeaderText("Cómo usar el módulo de Personal");
-        alert.setContentText(
+        DialogUtils.scrollable(Alert.AlertType.INFORMATION,
+            "Ayuda — Administración de Personal",
+            "Cómo usar el módulo de Personal",
             "BUSCAR PERSONAL\n" +
             "• Use la barra de búsqueda para filtrar por nombre o código.\n" +
             "• Haga clic en un miembro para cargarlo en el formulario.\n\n" +
@@ -485,7 +482,6 @@ public class StaffAdminController implements Initializable {
             "PERMISOS\n" +
             "• Se requiere sesión de administrador para modificar el personal."
         );
-        alert.showAndWait();
     }
 
     // ========================
@@ -690,11 +686,7 @@ public class StaffAdminController implements Initializable {
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+        DialogUtils.alert(type, title, null, content);
     }
 
     private String mapStatusToDb(String displayStatus) {

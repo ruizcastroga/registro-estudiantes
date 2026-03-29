@@ -3,6 +3,7 @@ package com.tuempresa.registro.controllers;
 import com.tuempresa.registro.api.ApiServer;
 import com.tuempresa.registro.dao.AdminUserDAO;
 import com.tuempresa.registro.models.AdminUser;
+import com.tuempresa.registro.utils.DialogUtils;
 import com.tuempresa.registro.utils.SecurityManager;
 import com.tuempresa.registro.utils.SessionManager;
 import javafx.application.Platform;
@@ -318,13 +319,10 @@ public class SettingsController implements Initializable {
         }
 
         // Confirm deletion
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Confirmar Eliminación");
-        confirm.setHeaderText("¿Eliminar usuario?");
-        confirm.setContentText("¿Está seguro de eliminar al usuario \"" + selected.getUsername() + "\"?\n" +
+        Optional<ButtonType> result = DialogUtils.alert(Alert.AlertType.CONFIRMATION,
+                "Confirmar Eliminación", "¿Eliminar usuario?",
+                "¿Está seguro de eliminar al usuario \"" + selected.getUsername() + "\"?\n" +
                 "Esta acción no se puede deshacer.");
-
-        Optional<ButtonType> result = confirm.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
                 adminUserDAO.delete(selected.getId());
@@ -568,13 +566,10 @@ public class SettingsController implements Initializable {
 
     @FXML
     private void onRegenerateApiKey() {
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Regenerar clave API");
-        confirm.setHeaderText("¿Regenerar la clave de API?");
-        confirm.setContentText(
+        Optional<ButtonType> result = DialogUtils.alert(Alert.AlertType.CONFIRMATION,
+                "Regenerar clave API", "¿Regenerar la clave de API?",
                 "La clave actual dejará de funcionar inmediatamente.\n" +
                 "Deberás actualizar todos los scripts y colecciones de Postman que la usen.");
-        Optional<ButtonType> result = confirm.showAndWait();
         if (result.isEmpty() || result.get() != ButtonType.OK) return;
 
         try {
@@ -597,10 +592,9 @@ public class SettingsController implements Initializable {
 
     @FXML
     private void onHelp() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Ayuda — Ajustes del Sistema");
-        alert.setHeaderText("Cómo usar los Ajustes");
-        alert.setContentText(
+        DialogUtils.scrollable(Alert.AlertType.INFORMATION,
+            "Ayuda — Ajustes del Sistema",
+            "Cómo usar los Ajustes",
             "CONFIGURACIÓN GENERAL\n" +
             "• Tiempo de expiración de sesión: minutos de inactividad antes de cerrar sesión automáticamente.\n" +
             "• Guarde los cambios con 'Guardar Configuración'.\n\n" +
@@ -624,7 +618,6 @@ public class SettingsController implements Initializable {
             "• No puede eliminar su propio usuario mientras tiene sesión activa.\n" +
             "• Se requiere sesión de administrador para acceder a esta sección."
         );
-        alert.showAndWait();
     }
 
     // -----------------------------------------------------------------------
@@ -690,10 +683,6 @@ public class SettingsController implements Initializable {
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+        DialogUtils.alert(type, title, null, content);
     }
 }

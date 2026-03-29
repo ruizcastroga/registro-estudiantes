@@ -2,6 +2,7 @@ package com.tuempresa.registro;
 
 import com.tuempresa.registro.api.ApiServer;
 import com.tuempresa.registro.dao.DatabaseConnection;
+import com.tuempresa.registro.utils.DialogUtils;
 import com.tuempresa.registro.utils.LicenseManager;
 import com.tuempresa.registro.utils.SecurityManager;
 import com.tuempresa.registro.utils.SessionManager;
@@ -262,14 +263,9 @@ public class Main extends Application {
             int timeoutMinutes = Integer.parseInt(timeoutSelection.split(" ")[0]);
 
             if (securityManager.createFirstAdmin(username, password, timeoutMinutes)) {
-                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                successAlert.setTitle("Configuración Completada");
-                successAlert.setHeaderText(null);
-                successAlert.setContentText(
+                DialogUtils.alert(Alert.AlertType.INFORMATION, "Configuración Completada", null,
                         "Usuario " + username + " creado correctamente como Administrador.\n" +
-                        "Recuerda crear usuarios Operadores u otros Administradores desde el módulo de Ajustes."
-                );
-                successAlert.showAndWait();
+                        "Recuerda crear usuarios Operadores u otros Administradores desde el módulo de Ajustes.");
                 logger.info("Primer administrador '{}' creado exitosamente", username);
                 return true;
             } else {
@@ -323,6 +319,8 @@ public class Main extends Application {
                         "Machine ID: " + licenseManager.getMachineId() + "\n\n" +
                         "Para obtener una licencia, contacte al proveedor."
         );
+        alert.getDialogPane().setMinWidth(460);
+        alert.getDialogPane().setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
 
         alert.getButtonTypes().clear();
         alert.getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
@@ -335,14 +333,10 @@ public class Main extends Application {
      * Muestra error de licencia inválida.
      */
     private void showLicenseError() {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error de Licencia");
-        alert.setHeaderText("Licencia inválida o expirada");
-        alert.setContentText(
+        DialogUtils.alert(Alert.AlertType.ERROR, "Error de Licencia",
+                "Licencia inválida o expirada",
                 "No se pudo validar la licencia del software.\n\n" +
-                        "Por favor, contacte al administrador para obtener una licencia válida."
-        );
-        alert.showAndWait();
+                "Por favor, contacte al administrador para obtener una licencia válida.");
     }
 
     /**
@@ -413,11 +407,8 @@ public class Main extends Application {
      * @param message Mensaje de error
      */
     private void showFatalError(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error Fatal");
-        alert.setHeaderText(title);
-        alert.setContentText(message + "\n\nLa aplicación se cerrará.");
-        alert.showAndWait();
+        DialogUtils.alert(Alert.AlertType.ERROR, "Error Fatal", title,
+                message + "\n\nLa aplicación se cerrará.");
     }
 
     /**
