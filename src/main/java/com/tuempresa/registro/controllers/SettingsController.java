@@ -614,6 +614,12 @@ public class SettingsController implements Initializable {
             "• Contraseña: mínimo 4 caracteres. Déjela en blanco al editar para no cambiarla.\n" +
             "• Tiempo de sesión: configura el tiempo de expiración global al guardar.\n" +
             "• Activo: los usuarios inactivos no pueden iniciar sesión.\n\n" +
+            "API REST\n" +
+            "• La aplicación expone una API en el puerto 8080 para importar y exportar datos.\n" +
+            "• La API Key se genera automáticamente al primer inicio. Cópiela con el botón 'Copiar'.\n" +
+            "• Use 'Regenerar' si necesita invalidar la clave actual (por ejemplo, si fue comprometida).\n" +
+            "• La nueva clave entra en vigor inmediatamente; la anterior deja de funcionar al instante.\n" +
+            "• Consulte el archivo API.md en el repositorio para la guía completa de endpoints y Postman.\n\n" +
             "SEGURIDAD\n" +
             "• No puede eliminar su propio usuario mientras tiene sesión activa.\n" +
             "• Se requiere sesión de administrador para acceder a esta sección."
