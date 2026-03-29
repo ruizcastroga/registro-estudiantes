@@ -76,6 +76,7 @@ Configuración del sistema y gestión de usuarios.
   - Campos: nombre de usuario, contraseña, rol, tiempo de sesión individual
   - No se puede eliminar el propio usuario con sesión activa
 - **Base de datos**: exportar copia de seguridad / importar desde respaldo
+- **API REST**: ver clave de acceso, copiarla al portapapeles, regenerarla
 
 ---
 
@@ -107,6 +108,37 @@ El módulo activo aparece deshabilitado (atenuado). El botón **? Ayuda** abre u
 
 ---
 
+## API REST
+
+La aplicación expone una API REST embebida en el **puerto 8080** que se inicia automáticamente al abrir el programa y se detiene al cerrarlo. No requiere instalación adicional.
+
+### Casos de uso principales
+- **Importar datos masivamente** desde sistemas externos (SIGE, Excel vía script, otro software de gestión)
+- **Exportar datos** para reportes, respaldos o migración
+- **Integración** con otros sistemas de la institución
+
+### Autenticación
+Todos los endpoints requieren el header `X-API-Key`. La clave se genera automáticamente al primer inicio y se puede consultar o regenerar en **Ajustes → API REST**.
+
+### Endpoints disponibles
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/health` | Estado del servidor y la base de datos |
+| GET | `/api/students/export` | Exportar todos los estudiantes en JSON |
+| POST | `/api/students/import` | Importar estudiantes desde array JSON |
+| GET | `/api/staff/export` | Exportar todo el personal en JSON |
+| POST | `/api/staff/import` | Importar personal desde array JSON |
+| GET | `/api/visitors/badges/export` | Exportar todos los carnés de visitante |
+| POST | `/api/visitors/badges/import` | Importar carnés de visitante |
+| GET | `/api/visitors/logs/export` | Historial de visitas (parámetros `from`/`to`) |
+| GET | `/api/entry-logs/export` | Historial de escaneos del scanner (parámetros `from`/`to`) |
+
+### Documentación completa
+Ver [`API.md`](./API.md) para la guía de configuración, datos de prueba, plan de pruebas con Postman y referencia completa de endpoints.
+
+---
+
 ## Stack Tecnológico
 
 | Componente | Tecnología | Versión |
@@ -115,6 +147,8 @@ El módulo activo aparece deshabilitado (atenuado). El botón **? Ayuda** abre u
 | UI | JavaFX | 21.0.1 |
 | Base de datos | SQLite (sqlite-jdbc) | 3.44.1.0 |
 | Códigos de barras | ZXing | 3.5.2 |
+| JSON (API REST) | Jackson Databind + JavaTime | 2.17.2 |
+| Servidor HTTP (API REST) | JDK built-in (`jdk.httpserver`) | JDK 17+ |
 | Logging | SLF4J + Logback | 2.0.9 / 1.4.14 |
 | Build | Maven | 3.8+ |
 
@@ -145,7 +179,7 @@ mvn javafx:run
 mvn clean package
 ```
 
-La base de datos `registro_estudiantes.db` se crea automáticamente en el directorio de trabajo al primer inicio.
+La base de datos se crea automáticamente en `~/.registro-estudiantes/registro_estudiantes.db` (Linux/macOS) o `%USERPROFILE%\.registro-estudiantes\registro_estudiantes.db` (Windows) al primer inicio.
 
 ---
 
@@ -184,6 +218,15 @@ src/main/java/com/tuempresa/registro/
 │   ├── StaffService.java               # Lógica de personal
 │   ├── VisitorService.java             # Lógica de carnés y visitas
 │   └── CsvImportService.java           # Importación masiva desde CSV
+├── api/                                # API REST embebida (puerto 8080)
+│   ├── ApiServer.java                  # Servidor HTTP, ciclo de vida, API key
+│   ├── ApiUtils.java                   # Helpers compartidos (auth, JSON, params)
+│   └── handlers/
+│       ├── HealthHandler.java          # GET /api/health
+│       ├── StudentsHandler.java        # /api/students/export|import
+│       ├── StaffHandler.java           # /api/staff/export|import
+│       ├── VisitorsHandler.java        # /api/visitors/badges|logs
+│       └── EntryLogsHandler.java       # /api/entry-logs/export
 └── utils/
     ├── SessionManager.java             # Gestión de sesiones con timeout
     ├── SecurityManager.java            # Hash de contraseñas
@@ -223,15 +266,26 @@ SQLite local, archivo `registro_estudiantes.db`. Tablas principales:
 | `admin_users` | Usuarios del sistema (administrador/guardia) |
 | `activity_logs` | Auditoría de acciones administrativas |
 | `settings` | Configuración del sistema (nombre, logo, timeout) |
+| `app_config` | Configuración interna de la app (incluye la API key) |
 
 ---
 
 ## Archivos de Prueba
 
-El repositorio incluye archivos CSV de ejemplo:
+El repositorio incluye archivos de ejemplo para importación CSV y para la API REST:
 
+**CSV (importación desde la app):**
 - `datos_estudiantes_prueba.csv` — Estudiantes de muestra para importar
 - `carnés_prueba.csv` — Carnés de visitante de muestra
+
+**API REST (importación vía Postman/scripts):**
+- `scripts/mock_data/students.json` — 15 estudiantes de prueba con grados y estados variados
+- `scripts/mock_data/staff.json` — 6 miembros del personal de distintos departamentos
+- `scripts/mock_data/visitor_badges.json` — 10 carnés de visitante (`VIS-API-01` a `VIS-API-10`)
+- `scripts/seed_api.sh` — Carga todos los datos de prueba en un comando (Linux/macOS)
+- `scripts/seed_api.ps1` — Ídem para Windows (PowerShell)
+- `postman/registro_api.postman_collection.json` — Colección Postman con todos los endpoints
+- `postman/registro_api.postman_environment.json` — Variables de entorno para Postman
 
 ---
 
