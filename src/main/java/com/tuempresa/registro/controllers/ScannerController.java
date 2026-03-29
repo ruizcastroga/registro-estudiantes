@@ -844,6 +844,34 @@ public class ScannerController implements Initializable {
         barcodeInput.requestFocus();
     }
 
+    @FXML
+    private void onHelp() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Ayuda — Scanner Principal");
+        alert.setHeaderText("Cómo usar el Scanner Principal");
+        alert.setContentText(
+            "ESCANEO DE CARNÉS\n" +
+            "• Escanee o escriba cualquier código de barras y presione Enter.\n" +
+            "• El sistema detecta automáticamente si es un estudiante, personal o visitante.\n\n" +
+            "ESTUDIANTES\n" +
+            "• Muestra nombre, grado y estado (Puede Salir / Requiere Acompañante / Inactivo).\n" +
+            "• Si requiere acompañante, se listan los tutores legales autorizados.\n\n" +
+            "PERSONAL\n" +
+            "• Muestra nombre, departamento y estado del miembro del personal.\n\n" +
+            "VISITANTES\n" +
+            "• Si el carné está 'Disponible', aparece un formulario para ingresar:\n" +
+            "  cédula (obligatorio), nombre, apellido y motivo de la visita.\n" +
+            "• Si el carné está 'En uso', se registra automáticamente la salida.\n\n" +
+            "HISTORIAL\n" +
+            "• El panel derecho muestra los últimos escaneos de la sesión.\n" +
+            "• Use 'Limpiar' para borrar el historial visible.\n\n" +
+            "SESIÓN\n" +
+            "• Use 'Iniciar Sesión' en la barra superior para habilitar acciones administrativas.\n" +
+            "• La sesión expira automáticamente por inactividad (configurable en Ajustes)."
+        );
+        alert.showAndWait();
+    }
+
     /**
      * Manejador para abrir la gestión de estudiantes.
      */

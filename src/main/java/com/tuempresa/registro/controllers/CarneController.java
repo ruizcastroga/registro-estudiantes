@@ -1017,6 +1017,41 @@ public class CarneController implements Initializable {
     }
 
     // ============================================================
+    //  Ayuda
+    // ============================================================
+
+    @FXML
+    private void onHelp() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Ayuda — Creador de Carné");
+        alert.setHeaderText("Cómo usar el Creador de Carné");
+        alert.setContentText(
+            "TIPO DE CARNÉ\n" +
+            "• Seleccione el tipo con los botones en la parte superior:\n" +
+            "  - Estudiante: cédula, nombre, apellido, grado y foto.\n" +
+            "  - Visitante: solo el código del carné (ej: VIS-01).\n" +
+            "  - Personal: cédula (usada como barcode), nombre, apellido, departamento.\n\n" +
+            "BUSCAR EXISTENTE\n" +
+            "• Escriba en el campo de búsqueda para encontrar un registro existente.\n" +
+            "• Seleccione de la lista para cargar sus datos en el formulario y la vista previa.\n\n" +
+            "NUEVO CARNÉ\n" +
+            "• Use '+ Nuevo Carné' para limpiar el formulario e ingresar datos nuevos.\n" +
+            "• Complete los campos requeridos (marcados con *).\n\n" +
+            "VISTA PREVIA\n" +
+            "• El panel derecho muestra cómo quedará el carné impreso (tamaño CR80).\n" +
+            "• La vista se actualiza en tiempo real mientras escribe.\n" +
+            "• El código de barras se genera automáticamente desde la cédula o código de carné.\n\n" +
+            "IMPRIMIR\n" +
+            "• Use 'Imprimir Carné' para enviar el carné a la impresora.\n" +
+            "• Si es un estudiante nuevo, se guardará en la base de datos antes de imprimir.\n\n" +
+            "FOTO (solo Estudiantes)\n" +
+            "• Haga clic en el cuadro de foto para seleccionar una imagen.\n" +
+            "• La foto aparecerá en la vista previa y se guardará con el registro."
+        );
+        alert.showAndWait();
+    }
+
+    // ============================================================
     //  Navegación
     // ============================================================
 

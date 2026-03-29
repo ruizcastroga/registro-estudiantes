@@ -253,85 +253,29 @@ public class StudentCRUDController implements Initializable {
      * Manejador para mostrar ayuda.
      */
     @FXML
-    private void onShowHelp() {
-        Alert helpDialog = new Alert(Alert.AlertType.INFORMATION);
-        helpDialog.setTitle("Ayuda - Guía Rápida");
-        helpDialog.setHeaderText("Sistema de Registro de Estudiantes");
-        helpDialog.getDialogPane().setPrefWidth(550);
-
-        String helpContent = """
-            ═══════════════════════════════════════════════════
-            📋 GESTIÓN DE ESTUDIANTES
-            ═══════════════════════════════════════════════════
-
-            🔍 BÚSQUEDA
-            • Escribe en el campo de búsqueda para filtrar estudiantes
-            • La búsqueda es instantánea (no necesita botón)
-            • Busca por nombre, apellido o código de barras
-            • Usa el botón ✕ para limpiar la búsqueda
-
-            ➕ AGREGAR ESTUDIANTE
-            1. Clic en "+ Nuevo Estudiante"
-            2. Completa los campos obligatorios (*)
-            3. Si "Requiere acompañante" está marcado, debes agregar
-               al menos un Tutor Legal
-            4. Clic en "Guardar" e ingresa la contraseña
-
-            ✏️ EDITAR ESTUDIANTE
-            1. Selecciona un estudiante de la tabla
-            2. Clic en "Editar"
-            3. Modifica los datos necesarios
-            4. Clic en "Guardar" e ingresa la contraseña
-
-            🗑️ ELIMINAR ESTUDIANTE
-            1. Selecciona un estudiante de la tabla
-            2. Clic en "Eliminar"
-            3. Ingresa la contraseña y confirma la eliminación
-
-            ═══════════════════════════════════════════════════
-            📥 IMPORTACIÓN MASIVA (CSV)
-            ═══════════════════════════════════════════════════
-
-            📄 GENERAR PLANTILLA
-            • Clic en "Plantilla" para descargar un archivo de ejemplo
-            • Abre el archivo en Excel y agrega tus estudiantes
-            • Guarda como CSV (separado por comas)
-
-            📤 IMPORTAR DATOS
-            1. Clic en "Importar CSV"
-            2. Ingresa la contraseña del sistema
-            3. Selecciona tu archivo CSV
-            4. El sistema mostrará un resumen de la importación
-
-            Columnas del CSV:
-            codigo, nombre, apellido, grado, requiere_acompanante,
-            tutor_nombre, tutor_relacion, tutor_telefono
-
-            ═══════════════════════════════════════════════════
-            👨‍👩‍👧 TUTORES LEGALES
-            ═══════════════════════════════════════════════════
-
-            • Son las personas autorizadas para recoger al estudiante
-            • Obligatorio si el estudiante "Requiere acompañante"
-            • Incluye: nombre, relación (Madre/Padre/etc.) y teléfono
-
-            ═══════════════════════════════════════════════════
-            🔐 SEGURIDAD
-            ═══════════════════════════════════════════════════
-
-            • Todas las operaciones de modificación requieren contraseña
-            • La contraseña se configura en el primer uso del sistema
-            • Contacta al administrador si olvidaste la contraseña
-            """;
-
-        TextArea textArea = new TextArea(helpContent);
-        textArea.setEditable(false);
-        textArea.setWrapText(true);
-        textArea.setPrefHeight(450);
-        textArea.setStyle("-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 12px;");
-
-        helpDialog.getDialogPane().setContent(textArea);
-        helpDialog.showAndWait();
+    private void onHelp() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Ayuda — Gestión de Estudiantes");
+        alert.setHeaderText("Cómo usar el módulo de Estudiantes");
+        alert.setContentText(
+            "BUSCAR ESTUDIANTES\n" +
+            "• Use la barra de búsqueda para filtrar por nombre o código de barras.\n" +
+            "• Haga clic en un estudiante de la lista para cargarlo en el formulario.\n\n" +
+            "AGREGAR / EDITAR\n" +
+            "• Código de Barras: es el identificador único escaneado en el carné.\n" +
+            "• Estado: Activo, Inactivo o Suspendido.\n" +
+            "  - Inactivo/Suspendido: el scanner mostrará que no puede entrar.\n" +
+            "• Menor de edad + Requiere acompañante: al escanear, se mostrarán los tutores.\n\n" +
+            "TUTORES LEGALES\n" +
+            "• Agréguelos si el estudiante requiere acompañante.\n" +
+            "• Se muestran al guardia cuando se escanea el carné del estudiante.\n\n" +
+            "IMPORTAR CSV\n" +
+            "• Use 'Importar CSV' para cargar múltiples estudiantes desde un archivo.\n" +
+            "• Descargue la 'Plantilla' para ver el formato requerido.\n\n" +
+            "PERMISOS\n" +
+            "• Se requiere sesión de administrador para agregar, editar o eliminar."
+        );
+        alert.showAndWait();
     }
 
     /**

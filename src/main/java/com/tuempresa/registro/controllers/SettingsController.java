@@ -535,6 +535,36 @@ public class SettingsController implements Initializable {
     }
 
     // -----------------------------------------------------------------------
+    // Help
+    // -----------------------------------------------------------------------
+
+    @FXML
+    private void onHelp() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Ayuda — Ajustes del Sistema");
+        alert.setHeaderText("Cómo usar los Ajustes");
+        alert.setContentText(
+            "CONFIGURACIÓN GENERAL\n" +
+            "• Tiempo de expiración de sesión: minutos de inactividad antes de cerrar sesión automáticamente.\n" +
+            "• Guarde los cambios con 'Guardar Configuración'.\n\n" +
+            "GESTIÓN DE USUARIOS\n" +
+            "• Lista todos los usuarios del sistema con su rol y estado.\n" +
+            "• Roles disponibles:\n" +
+            "  - Administrador: acceso completo (agregar/editar/eliminar registros, cambiar ajustes).\n" +
+            "  - Operador: solo puede ver registros y realizar escaneos.\n\n" +
+            "AGREGAR / EDITAR USUARIO\n" +
+            "• Usuario: nombre único de inicio de sesión.\n" +
+            "• Contraseña: mínimo 4 caracteres. Déjela en blanco al editar para no cambiarla.\n" +
+            "• Tiempo de sesión: configura el tiempo de expiración global al guardar.\n" +
+            "• Activo: los usuarios inactivos no pueden iniciar sesión.\n\n" +
+            "SEGURIDAD\n" +
+            "• No puede eliminar su propio usuario mientras tiene sesión activa.\n" +
+            "• Se requiere sesión de administrador para acceder a esta sección."
+        );
+        alert.showAndWait();
+    }
+
+    // -----------------------------------------------------------------------
     // Navigation
     // -----------------------------------------------------------------------
 
