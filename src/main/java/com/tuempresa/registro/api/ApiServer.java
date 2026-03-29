@@ -97,7 +97,7 @@ public class ApiServer {
      * Generate a new random key, persist it, and re-register all handler
      * contexts so the new key is enforced immediately without a restart.
      */
-    public String regenerateApiKey() throws IOException {
+    public String regenerateApiKey() throws IOException, SQLException {
         String newKey = UUID.randomUUID().toString();
         persistApiKey(newKey);
         this.apiKey = newKey;
