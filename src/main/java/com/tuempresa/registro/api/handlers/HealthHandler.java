@@ -6,6 +6,7 @@ import com.tuempresa.registro.api.ApiUtils;
 import com.tuempresa.registro.dao.DatabaseConnection;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -25,7 +26,14 @@ public class HealthHandler implements HttpHandler {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("status", "ok");
         body.put("version", "1.0.0");
-        body.put("db", DatabaseConnection.getInstance().isConnected() ? "connected" : "disconnected");
+        String dbStatus;
+        try {
+            DatabaseConnection.getInstance().getConnection();
+            dbStatus = "connected";
+        } catch (SQLException e) {
+            dbStatus = "disconnected";
+        }
+        body.put("db", dbStatus);
         body.put("port", 8080);
 
         ApiUtils.sendJson(exchange, 200, body);
