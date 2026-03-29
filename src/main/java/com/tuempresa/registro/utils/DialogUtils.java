@@ -48,12 +48,17 @@ public final class DialogUtils {
         label.setWrapText(true);
         label.setPadding(new Insets(4, 8, 4, 4));
         label.setMaxWidth(Double.MAX_VALUE);
+        label.setStyle("-fx-text-fill: #212121; -fx-font-size: 13px;");
 
         ScrollPane scrollPane = new ScrollPane(label);
         scrollPane.setFitToWidth(true);
         scrollPane.setPrefViewportHeight(380);
         scrollPane.setPrefWidth(540);
-        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+        scrollPane.setStyle(
+            "-fx-background-color: white; " +
+            "-fx-background: white; " +
+            "-fx-border-color: transparent;"
+        );
 
         Alert alert = new Alert(type);
         alert.setTitle(title);
