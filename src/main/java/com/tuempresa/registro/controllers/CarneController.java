@@ -8,6 +8,7 @@ import com.tuempresa.registro.models.StaffMember;
 import com.tuempresa.registro.models.Student;
 import com.tuempresa.registro.services.StaffService;
 import com.tuempresa.registro.services.StudentService;
+import com.tuempresa.registro.utils.DialogUtils;
 import com.tuempresa.registro.utils.SecurityManager;
 import com.tuempresa.registro.utils.SessionManager;
 import com.tuempresa.registro.models.AdminUser;
@@ -1009,11 +1010,7 @@ public class CarneController implements Initializable {
     }
 
     private void showAlert(Alert.AlertType type, String title, String content) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(content);
-        alert.showAndWait();
+        DialogUtils.alert(type, title, null, content);
     }
 
     // ============================================================
@@ -1022,10 +1019,9 @@ public class CarneController implements Initializable {
 
     @FXML
     private void onHelp() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Ayuda — Creador de Carné");
-        alert.setHeaderText("Cómo usar el Creador de Carné");
-        alert.setContentText(
+        DialogUtils.scrollable(Alert.AlertType.INFORMATION,
+            "Ayuda — Creador de Carné",
+            "Cómo usar el Creador de Carné",
             "TIPO DE CARNÉ\n" +
             "• Seleccione el tipo con los botones en la parte superior:\n" +
             "  - Estudiante: cédula, nombre, apellido, grado y foto.\n" +
@@ -1048,7 +1044,6 @@ public class CarneController implements Initializable {
             "• Haga clic en el cuadro de foto para seleccionar una imagen.\n" +
             "• La foto aparecerá en la vista previa y se guardará con el registro."
         );
-        alert.showAndWait();
     }
 
     // ============================================================

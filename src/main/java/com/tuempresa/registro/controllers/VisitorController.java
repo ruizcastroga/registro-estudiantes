@@ -3,6 +3,7 @@ package com.tuempresa.registro.controllers;
 import com.tuempresa.registro.models.VisitorBadge;
 import com.tuempresa.registro.models.VisitorLog;
 import com.tuempresa.registro.services.VisitorService;
+import com.tuempresa.registro.utils.DialogUtils;
 import com.tuempresa.registro.utils.SecurityManager;
 import com.tuempresa.registro.utils.SessionManager;
 import com.tuempresa.registro.models.AdminUser;
@@ -335,16 +336,11 @@ public class VisitorController implements Initializable {
         summary.append("- Errores: ").append(errors.size());
         if (!errors.isEmpty()) {
             summary.append("\n\nErrores:\n");
-            int max = Math.min(5, errors.size());
-            for (int i = 0; i < max; i++) summary.append("- ").append(errors.get(i)).append("\n");
-            if (errors.size() > 5) summary.append("... y ").append(errors.size() - 5).append(" más");
+            for (String err : errors) summary.append("- ").append(err).append("\n");
         }
 
-        Alert alert = new Alert(errors.isEmpty() ? Alert.AlertType.INFORMATION : Alert.AlertType.WARNING);
-        alert.setTitle("Resultado de Importación");
-        alert.setHeaderText("Carnés importados");
-        alert.setContentText(summary.toString());
-        alert.showAndWait();
+        DialogUtils.scrollable(errors.isEmpty() ? Alert.AlertType.INFORMATION : Alert.AlertType.WARNING,
+                "Resultado de Importación", "Carnés importados", summary.toString());
 
         loadBadgesTable();
         updateStats();
@@ -409,11 +405,10 @@ public class VisitorController implements Initializable {
 
         LocalDate date = result.get();
 
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Confirmar borrado");
-        confirm.setHeaderText("¿Borrar todos los registros anteriores al " + date + "?");
-        confirm.setContentText("Esta acción no se puede deshacer.");
-        Optional<ButtonType> res = confirm.showAndWait();
+        Optional<ButtonType> res = DialogUtils.alert(Alert.AlertType.CONFIRMATION,
+                "Confirmar borrado",
+                "¿Borrar todos los registros anteriores al " + date + "?",
+                "Esta acción no se puede deshacer.");
         if (res.isEmpty() || res.get() != ButtonType.OK) return;
 
         if (!requireSession()) return;
@@ -652,10 +647,9 @@ public class VisitorController implements Initializable {
 
     @FXML
     private void onHelp() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Ayuda — Control de Visitantes");
-        alert.setHeaderText("Cómo usar el módulo de Visitantes");
-        alert.setContentText(
+        DialogUtils.scrollable(Alert.AlertType.INFORMATION,
+            "Ayuda — Control de Visitantes",
+            "Cómo usar el módulo de Visitantes",
             "REGISTRO DE VISITAS\n" +
             "• Las entradas y salidas de visitantes se registran desde el Scanner principal.\n" +
             "• El scanner detecta automáticamente el carné de visitante y solicita los datos.\n\n" +
@@ -676,7 +670,6 @@ public class VisitorController implements Initializable {
             "PERMISOS\n" +
             "• Se requiere sesión de administrador para gestionar carnés."
         );
-        alert.showAndWait();
     }
 
     // -----------------------------------------------------------------------
@@ -741,27 +734,15 @@ public class VisitorController implements Initializable {
     // -----------------------------------------------------------------------
 
     private void showError(String msg) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
+        DialogUtils.alert(Alert.AlertType.ERROR, "Error", null, msg);
     }
 
     private void showInfo(String msg) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Información");
-        alert.setHeaderText(null);
-        alert.setContentText(msg);
-        alert.showAndWait();
+        DialogUtils.alert(Alert.AlertType.INFORMATION, "Información", null, msg);
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        DialogUtils.alert(type, title, null, message);
     }
 
     // -----------------------------------------------------------------------

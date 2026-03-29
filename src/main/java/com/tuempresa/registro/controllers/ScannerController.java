@@ -10,6 +10,7 @@ import com.tuempresa.registro.models.VisitorBadge;
 import com.tuempresa.registro.services.StaffService;
 import com.tuempresa.registro.services.StudentService;
 import com.tuempresa.registro.services.VisitorService;
+import com.tuempresa.registro.utils.DialogUtils;
 import com.tuempresa.registro.utils.LicenseManager;
 import com.tuempresa.registro.utils.SecurityManager;
 import com.tuempresa.registro.utils.SessionManager;
@@ -812,22 +813,14 @@ public class ScannerController implements Initializable {
                 int timeout = sessionManager.getTimeoutMinutes();
                 sessionManager.startSession(user, timeout);
 
-                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
-                successAlert.setTitle("Sesión Iniciada");
-                successAlert.setHeaderText(null);
-                successAlert.setContentText(
+                DialogUtils.alert(Alert.AlertType.INFORMATION, "Sesión Iniciada", null,
                         "Usuario " + user.getUsername() + " logueado correctamente. " +
                         "Tu sesión estará activa por " + timeout + " minutos. " +
-                        "Si terminas antes, recuerda cerrar la sesión para cuidar los datos."
-                );
-                successAlert.showAndWait();
+                        "Si terminas antes, recuerda cerrar la sesión para cuidar los datos.");
                 break;
             } else {
-                Alert errorAlert = new Alert(Alert.AlertType.ERROR);
-                errorAlert.setTitle("Error de Autenticación");
-                errorAlert.setHeaderText(null);
-                errorAlert.setContentText("Usuario o contraseña incorrectos. Intente nuevamente.");
-                errorAlert.showAndWait();
+                DialogUtils.alert(Alert.AlertType.ERROR, "Error de Autenticación", null,
+                        "Usuario o contraseña incorrectos. Intente nuevamente.");
                 // Loop continues - show dialog again
             }
         }
@@ -846,10 +839,9 @@ public class ScannerController implements Initializable {
 
     @FXML
     private void onHelp() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Ayuda — Scanner Principal");
-        alert.setHeaderText("Cómo usar el Scanner Principal");
-        alert.setContentText(
+        DialogUtils.scrollable(Alert.AlertType.INFORMATION,
+            "Ayuda — Scanner Principal",
+            "Cómo usar el Scanner Principal",
             "ESCANEO DE CARNÉS\n" +
             "• Escanee o escriba cualquier código de barras y presione Enter.\n" +
             "• El sistema detecta automáticamente si es un estudiante, personal o visitante.\n\n" +
@@ -869,7 +861,6 @@ public class ScannerController implements Initializable {
             "• Use 'Iniciar Sesión' en la barra superior para habilitar acciones administrativas.\n" +
             "• La sesión expira automáticamente por inactividad (configurable en Ajustes)."
         );
-        alert.showAndWait();
     }
 
     /**
