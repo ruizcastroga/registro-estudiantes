@@ -35,8 +35,11 @@
                         <Insets top="12" right="20" bottom="12" left="20"/>
                     </padding>
 
-                    <!-- Left: page title (hgrow to push buttons right) -->
-                    <Label text="Creador de Carné" styleClass="page-title" HBox.hgrow="ALWAYS"/>
+                    <!-- Left: page title -->
+                    <Label text="Creador de Carné" styleClass="page-title"/>
+
+                    <!-- Spacer: pushes nav buttons to the far right -->
+                    <Region HBox.hgrow="ALWAYS"/>
 
                     <!-- Right: nav buttons (Creador de Carné greyed out = current module) -->
                     <Button text="Scanner" onAction="#onBackToScanner" styleClass="secondary-button"/>
