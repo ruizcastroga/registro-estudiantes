@@ -6,9 +6,9 @@ Sistema de escritorio para el control de acceso y registro de entrada/salida en 
 
 ## Descripción General
 
-La aplicación funciona como una estación de control de acceso operada por un guardia. Cualquier persona que intente entrar o salir del plantel escanea su carné, y el sistema valida si tiene permitido hacerlo, muestra información relevante (como tutores autorizados para menores), y registra la actividad en un historial auditorio.
+La aplicación funciona como una estación de control de acceso operada por un guardia. Cualquier persona que intente entrar o salir del plantel escanea su carné, y el sistema valida si tiene permitido hacerlo, muestra información relevante (como tutores autorizados para menores), y registra la actividad en un historial auditable.
 
-La interfaz está diseñada para ser operada desde teclado/escáner sin necesidad de mouse, con el campo de entrada siempre activo para recibir el código de barras del lector.
+La pantalla principal (Scanner) está optimizada para uso con lector de código de barras: el campo de entrada siempre está activo y listo para recibir el código. Los módulos de gestión (Estudiantes, Personal, Visitantes, etc.) se operan con mouse y teclado como cualquier aplicación de escritorio.
 
 ---
 
@@ -20,14 +20,14 @@ El punto de entrada de la aplicación. El guardia deja el cursor aquí y el esc�
 - **Escaneo de estudiantes**: muestra nombre, foto (si tiene), estado y tutores autorizados
 - **Escaneo de personal**: muestra nombre, departamento y estado del miembro del staff
 - **Escaneo de visitantes**: detecta el carné de visitante, solicita datos del visitante (cédula, nombre, apellido, motivo) y registra la entrada; al escanear por segunda vez, registra la salida
-- Historial de escaneos del día en la misma pantalla
-- Muestra estadísticas rápidas: escaneos del día, personas dentro
+- Historial de escaneos de la sesión actual visible en la misma pantalla
+- Muestra estadísticas rápidas: total de escaneos del día y personas actualmente dentro
 
 ### 2. Estudiantes
 CRUD completo para la gestión del padrón de estudiantes.
 
 - Búsqueda instantánea por nombre o código de barras
-- Campos: código de barras, nombre, apellido, grado, fecha de nacimiento, estado
+- Campos: código de barras, nombre, apellido, grado, estado, foto (opcional)
 - Estados: **Activo**, **Inactivo**, **Suspendido** (el scanner muestra el estado apropiado al escanear)
 - Opción "Menor de edad — requiere acompañante": al escanear, se muestran los tutores legales registrados
 - Gestión de **Tutores Legales**: nombre, cédula, teléfono, relación (se muestran al guardia en pantalla)
@@ -72,7 +72,7 @@ Configuración del sistema y gestión de usuarios.
 
 - **Configuración general**: nombre de la institución, escudo/logo, tiempo de espera de sesión
 - **Gestión de usuarios**:
-  - Roles: **Administrador** (acceso total) y **Guardia** (solo lectura + escaneo)
+  - Roles: **Administrador** (acceso total) y **Operador** (solo lectura + escaneo)
   - Campos: nombre de usuario, contraseña, rol, tiempo de sesión individual
   - No se puede eliminar el propio usuario con sesión activa
 - **Base de datos**: exportar copia de seguridad / importar desde respaldo
@@ -87,7 +87,7 @@ La aplicación tiene una barra de sesión en la parte superior de cada módulo.
 | Rol | Permisos |
 |-----|----------|
 | **Administrador** | Todas las operaciones: agregar, editar, eliminar registros; gestionar usuarios y ajustes; importar/exportar datos |
-| **Guardia** | Solo puede operar el scanner; visualizar listas y detalles |
+| **Operador** | Solo puede operar el scanner y visualizar listas y detalles; no puede modificar registros |
 
 - Las sesiones expiran por inactividad (tiempo configurable por usuario, predeterminado: 10 minutos)
 - Un temporizador visible cuenta regresivamente en la barra de sesión
@@ -253,7 +253,7 @@ src/main/resources/
 
 ## Base de Datos
 
-SQLite local, archivo `registro_estudiantes.db`. Tablas principales:
+Base de datos SQLite almacenada localmente en `~/.registro-estudiantes/registro_estudiantes.db` (Linux/macOS) o `%USERPROFILE%\.registro-estudiantes\registro_estudiantes.db` (Windows). Se crea automáticamente al primer inicio. Tablas principales:
 
 | Tabla | Descripción |
 |-------|-------------|
