@@ -1,5 +1,6 @@
 package com.tuempresa.registro;
 
+import com.tuempresa.registro.api.ApiServer;
 import com.tuempresa.registro.dao.DatabaseConnection;
 import com.tuempresa.registro.utils.LicenseManager;
 import com.tuempresa.registro.utils.SecurityManager;
@@ -28,6 +29,8 @@ import java.util.Optional;
 public class Main extends Application {
 
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
+
+    private ApiServer apiServer;
 
     // Nombre de la aplicación
     private static final String APP_TITLE = "Sistema de Registro de Estudiantes";
@@ -80,6 +83,9 @@ public class Main extends Application {
                 }
             }
 
+            // Iniciar el servidor de API REST
+            startApiServer();
+
             // Cargar la vista principal
             loadMainView(primaryStage);
 
@@ -89,6 +95,19 @@ public class Main extends Application {
             logger.error("Error fatal al iniciar la aplicación", e);
             showFatalError("Error al iniciar la aplicación", e.getMessage());
             Platform.exit();
+        }
+    }
+
+    /**
+     * Arranca el servidor de API REST embebido en el puerto 8080.
+     */
+    private void startApiServer() {
+        try {
+            apiServer = new ApiServer();
+            apiServer.start();
+        } catch (Exception e) {
+            logger.warn("No se pudo iniciar el servidor de API en el puerto 8080: {}", e.getMessage());
+            logger.warn("La aplicación funcionará normalmente pero sin la API REST.");
         }
     }
 
@@ -376,6 +395,9 @@ public class Main extends Application {
      * Limpia recursos al cerrar la aplicación.
      */
     private void cleanup() {
+        if (apiServer != null) {
+            apiServer.stop();
+        }
         try {
             DatabaseConnection.getInstance().closeConnection();
             logger.info("Conexión a base de datos cerrada");

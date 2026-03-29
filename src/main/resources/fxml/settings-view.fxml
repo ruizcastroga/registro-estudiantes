@@ -93,7 +93,59 @@
                 </VBox>
             </Tab>
 
-            <!-- Tab 2: Usuarios administradores -->
+            <!-- Tab 2: API REST -->
+            <Tab text="API REST">
+                <VBox spacing="20" alignment="TOP_LEFT">
+                    <padding>
+                        <Insets top="25" right="30" bottom="25" left="30"/>
+                    </padding>
+
+                    <Label text="API REST" styleClass="section-title"/>
+                    <Separator/>
+
+                    <Label text="La API permite importar y exportar datos desde scripts, Postman u otros sistemas sin abrir la aplicación."
+                           styleClass="hint-label" wrapText="true"/>
+
+                    <!-- URL -->
+                    <HBox spacing="15" alignment="CENTER_LEFT">
+                        <Label text="URL base:" styleClass="form-label" minWidth="120"/>
+                        <TextField text="http://localhost:8080" editable="false" prefWidth="280"
+                                   styleClass="readonly-field"/>
+                    </HBox>
+
+                    <!-- API Key -->
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="API Key:" styleClass="form-label" minWidth="120"/>
+                        <TextField fx:id="apiKeyField" editable="false" prefWidth="340"
+                                   styleClass="readonly-field" promptText="Generando clave..."/>
+                        <Button text="Copiar" onAction="#onCopyApiKey" styleClass="secondary-button"/>
+                        <Button text="Regenerar" onAction="#onRegenerateApiKey" styleClass="danger-button"/>
+                    </HBox>
+
+                    <Label text="Incluye esta clave en el header X-API-Key de cada petición."
+                           styleClass="hint-label"/>
+
+                    <Separator/>
+
+                    <!-- Quick reference -->
+                    <Label text="Endpoints disponibles:" styleClass="section-title"/>
+                    <VBox spacing="6">
+                        <Label text="GET  /api/health" styleClass="code-label"/>
+                        <Label text="GET  /api/students/export" styleClass="code-label"/>
+                        <Label text="POST /api/students/import" styleClass="code-label"/>
+                        <Label text="GET  /api/staff/export" styleClass="code-label"/>
+                        <Label text="POST /api/staff/import" styleClass="code-label"/>
+                        <Label text="GET  /api/visitors/badges/export" styleClass="code-label"/>
+                        <Label text="POST /api/visitors/badges/import" styleClass="code-label"/>
+                        <Label text="GET  /api/visitors/logs/export?from=YYYY-MM-DD&amp;to=YYYY-MM-DD" styleClass="code-label"/>
+                        <Label text="GET  /api/entry-logs/export?from=YYYY-MM-DD&amp;to=YYYY-MM-DD" styleClass="code-label"/>
+                    </VBox>
+
+                    <Label fx:id="apiStatusLabel" text="" styleClass="status-message"/>
+                </VBox>
+            </Tab>
+
+            <!-- Tab 3: Usuarios administradores -->
             <Tab text="Usuarios">
                 <SplitPane dividerPositions="0.6" orientation="HORIZONTAL">
 

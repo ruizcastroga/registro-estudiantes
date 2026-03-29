@@ -1,0 +1,251 @@
+{
+  "info": {
+    "name": "Registro Estudiantes API",
+    "description": "All endpoints for the Sistema de Registro de Estudiantes REST API.\n\nBefore running:\n1. Import the environment file (registro_api.postman_environment.json)\n2. Set the `api_key` variable to the key shown in Ajustes → API REST\n3. Make sure the app is running (mvn javafx:run)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [],
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      { "key": "key",   "value": "X-API-Key" },
+      { "key": "value", "value": "{{api_key}}" },
+      { "key": "in",    "value": "header" }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /api/health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/health", "host": ["{{base_url}}"], "path": ["api","health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Students",
+      "item": [
+        {
+          "name": "GET /api/students/export",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/students/export",
+              "host": ["{{base_url}}"],
+              "path": ["api","students","export"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/students/import",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"barcode\": \"TEST-001\",\n    \"firstName\": \"Carlos\",\n    \"lastName\": \"Prueba López\",\n    \"grade\": \"5to Primaria\",\n    \"isMinor\": true,\n    \"requiresGuardian\": true,\n    \"status\": \"active\"\n  },\n  {\n    \"barcode\": \"TEST-002\",\n    \"firstName\": \"María\",\n    \"lastName\": \"Ejemplo Ruiz\",\n    \"grade\": \"8vo Secundaria\",\n    \"isMinor\": false,\n    \"requiresGuardian\": false,\n    \"status\": \"active\"\n  }\n]",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/students/import",
+              "host": ["{{base_url}}"],
+              "path": ["api","students","import"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/students/import — duplicate (expect skipped)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"barcode\": \"TEST-001\",\n    \"firstName\": \"Carlos\",\n    \"lastName\": \"Duplicado\",\n    \"grade\": \"3ro Primaria\",\n    \"isMinor\": true,\n    \"requiresGuardian\": false,\n    \"status\": \"active\"\n  }\n]",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/students/import",
+              "host": ["{{base_url}}"],
+              "path": ["api","students","import"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/students/import — missing fields (expect error)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"barcode\": \"\",\n    \"firstName\": \"Sin\",\n    \"lastName\": \"Barcode\"\n  }\n]",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/students/import",
+              "host": ["{{base_url}}"],
+              "path": ["api","students","import"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Staff",
+      "item": [
+        {
+          "name": "GET /api/staff/export",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/staff/export",
+              "host": ["{{base_url}}"],
+              "path": ["api","staff","export"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/staff/import",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"idNumber\": \"999000001\",\n    \"firstName\": \"Jorge\",\n    \"lastName\": \"Prueba Docente\",\n    \"department\": \"Docencia\",\n    \"status\": \"active\"\n  },\n  {\n    \"idNumber\": \"999000002\",\n    \"firstName\": \"Laura\",\n    \"lastName\": \"Prueba Admin\",\n    \"department\": \"Administración\",\n    \"status\": \"active\"\n  }\n]",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/staff/import",
+              "host": ["{{base_url}}"],
+              "path": ["api","staff","import"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Visitors",
+      "item": [
+        {
+          "name": "GET /api/visitors/badges/export",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/visitors/badges/export",
+              "host": ["{{base_url}}"],
+              "path": ["api","visitors","badges","export"]
+            }
+          }
+        },
+        {
+          "name": "POST /api/visitors/badges/import",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  { \"code\": \"VIS-TEST-01\" },\n  { \"code\": \"VIS-TEST-02\" },\n  { \"code\": \"VIS-TEST-03\" }\n]",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/visitors/badges/import",
+              "host": ["{{base_url}}"],
+              "path": ["api","visitors","badges","import"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/visitors/logs/export (last 30 days)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/visitors/logs/export",
+              "host": ["{{base_url}}"],
+              "path": ["api","visitors","logs","export"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/visitors/logs/export (date range)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/visitors/logs/export?from={{date_from}}&to={{date_to}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","visitors","logs","export"],
+              "query": [
+                { "key": "from", "value": "{{date_from}}" },
+                { "key": "to",   "value": "{{date_to}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Entry Logs",
+      "item": [
+        {
+          "name": "GET /api/entry-logs/export (last 30 days)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/entry-logs/export",
+              "host": ["{{base_url}}"],
+              "path": ["api","entry-logs","export"]
+            }
+          }
+        },
+        {
+          "name": "GET /api/entry-logs/export (date range)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/entry-logs/export?from={{date_from}}&to={{date_to}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","entry-logs","export"],
+              "query": [
+                { "key": "from", "value": "{{date_from}}" },
+                { "key": "to",   "value": "{{date_to}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth errors",
+      "item": [
+        {
+          "name": "GET /api/health — no key (expect 401)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/health", "host": ["{{base_url}}"], "path": ["api","health"] }
+          }
+        },
+        {
+          "name": "GET /api/health — wrong key (expect 401)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [{ "key": "X-API-Key", "value": "wrong-key-12345" }],
+            "url": { "raw": "{{base_url}}/api/health", "host": ["{{base_url}}"], "path": ["api","health"] }
+          }
+        }
+      ]
+    }
+  ]
+}
