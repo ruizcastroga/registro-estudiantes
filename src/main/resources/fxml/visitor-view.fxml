@@ -35,8 +35,8 @@
                         <Insets top="12" right="20" bottom="12" left="20"/>
                     </padding>
 
-                    <!-- Left: title + subtitle (hgrow to push buttons right) -->
-                    <VBox HBox.hgrow="ALWAYS">
+                    <!-- Left: title + subtitle -->
+                    <VBox>
                         <Label text="Control de Visitantes" styleClass="app-title"/>
                         <Label fx:id="subtitleLabel" text="Escanee un carné para registrar entrada o salida"
                                styleClass="datetime-label"/>
@@ -55,6 +55,9 @@
                         <Label text="Carnés disponibles" styleClass="stats-label"/>
                         <Label fx:id="availableCountLabel" text="0" styleClass="stats-value"/>
                     </VBox>
+
+                    <!-- Spacer: pushes nav buttons to the far right -->
+                    <Region HBox.hgrow="ALWAYS"/>
 
                     <!-- Right: nav buttons (Visitantes greyed out = current module) -->
                     <Button text="Scanner"

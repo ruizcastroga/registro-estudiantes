@@ -37,7 +37,7 @@
                     </padding>
 
                     <!-- Left: app title -->
-                    <VBox HBox.hgrow="ALWAYS">
+                    <VBox>
                         <Label fx:id="schoolNameLabel" text="Sistema de Registro de Estudiantes"
                                styleClass="app-title"/>
                         <Label fx:id="dateTimeLabel" text="Fecha y hora"
@@ -49,6 +49,9 @@
                         <Label text="Escaneos hoy:" styleClass="stats-label"/>
                         <Label fx:id="todayScansLabel" text="0" styleClass="stats-value"/>
                     </VBox>
+
+                    <!-- Spacer: pushes nav buttons to the far right -->
+                    <Region HBox.hgrow="ALWAYS"/>
 
                     <!-- Right: nav buttons (Scanner greyed out = current module) -->
                     <Button text="Scanner" disable="true" styleClass="secondary-button"/>
