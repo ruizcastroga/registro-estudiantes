@@ -216,6 +216,10 @@ public class StudentService {
         return guardianDAO.save(guardian);
     }
 
+    public void removeGuardian(Long guardianId) throws SQLException {
+        guardianDAO.delete(guardianId);
+    }
+
     /**
      * Obtiene los últimos registros de escaneo.
      *

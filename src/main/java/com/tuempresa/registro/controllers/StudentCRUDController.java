@@ -187,6 +187,15 @@ public class StudentCRUDController implements Initializable {
                     boolean hasSelection = newSelection != null;
                     editButton.setDisable(!hasSelection);
                     deleteButton.setDisable(!hasSelection);
+
+                    if (newSelection != null) {
+                        currentStudent = newSelection;
+                        isEditMode = false;
+                        loadStudentToForm(newSelection);
+                        formTitle.setText(newSelection.getFullName());
+                        barcodeField.setDisable(true);
+                        setStatusMessage("Seleccionado: " + newSelection.getFullName());
+                    }
                 });
 
         guardiansListView.getSelectionModel().selectedItemProperty().addListener(
@@ -428,6 +437,11 @@ public class StudentCRUDController implements Initializable {
      */
     @FXML
     private void onAddGuardian() {
+        if (!sessionManager.canModifyData()) {
+            showAlert(Alert.AlertType.WARNING, "Sin Permisos",
+                    "Se requiere sesión de administrador para agregar tutores legales.");
+            return;
+        }
         // Crear diálogo personalizado para tutor
         Dialog<Guardian> dialog = new Dialog<>();
         dialog.setTitle("Agregar Tutor Legal");
@@ -488,13 +502,32 @@ public class StudentCRUDController implements Initializable {
      */
     @FXML
     private void onRemoveGuardian() {
-        int selectedIndex = guardiansListView.getSelectionModel().getSelectedIndex();
-
-        if (selectedIndex >= 0) {
-            currentGuardians.remove(selectedIndex);
-            guardianDisplayList.remove(selectedIndex);
-            logger.debug("Guardián eliminado del índice: {}", selectedIndex);
+        if (!sessionManager.canModifyData()) {
+            showAlert(Alert.AlertType.WARNING, "Sin Permisos",
+                    "Se requiere sesión de administrador para eliminar tutores legales.");
+            return;
         }
+
+        int selectedIndex = guardiansListView.getSelectionModel().getSelectedIndex();
+        if (selectedIndex < 0) return;
+
+        Guardian guardian = currentGuardians.get(selectedIndex);
+
+        // If already persisted in DB, delete it immediately
+        if (guardian.getId() != null) {
+            try {
+                studentService.removeGuardian(guardian.getId());
+                logger.debug("Guardián eliminado de BD: {}", guardian.getName());
+            } catch (SQLException e) {
+                logger.error("Error al eliminar guardián", e);
+                showAlert(Alert.AlertType.ERROR, "Error",
+                        "No se pudo eliminar el tutor: " + e.getMessage());
+                return;
+            }
+        }
+
+        currentGuardians.remove(selectedIndex);
+        guardianDisplayList.remove(selectedIndex);
     }
 
     /**
