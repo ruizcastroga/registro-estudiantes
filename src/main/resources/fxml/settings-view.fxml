@@ -93,7 +93,8 @@
                 </VBox>
             </Tab>
 
-            <!-- Tab 2: API REST -->
+            <!-- Tab 2: API REST (hidden for demo) -->
+            <!--
             <Tab text="API REST">
                 <VBox spacing="20" alignment="TOP_LEFT">
                     <padding>
@@ -144,6 +145,7 @@
                     <Label fx:id="apiStatusLabel" text="" styleClass="status-message"/>
                 </VBox>
             </Tab>
+            -->
 
             <!-- Tab 3: Usuarios administradores -->
             <Tab text="Usuarios">

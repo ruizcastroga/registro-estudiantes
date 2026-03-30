@@ -1,6 +1,5 @@
 package com.tuempresa.registro.controllers;
 
-import com.tuempresa.registro.api.ApiServer;
 import com.tuempresa.registro.dao.AdminUserDAO;
 import com.tuempresa.registro.models.AdminUser;
 import com.tuempresa.registro.utils.DialogUtils;
@@ -24,8 +23,7 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
+
 import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
@@ -71,10 +69,6 @@ public class SettingsController implements Initializable {
     @FXML private Button editUserButton;
     @FXML private Button deleteUserButton;
 
-    // API tab
-    @FXML private TextField apiKeyField;
-    @FXML private Label apiStatusLabel;
-
     // Footer
     @FXML private Label statusMessage;
     @FXML private Label userValidationMessage;
@@ -116,7 +110,6 @@ public class SettingsController implements Initializable {
         setupListeners();
         loadUsers();
         clearUserForm();
-        setupApiTab();
 
         logger.info("SettingsController inicializado correctamente");
     }
@@ -541,50 +534,7 @@ public class SettingsController implements Initializable {
     }
 
     // -----------------------------------------------------------------------
-    // API tab
-    // -----------------------------------------------------------------------
 
-    private void setupApiTab() {
-        if (apiKeyField == null) return;
-        ApiServer api = ApiServer.getInstance();
-        if (api != null) {
-            apiKeyField.setText(api.getApiKey());
-        } else {
-            apiKeyField.setText("(servidor no iniciado)");
-        }
-    }
-
-    @FXML
-    private void onCopyApiKey() {
-        String key = apiKeyField.getText();
-        if (key == null || key.isBlank()) return;
-        ClipboardContent content = new ClipboardContent();
-        content.putString(key);
-        Clipboard.getSystemClipboard().setContent(content);
-        apiStatusLabel.setText("Clave copiada al portapapeles.");
-    }
-
-    @FXML
-    private void onRegenerateApiKey() {
-        Optional<ButtonType> result = DialogUtils.alert(Alert.AlertType.CONFIRMATION,
-                "Regenerar clave API", "¿Regenerar la clave de API?",
-                "La clave actual dejará de funcionar inmediatamente.\n" +
-                "Deberás actualizar todos los scripts y colecciones de Postman que la usen.");
-        if (result.isEmpty() || result.get() != ButtonType.OK) return;
-
-        try {
-            ApiServer api = ApiServer.getInstance();
-            if (api == null) {
-                apiStatusLabel.setText("Error: el servidor de API no está activo.");
-                return;
-            }
-            String newKey = api.regenerateApiKey();
-            apiKeyField.setText(newKey);
-            apiStatusLabel.setText("Clave regenerada correctamente.");
-        } catch (Exception e) {
-            apiStatusLabel.setText("Error al regenerar: " + e.getMessage());
-        }
-    }
 
     // -----------------------------------------------------------------------
     // Help
@@ -608,12 +558,6 @@ public class SettingsController implements Initializable {
             "• Contraseña: mínimo 4 caracteres. Déjela en blanco al editar para no cambiarla.\n" +
             "• Tiempo de sesión: configura el tiempo de expiración global al guardar.\n" +
             "• Activo: los usuarios inactivos no pueden iniciar sesión.\n\n" +
-            "API REST\n" +
-            "• La aplicación expone una API en el puerto 8080 para importar y exportar datos.\n" +
-            "• La API Key se genera automáticamente al primer inicio. Cópiela con el botón 'Copiar'.\n" +
-            "• Use 'Regenerar' si necesita invalidar la clave actual (por ejemplo, si fue comprometida).\n" +
-            "• La nueva clave entra en vigor inmediatamente; la anterior deja de funcionar al instante.\n" +
-            "• Consulte el archivo API.md en el repositorio para la guía completa de endpoints y Postman.\n\n" +
             "SEGURIDAD\n" +
             "• No puede eliminar su propio usuario mientras tiene sesión activa.\n" +
             "• Se requiere sesión de administrador para acceder a esta sección."
